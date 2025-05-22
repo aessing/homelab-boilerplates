@@ -1,3 +1,11 @@
+# ----------------------- Boilerplate files ----------------------- #
+# Ignore _ToDo files
+_ToDo/
+
+# Ignore all Environment files (.env files) except _SAMPLE.env
+**/environments/*.env
+!**/environments/_SAMPLE.env
+
 # ----------------------------- macOS ----------------------------- #
 # General
 .DS_Store

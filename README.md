@@ -1,18 +1,17 @@
-# Project Title
+![Banner of the repository](media/banner.png)
 
-A README file, along with a repository license, contribution guidelines, and a code of conduct, helps you communicate expectations and manage contributions to your project.
+# Andre’s Boilerplate Repository
 
-A README is often the first item a visitor will see when visiting your repository. README files typically include information on:
+Welcome to my personal collection of boilerplates and configuration templates!
+This repository serves as a starting point for a variety of tools, technologies, and projects I frequently work with.
 
-- What the project does?
-- Why the project is useful?
-- How can users get started with the project?
-- Where can users get help with your project?
-- Who maintains and contributes to the project?
+You’ll find ready-to-use templates for different stacks and scenarios — from development environments to deployment setups. These boilerplates aim to speed up project bootstrapping and maintain consistency across projects.
 
-:exclamation: Please also have a look at the [license](LICENSE) and if the license fits the needs of your project. :exclamation:
+⚠️ Disclaimer: Technologies evolve quickly. While I strive to keep these templates up to date, some configurations may lag behind the latest versions or best practices. Always double-check compatibility with current tool versions.
 
----
+## How to Use
+
+Feel free to clone or fork this repository and adapt it to your needs.
 
 ## :ambulance: Support Information
 
