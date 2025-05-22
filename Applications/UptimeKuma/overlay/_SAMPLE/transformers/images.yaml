@@ -1,0 +1,8 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: uptimekuma-imagetransformer
+imageTag:
+  name: louislam/uptime-kuma
+  newTag: 1.23.16

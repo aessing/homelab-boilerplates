@@ -6,6 +6,11 @@ _ToDo/
 **/environments/*.env
 !**/environments/_SAMPLE.env
 
+# Ignore all kustomize overlays except _SAMPLE
+**/overlay/*
+!**/overlay/_SAMPLE/
+!**/overlay/_SAMPLE/**
+
 # ----------------------------- macOS ----------------------------- #
 # General
 .DS_Store

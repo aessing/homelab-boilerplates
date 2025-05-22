@@ -1,0 +1,4 @@
+[
+  { "op": "replace", "path": "/spec/subject/organizations", "value": ["###_NAME_OF_ORGANISATION_###"] },
+  { "op": "replace", "path": "/spec/dnsNames", "value": ["###_FQDN_OF_UPTIMEKUMA_###"] }
+]

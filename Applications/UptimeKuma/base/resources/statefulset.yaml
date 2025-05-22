@@ -1,0 +1,81 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: uptimekuma
+  annotations:
+    configmap.reloader.stakater.com/reload: ''
+    secret.reloader.stakater.com/reload: ''
+spec:
+  serviceName: uptimekuma
+  replicas: 0
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Retain
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 180
+      containers:
+        - name: uptimekuma
+          image: louislam/uptime-kuma:0.0.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 0.2
+              memory: 256Mi
+            limits:
+              cpu: 1
+              memory: 512Mi
+          ports:
+            - containerPort: 3001
+              protocol: TCP
+              name: http
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+            terminationGracePeriodSeconds: 180
+          volumeMounts:
+            - mountPath: /app/data
+              name: uptimekuma-data
+  volumeClaimTemplates:
+    - metadata:
+        name: uptimekuma-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 8Gi

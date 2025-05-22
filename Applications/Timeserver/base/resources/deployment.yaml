@@ -1,0 +1,67 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: timeserver
+  annotations:
+    configmap.reloader.stakater.com/reload: ''
+    secret.reloader.stakater.com/reload: ''
+spec:
+  replicas: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  template:
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: chrony
+          image: ghcr.io/aessing/chronyd:0.0.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: 4Mi
+              cpu: 0.01
+            limits:
+              memory: 8Mi
+              cpu: 0.1
+          ports:
+            - containerPort: 123
+              protocol: UDP
+              name: ntp
+          startupProbe:
+            exec:
+              command: ['/usr/bin/chronyc', 'tracking']
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            exec:
+              command: ['/usr/bin/chronyc', 'tracking']
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command: ['/usr/bin/chronyc', 'tracking']
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          volumeMounts:
+            - name: chrony-config
+              mountPath: /etc/chrony/chrony.conf
+              subPath: chrony.conf
+              readOnly: true
+      volumes:
+        - name: chrony-config
+          configMap:
+            name: timeserver-config

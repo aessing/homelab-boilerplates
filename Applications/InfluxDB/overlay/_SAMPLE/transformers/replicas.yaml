@@ -1,0 +1,21 @@
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: influxdb-replicatransformer
+replica:
+  name: influxdb
+  count: ###_NUMBER_OF_REPLICAS_###
+fieldSpecs:
+  - path: spec/replicas
+    create: false
+    kind: Deployment
+  - path: spec/replicas
+    create: false
+    kind: ReplicationController
+  - path: spec/replicas
+    create: false
+    kind: ReplicaSet
+  - path: spec/replicas
+    create: true
+    kind: StatefulSet

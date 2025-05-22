@@ -1,0 +1,21 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: uptimekuma
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: CHANGE_ME
+      kind: Rule
+      middlewares:
+        - name: default-chain
+          namespace: traefik-system
+      services:
+        - name: uptimekuma
+          port: 3001
+  tls:
+    secretName: uptimekuma-certificate

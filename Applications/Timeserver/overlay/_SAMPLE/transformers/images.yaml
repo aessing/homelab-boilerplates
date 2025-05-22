@@ -1,0 +1,8 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: timeserver-imagetransformer
+imageTag:
+  name: ghcr.io/aessing/chronyd
+  newTag: 1.3.5

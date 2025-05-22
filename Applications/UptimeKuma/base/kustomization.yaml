@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/component: 'uptimekuma'
+  - includeSelectors: true
+    pairs:
+      app.kubernetes.io/name: 'uptimekuma'
+      app.kubernetes.io/part-of: 'monitoring'
+
+resources:
+  - ./resources/certificate.yaml
+  - ./resources/ingressroute.yaml
+  - ./resources/namespace.yaml
+  - ./resources/resource-quota.yaml
+  - ./resources/service.yaml
+  - ./resources/statefulset.yaml

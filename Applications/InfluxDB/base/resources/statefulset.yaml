@@ -1,0 +1,86 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: influxdb
+  annotations:
+    configmap.reloader.stakater.com/reload: ''
+    secret.reloader.stakater.com/reload: ''
+spec:
+  serviceName: influxdb
+  replicas: 0
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Retain
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 180
+      containers:
+        - name: influxdb
+          image: influxdb:0.0.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 0.1
+              memory: 1Gi
+            limits:
+              cpu: 2
+              memory: 2Gi
+          env:
+            - name: 'INFLUXD_REPORTING_DISABLED'
+              value: 'true'
+            - name: 'INFLUXD_HARDENING_ENABLED'
+              value: 'true'
+          ports:
+            - containerPort: 8086
+              protocol: TCP
+              name: http
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+            terminationGracePeriodSeconds: 180
+          volumeMounts:
+            - mountPath: /var/lib/influxdb2
+              name: influxdb-data
+  volumeClaimTemplates:
+    - metadata:
+        name: influxdb-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 32Gi
