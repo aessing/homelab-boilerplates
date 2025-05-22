@@ -1,0 +1,1 @@
+[{ "op": "replace", "path": "/metadata/namespace", "value": "longhorn-system" }]

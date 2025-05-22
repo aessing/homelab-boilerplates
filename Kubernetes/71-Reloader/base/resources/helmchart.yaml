@@ -1,0 +1,10 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: reloader
+spec:
+  repo: https://stakater.github.io/stakater-charts
+  chart: reloader
+  helmVersion: v3
+  bootstrap: true

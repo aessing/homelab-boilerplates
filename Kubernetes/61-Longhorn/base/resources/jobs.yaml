@@ -1,0 +1,44 @@
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: longhorn-job-backup
+spec:
+  concurrency: 1
+  cron: 0 2 * * *
+  groups:
+    - default
+  labels: {}
+  name: longhorn-job-backup
+  retain: 35
+  task: backup-force-create
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: longhorn-job-snapshot
+spec:
+  concurrency: 1
+  cron: 0 0/4 * * *
+  groups:
+    - default
+  labels: {}
+  name: longhorn-job-snapshot
+  retain: 6
+  task: snapshot-force-create
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: longhorn-job-trim
+spec:
+  concurrency: 1
+  cron: 0 4 * * 0
+  groups:
+    - default
+  labels: {}
+  name: longhorn-job-trim
+  retain: 0
+  task: filesystem-trim

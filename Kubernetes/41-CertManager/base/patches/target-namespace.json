@@ -1,0 +1,1 @@
+[{ "op": "replace", "path": "/spec/targetNamespace", "value": "certmgr-system" }]

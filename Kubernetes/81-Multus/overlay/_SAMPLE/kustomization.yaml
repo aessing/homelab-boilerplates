@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+sortOptions:
+  # If not specified, HelmChart will be deployed before HelmChartConfig - This can lead to unconfigured HelmChart deployments
+  order: fifo
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  - transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/component: network-cni
+      app.kubernetes.io/instance: multus
+      app.kubernetes.io/name: multus
+      app.kubernetes.io/part-of: system-services
+
+resources:
+  - ../../base
+
+patches:
+  # https://github.com/k8snetworkplumbingwg/multus-cni
+  - path: ./patches/version.json
+    target:
+      group: helm.cattle.io
+      version: v1
+      kind: HelmChart

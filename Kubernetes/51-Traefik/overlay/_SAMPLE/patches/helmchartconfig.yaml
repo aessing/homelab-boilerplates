@@ -1,0 +1,80 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+spec:
+  valuesContent: >-
+    deployment:
+      enabled: true
+      replicas: ###_NUMBER_OF_REPLICAS_###
+    ingressClass:
+      enabled: true
+      isDefaultClass: true
+    ingressRoute:
+      dashboard:
+        enabled: false
+    providers:
+      kubernetesCRD:
+        enabled: true
+        ingressClass: traefik-external
+        allowCrossNamespace: true
+      kubernetesIngress:
+        enabled: true
+        publishedService:
+          enabled: false
+    logs:
+      general:
+        level: INFO
+    metrics:
+      prometheus:
+        addEntryPointsLabels: true
+        addRoutersLabels: true
+        addServicesLabels: true
+    globalArguments:
+      - '--global.checknewversion=true'
+      - '--global.sendanonymoususage=false'
+    additionalArguments:
+      - '--serversTransport.insecureSkipVerify=true'
+      - '--providers.kubernetesingress.ingressclass=traefik-external'
+    ports:
+      traefik:
+        port: 9000
+        expose:
+          default: false
+        exposedPort: 9000
+        protocol: TCP
+      web:
+        port: 8000
+        expose:
+          default: true
+        exposedPort: 80
+        protocol: TCP
+        redirections:
+          entryPoint:
+            to: websecure
+            scheme: https
+            permanent: true
+      websecure:
+        port: 8443
+        expose:
+          default: true
+        exposedPort: 443
+        protocol: TCP
+        http3:
+          enabled: false
+        tls:
+          enabled: true
+      metrics:
+        port: 9100
+        expose:
+          default: false
+        exposedPort: 9100
+    service:
+      enabled: true
+      type: LoadBalancer
+      spec:
+        externalTrafficPolicy: Local
+        loadBalancerIP: '###_IP_ADDRESS_FOR_TRAEFIK_###'
+    rbac:
+      enabled: true

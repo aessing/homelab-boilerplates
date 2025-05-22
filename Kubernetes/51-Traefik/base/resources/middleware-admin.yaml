@@ -1,0 +1,14 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: chain-admin
+spec:
+  chain:
+    middlewares:
+      - name: headers-default
+        namespace: traefik-system
+      - name: compression
+        namespace: traefik-system
+      - name: ipallowlist-admin
+        namespace: traefik-system
