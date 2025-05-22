@@ -1,0 +1,10 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: multus
+spec:
+  repo: https://rke2-charts.rancher.io
+  chart: rke2-multus
+  helmVersion: v3
+  bootstrap: true

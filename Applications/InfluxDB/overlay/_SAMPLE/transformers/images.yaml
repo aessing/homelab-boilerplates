@@ -1,0 +1,8 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: influxdb-imagetransformer
+imageTag:
+  name: influxdb
+  newTag: 2.7.12

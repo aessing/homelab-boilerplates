@@ -1,0 +1,24 @@
+$TTL    3600
+
+@       IN      SOA     name.example.org. admin.example.org. (
+                                  2025052501         ; Serial
+                                      604800         ; Refresh
+                                       86400         ; Retry
+                                     2419200         ; Expire
+                                       86400 )       ; Negative Cache TTL
+;
+
+; -----------------------------------------------------------------------------
+; Common - NS records
+@                               3600    IN      NS      name01.example.org.
+@                               3600    IN      NS      name02.example.org.
+
+; -----------------------------------------------------------------------------
+; Common - Zone records
+mask.icloud.com                 3600    IN      CNAME   .
+mask-h2.icloud.com              3600    IN      CNAME   .
+mask-h3.icloud.com              3600    IN      CNAME   .
+mask.icloud-dns.com             3600    IN      CNAME   .
+
+; -----------------------------------------------------------------------------
+; EOF

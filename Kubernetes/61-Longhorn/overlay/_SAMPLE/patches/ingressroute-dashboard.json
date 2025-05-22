@@ -1,0 +1,1 @@
+[{ "op": "replace", "path": "/spec/routes/0/match", "value": "Host(`###FQDN_FOR_LONGHORN_DASHBOARD###`)" }]

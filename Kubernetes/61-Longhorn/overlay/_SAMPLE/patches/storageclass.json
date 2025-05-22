@@ -1,0 +1,1 @@
+[{ "op": "replace", "path": "/parameters/numberOfReplicas", "value": "###NUMBER_OF_STORAGE_REPLICAS###" }]

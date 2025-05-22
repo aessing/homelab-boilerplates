@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: nameserver-zones
+    behavior: create
+    options:
+      labels:
+        app.kubernetes.io/component: 'application' # The component within the architecture
+    files:
+      - named.0
+      - named.127
+      - named.255
+      - named.empty
+      - named.local
+      - named.root
+      - db.blocklist
+      - db.10.in-addr.arpa
+      - db.example.org

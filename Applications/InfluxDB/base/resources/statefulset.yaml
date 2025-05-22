@@ -1,0 +1,119 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: influxdb
+  labels:
+    app.kubernetes.io/component: 'database'
+  annotations:
+    configmap.reloader.stakater.com/reload: ''
+    secret.reloader.stakater.com/reload: ''
+spec:
+  serviceName: influxdb
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: 'database'
+  replicas: 0
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Retain
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: 'database'
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 180
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: influxdb
+          image: influxdb:0.0.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            runAsUser: 1000
+            runAsGroup: 1000
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: 0.1
+              memory: 1Gi
+            limits:
+              cpu: 2
+              memory: 2Gi
+          env:
+            - name: INFLUXD_REPORTING_DISABLED
+              value: 'true'
+            - name: INFLUXD_HARDENING_ENABLED
+              value: 'true'
+            - name: INFLUXD_PPROF_DISABLED
+              value: 'true'
+          ports:
+            - containerPort: 8086
+              protocol: TCP
+              name: http
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          volumeMounts:
+            - mountPath: /etc/influxdb2
+              name: influxdb-config
+            - mountPath: /var/lib/influxdb2
+              name: influxdb-data
+  volumeClaimTemplates:
+    - metadata:
+        name: influxdb-config
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 1Gi
+    - metadata:
+        name: influxdb-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 16Gi

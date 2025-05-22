@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: uptimekuma
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  #- transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: 2.0.0-beta-rootless.2 # The current version of the application
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/secret-uptimekuma-database-root.yaml
+  - ./generators/secret-uptimekuma-database-user.yaml
+
+patches:
+  - path: ./patches/certificate.json
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+  - path: ./patches/ingressroute.json
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+  - path: ./patches/resource-quota.json
+    target:
+      version: v1
+      kind: ResourceQuota
+
+transformers:
+  # https://github.com/louislam/uptime-kuma
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml

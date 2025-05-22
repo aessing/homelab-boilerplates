@@ -1,0 +1,126 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: uptimekuma
+  labels:
+    app.kubernetes.io/component: 'application'
+  annotations:
+    configmap.reloader.stakater.com/reload: ''
+    secret.reloader.stakater.com/reload: ''
+spec:
+  serviceName: uptimekuma
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: 'application'
+  replicas: 0
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Retain
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: 'application'
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 180
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: uptimekuma
+          image: louislam/uptime-kuma:0.0.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            runAsUser: 1000
+            runAsGroup: 1000
+            # capabilities:
+            #   drop:
+            #     - ALL
+            seccompProfile:
+              type: RuntimeDefault
+            readOnlyRootFilesystem: false
+          resources:
+            requests:
+              cpu: 0.2
+              memory: 512Mi
+            limits:
+              cpu: 1
+              memory: 1024Mi
+          env:
+            - name: PUID
+              value: '1000'
+            - name: PGID
+              value: '1000'
+            - name: UPTIME_KUMA_DB_TYPE
+              value: mariadb
+            - name: UPTIME_KUMA_DB_HOSTNAME
+              value: uptimekuma-database
+            - name: UPTIME_KUMA_DB_PORT
+              value: '3306'
+            - name: UPTIME_KUMA_DB_NAME
+              value: uptimekuma
+            - name: UPTIME_KUMA_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: uptimekuma-database-user
+                  key: username
+            - name: UPTIME_KUMA_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: uptimekuma-database-user
+                  key: password
+          ports:
+            - containerPort: 3001
+              protocol: TCP
+              name: http
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          volumeMounts:
+            - mountPath: /app/data
+              name: uptimekuma-data
+  volumeClaimTemplates:
+    - metadata:
+        name: uptimekuma-data
+        labels:
+          app.kubernetes.io/component: 'application'
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 8Gi

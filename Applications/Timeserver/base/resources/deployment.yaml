@@ -1,0 +1,97 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: timeserver
+  labels:
+    app.kubernetes.io/component: 'application' # The component within the architecture
+  annotations:
+    configmap.reloader.stakater.com/reload: ''
+    secret.reloader.stakater.com/reload: ''
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: 'application' # The component within the architecture
+  replicas: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: 'application' # The component within the architecture
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 180
+      initContainers:
+        - name: fix-perms
+          image: busybox:0.0.0
+          command: ['sh', '-c', 'chown -R 100:101 /var/run/chrony /var/lib/chrony && chmod 700 /var/run/chrony /var/lib/chrony']
+          volumeMounts:
+            - name: chrony-drift
+              mountPath: /var/lib/chrony
+            - name: chrony-run
+              mountPath: /var/run/chrony
+      containers:
+        - name: chrony
+          image: ghcr.io/aessing/chronyd:0.0.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            readOnlyRootFilesystem: false
+          resources:
+            requests:
+              memory: 8Mi
+              cpu: 0.01
+            limits:
+              memory: 16Mi
+              cpu: 0.25
+          ports:
+            - containerPort: 123
+              protocol: UDP
+              name: ntp
+          startupProbe:
+            exec:
+              command: ['/usr/bin/chronyc', 'tracking']
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            exec:
+              command: ['/usr/bin/chronyc', 'tracking']
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command: ['/usr/bin/chronyc', 'tracking']
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          volumeMounts:
+            - name: chrony-config
+              mountPath: /etc/chrony/chrony.conf
+              subPath: chrony.conf
+              readOnly: true
+            - name: chrony-drift
+              mountPath: /var/lib/chrony
+            - name: chrony-run
+              mountPath: /var/run/chrony
+      volumes:
+        - name: chrony-config
+          configMap:
+            name: timeserver-config
+        - name: chrony-drift
+          emptyDir: {}
+        - name: chrony-run
+          emptyDir: {}

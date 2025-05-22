@@ -1,0 +1,119 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: uptimekuma-database
+  labels:
+    app.kubernetes.io/component: 'database'
+  annotations:
+    configmap.reloader.stakater.com/reload: ''
+    secret.reloader.stakater.com/reload: ''
+spec:
+  serviceName: uptimekuma-database
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: 'database'
+  replicas: 0
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Retain
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: 'database'
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 180
+      securityContext:
+        fsGroup: 999
+      containers:
+        - name: uptimekuma-database
+          image: mariadb:0.0.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            runAsUser: 999
+            runAsGroup: 999
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+            readOnlyRootFilesystem: false
+          resources:
+            requests:
+              cpu: 0.1
+              memory: 512Mi
+            limits:
+              cpu: 1
+              memory: 1024Mi
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: uptimekuma-database-root
+                  key: password
+            - name: MARIADB_DATABASE
+              value: uptimekuma
+            - name: MARIADB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: uptimekuma-database-user
+                  key: username
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: uptimekuma-database-user
+                  key: password
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+              name: mysql
+          lifecycle:
+            preStop:
+              exec:
+                command: ['/bin/sh', '-c', 'mysqladmin --protocol=socket --user=root --password=$MARIADB_ROOT_PASSWORD shutdown']
+          startupProbe:
+            exec:
+              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            exec:
+              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: uptimekuma-database
+  volumeClaimTemplates:
+    - metadata:
+        name: uptimekuma-database
+        labels:
+          app.kubernetes.io/component: 'database'
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 16Gi

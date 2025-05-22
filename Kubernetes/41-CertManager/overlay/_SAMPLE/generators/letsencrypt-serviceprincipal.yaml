@@ -1,0 +1,11 @@
+---
+apiVersion: builtin
+kind: SecretGenerator
+metadata:
+  name: letsencrypt-serviceprincipal
+  namespace: certmgr-system
+behavior: create
+options:
+  disableNameSuffixHash: true
+files:
+  - client-secret=./secrets/letsencrypt-serviceprincipal.txt

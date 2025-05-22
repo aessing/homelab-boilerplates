@@ -1,0 +1,76 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+sortOptions:
+  # If not specified, HelmChart will be deployed before HelmChartConfig - This can lead to unconfigured HelmChart deployments
+  order: fifo
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  - transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/component: storage
+      app.kubernetes.io/instance: longhorn
+      app.kubernetes.io/name: longhorn
+      app.kubernetes.io/part-of: system-services
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/secret-dashboard-auth.yaml
+  - ./generators/secret-azure-backup-store.yaml
+
+patches:
+  # https://github.com/longhorn/longhorn
+  - path: ./patches/version.json
+    target:
+      group: helm.cattle.io
+      version: v1
+      kind: HelmChart
+
+  - path: ./patches/certificate-dashboard.json
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+  - path: ./patches/helmchartconfig.yaml
+    target:
+      group: helm.cattle.io
+      version: v1
+      kind: HelmChartConfig
+  - path: ./patches/ingressroute-dashboard.json
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+  - path: ./patches/jobs-longhorn-job-backup.json
+    target:
+      group: longhorn.io
+      version: v1beta2
+      kind: RecurringJob
+      name: longhorn-job-backup
+  - path: ./patches/jobs-longhorn-job-snapshot.json
+    target:
+      group: longhorn.io
+      version: v1beta2
+      kind: RecurringJob
+      name: longhorn-job-snapshot
+  - path: ./patches/jobs-longhorn-job-trim.json
+    target:
+      group: longhorn.io
+      version: v1beta2
+      kind: RecurringJob
+      name: longhorn-job-trim
+  - path: ./patches/namespace.json
+    target:
+      labelSelector: 'kustomize-base=overlay'
+  - path: ./patches/storageclass.json
+    target:
+      group: storage.k8s.io
+      version: v1
+      kind: StorageClass

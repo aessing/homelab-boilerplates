@@ -1,0 +1,46 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: longhorn
+spec:
+  valuesContent: >-
+    persistence:
+      defaultClass: false
+      defaultFsType: ext4
+      defaultClassReplicaCount: ###NUMBER_OF_STORAGE_REPLICAS###
+      defaultDataLocality: 'best-effort'
+      defaultReplicaAutoBalance: 'best-effort'
+      reclaimPolicy: 'Delete'
+      migratable: false
+      removeSnapshotsDuringFilesystemTrim: 'ignored'
+    csi:
+      attacherReplicaCount: ###NUMBER_OF_REPLICAS###
+      provisionerReplicaCount: ###NUMBER_OF_REPLICAS###
+      resizerReplicaCount: ###NUMBER_OF_REPLICAS###
+      snapshotterReplicaCount: ###NUMBER_OF_REPLICAS###
+    defaultSettings:
+      storageOverProvisioningPercentage: 100
+      storageMinimalAvailablePercentage: 10
+      storageReservedPercentageForDefaultDisk: 10
+      replicaSoftAntiAffinity: false
+      allowVolumeCreationWithDegradedAvailability: false
+      defaultDataLocality: 'best-effort'
+      defaultReplicaCount: ###NUMBER_OF_REPLICAS###
+      deletingConfirmationFlag: false
+      upgradeChecker: true
+      allowCollectingLonghornUsageMetrics: false
+      replicaAutoBalance: 'best-effort'
+      concurrentAutomaticEngineUpgradePerNodeLimit: 3
+    defaultBackupStore:
+      backupTarget: '###AZURE_BLOB_STORAGE_URL###'
+      backupTargetCredentialSecret: 'longhorn-backup-secret-azure'
+      pollInterval: 0
+    longhornUI:
+      replicas: ###NUMBER_OF_REPLICAS###
+    longhornConversionWebhook:
+      replicas: ###NUMBER_OF_REPLICAS###
+    longhornAdmissionWebhook:
+      replicas: ###NUMBER_OF_REPLICAS###
+    longhornRecoveryBackend:
+      replicas: ###NUMBER_OF_REPLICAS###

@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ./resources/certificate.yaml
+  - ./resources/namespace.yaml
+  - ./resources/resource-quota.yaml
+  - ./resources/network-policy.yaml
+
+components:
+  - ../components/_application/
+  - ../components/_database/

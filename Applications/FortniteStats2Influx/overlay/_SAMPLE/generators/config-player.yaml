@@ -1,0 +1,12 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: fortnitestats-player
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: 'job'
+type: Opaque
+files:
+  - ./configs/player.txt

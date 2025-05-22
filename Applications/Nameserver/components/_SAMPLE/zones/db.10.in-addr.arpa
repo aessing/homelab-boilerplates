@@ -1,0 +1,24 @@
+$ORIGIN 10.in-addr.arpa.
+$TTL    3600
+
+@       IN      SOA     name.example.org. admin.example.org. (
+                                  2025052501         ; Serial
+                                      604800         ; Refresh
+                                       86400         ; Retry
+                                     2419200         ; Expire
+                                       86400 )       ; Negative Cache TTL
+;
+
+; -----------------------------------------------------------------------------
+; Common - NS records
+@                               3600    IN      NS      name01.example.org.
+@                               3600    IN      NS      name02.example.org.
+
+; -----------------------------------------------------------------------------
+; Records
+1.1.1                          3600    IN      PTR     router.example.org.
+11.1.2                         3600    IN      PTR     server.example.org.
+45.2.3                         3600    IN      PTR     whatever.example.org.
+
+; -----------------------------------------------------------------------------
+; EOF

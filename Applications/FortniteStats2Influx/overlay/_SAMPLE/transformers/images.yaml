@@ -1,0 +1,8 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: fortnitestats-imagetransformer
+imageTag:
+  name: ghcr.io/aessing/fortnitestats-2-influxdb
+  newTag: 0.2.1

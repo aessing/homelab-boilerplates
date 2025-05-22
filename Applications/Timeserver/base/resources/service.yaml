@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: timeserver
+  labels:
+    app.kubernetes.io/component: 'application' # The component within the architecture
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: '0.0.0.0'
+spec:
+  selector:
+    app.kubernetes.io/component: 'application' # The component within the architecture
+  ports:
+    - protocol: UDP
+      port: 123
+      targetPort: 123
+      name: ntp
+  type: LoadBalancer

@@ -1,0 +1,8 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: nameserver-imagetransformer
+imageTag:
+  name: ghcr.io/aessing/bind
+  newTag: 1.4.0

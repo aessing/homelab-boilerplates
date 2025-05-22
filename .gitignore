@@ -1,3 +1,21 @@
+# ----------------------- Boilerplate files ----------------------- #
+# Ignore _ToDo files
+_ToDo/
+
+# Ignore all Environment files (.env files) except _SAMPLE.env
+**/environments/*.env
+!**/environments/_SAMPLE.env
+
+# Ignore all kustomize overlays except _SAMPLE
+**/overlay/*
+!**/overlay/_SAMPLE/
+!**/overlay/_SAMPLE/**
+
+# Ignore all kustomize components except _SAMPLE
+**/components/*
+!**/components/_*/
+!**/components/_*/**
+
 # ----------------------------- macOS ----------------------------- #
 # General
 .DS_Store
