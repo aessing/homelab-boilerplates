@@ -1,30 +1,31 @@
-# Install DISPLAY Tool/Driver for UCTRONICS Rack Case
+# Install Display Tool/Driver for UCTRONICS RM0004 Rack Case
 
 ---
 
-https://github.com/UCTRONICS/SKU_RM0004
-https://github.com/UCTRONICS/UCTRONICS_RM0004_HA
-https://github.com/UCTRONICS/HomeAssistant
+### Links to the UCTRONICS RM0004 Repositries
+
+- https://github.com/UCTRONICS/SKU_RM0004
+- https://github.com/UCTRONICS/UCTRONICS_RM0004_HA
+- https://github.com/UCTRONICS/HomeAssistant
 
 ---
 
-If you use a UCTRONICS Rack Case with display, you will need to install the UCTRONICS display tool. First, copy the UCTRONICS display tool to the Raspberry Pi 4.
+If you’re using a UCTRONICS RM0004 Rack Case with a built-in display, you need to install and configure the UCTRONICS display tool on your Raspberry Pi 4.
+
+### Install the Display Tool
+
+First, copy the UCTRONICS display tool to the target location.
 
 ```bash
-mv ./display /usr/local/bin
-chmod 550 /usr/local/bin/display
-chown root:root /usr/local/bin/display
+sudo install -m 550 -o root -g root ./display /usr/local/bin/display
 ```
 
-After copying the display tool, create a service to start the display tool on boot.
+### Create a Systemd Service
+
+To ensure the display tool starts automatically at boot, create a systemd service.
 
 ```bash
-vi /etc/systemd/system/uctronics-display.service
-```
-
-The file should look like this.
-
-```service
+sudo tee /etc/systemd/system/uctronics-display.service > /dev/null << 'EOF'
 [Unit]
 Description=UCTRONICS Display
 
@@ -35,25 +36,42 @@ Type=simple
 
 [Install]
 WantedBy=multi-user.target
+EOF
 ```
 
-After creating the service, enable the service and reload the systemd daemon.
+Then reload systemd and enable the service:
 
 ```bash
-systemctl daemon-reload
-systemctl enable uctronics-display.service
+sudo systemctl daemon-reload
+sudo systemctl enable uctronics-display.service
 ```
 
-Edit your `/boot/firmware/config.txt` file...
+You can start it immediately with:
+
+```bash
+sudo systemctl start uctronics-display.service
+```
+
+### Configure Firmware
+
+To enable I²C and GPIO shutdown for the display, you need to modify the firmware configuration:
+
+1. Open the configuration file
 
 ```bash
 vi /boot/firmware/config.txt
 ```
 
-... and adde the following lines to the end of the file into the all section. Make sure that the lines are not duplicated.
+2. Add the following lines at the end of the file (make sure they are not already present)
 
-```config
+```ini
 [all]
 dtparam=i2c_arm=on,i2c_arm_baudrate=400000
 dtoverlay=gpio-shutdown,gpio_pin=4,active_low=1,gpio_pull=up
+```
+
+3. Save the file and reboot:
+
+```bash
+sudo reboot
 ```
