@@ -19,6 +19,9 @@
 
 set -u -o pipefail
 
+LOG_FILE="11-install-k3s.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 echo ""
 echo ""
 echo "# ============================================================================="
@@ -130,8 +133,21 @@ echo "# ------------------------------------------------------------------------
 echo ""
 echo " - Loading environment variables from '$ENV_FILE'"
 set -o allexport
-source "$ENV_FILE"
+if ! source "$ENV_FILE"; then
+  echo " - ERROR: Could not load environment file '$ENV_FILE'"
+  exit 1
+fi
 set +o allexport
+
+echo ""
+echo " - Validating required environment variables"
+REQUIRED_VARS=(ADMIN_IPS K3S_CHANNEL K3S_CLUSTER_TOKEN K3S_AGENT_TOKEN K3S_NODES_FIRST K3S_NODES_SERVERS K3S_TLSSAN_VIP K3S_CLUSTER_DOMAIN K3S_NETWORK_CLUSTER K3S_NETWORK_SERVICES K3S_NODE_CIDR_SIZE_IPV4 K3S_FLANNEL_BACKEND K3S_MAX_PODS K3S_KUBECONFIG_MODE K3S_SERVICE_DISABLE K3S_EMBEDDED_REGISTRY PSAD_INSTALLED)
+for var in "${REQUIRED_VARS[@]}"; do
+  if [ -z "${!var:-}" ]; then
+    echo " - ERROR: Required variable '$var' not set in environment file"
+    exit 1
+  fi
+done
 
 echo ""
 echo " - Setting some path variables"
@@ -311,13 +327,13 @@ for ip in $K3S_NODES_ALL; do
   ufw allow from "$ip" to any port 10250 proto tcp comment 'Allow communication between nodes for Kubelet metrics'
 done
 
-if [[ $K3S_FLANNEL_BACKEND == "vxlan" ]]; then
+if [[ "$K3S_FLANNEL_BACKEND" == "vxlan" ]]; then
   echo ""
   echo " - Allow communication between nodes for Flannel VXLAN"
   for ip in $K3S_NODES_ALL; do
     ufw allow from "$ip" to any port 8472 proto udp comment 'Allow communication between nodes for Flannel VXLAN'
   done
-elif [[ $K3S_FLANNEL_BACKEND == "wireguard-native" ]]; then
+elif [[ "$K3S_FLANNEL_BACKEND" == "wireguard-native" ]]; then
   echo ""
   echo " - Allow communication between nodes for Flannel Wireguard"
   for ip in $K3S_NODES_ALL; do
@@ -343,9 +359,13 @@ echo ""
 echo " - Allow routed traffic"
 ufw default allow routed
 
+echo ""
+echo " - Reload UFW"
+ufw reload
+
 # -------------------------------------------------------------------------------------
 
-if $PSAD_INSTALLED == "true"; then
+if [ "$PSAD_INSTALLED" = "true" ]; then
   echo ""
   echo ""
   echo "# -----------------------------------------------------------------------------"
@@ -355,15 +375,15 @@ if $PSAD_INSTALLED == "true"; then
   echo ""
   echo " - Configuring danger levels for cluster and service networks"
   for ip in $K3S_NODES_ALL; do
-    if ! [[ $ip == $SERVERIP ]]; then
-      echo "$ip   0;"  >> $PSAD_DL
+    if ! [[ "$ip" == "$SERVERIP" ]]; then
+      echo "$ip   0;"  >> "$PSAD_DL"
     fi
   done
   for cidr in $K3S_NETWORK_CLUSTER; do
-      echo "$cidr   0;"  >> $PSAD_DL
+      echo "$cidr   0;"  >> "$PSAD_DL"
   done
   for cidr in $K3S_NETWORK_SERVICES; do
-      echo "$cidr   0;"  >> $PSAD_DL
+      echo "$cidr   0;"  >> "$PSAD_DL"
   done
 
   echo ""
@@ -384,99 +404,99 @@ echo " - Create K3s configuration file"
 mkdir --mode=750 -p /etc/rancher/k3s
 if exists_in_list "$K3S_NODES_SERVERS" " " $SERVERIP; then
   # Cluster Options
-  echo "token: $K3S_CLUSTER_TOKEN" > $K3S_CONF
-  echo "agent-token: $K3S_AGENT_TOKEN" >> $K3S_CONF  
+  echo "token: $K3S_CLUSTER_TOKEN" > "$K3S_CONF"
+  echo "agent-token: $K3S_AGENT_TOKEN" >> "$K3S_CONF"
   if [ $K3S_NODES_SERVERS_COUNT -ge 2 ]; then
     if [[ $K3S_NODES_FIRST == $SERVERIP ]]; then
-      echo "cluster-init: true" >> $K3S_CONF
+      echo "cluster-init: true" >> "$K3S_CONF"
     else
-      echo "server: https://$K3S_NODES_FIRST:6443" >> $K3S_CONF
+      echo "server: https://$K3S_NODES_FIRST:6443" >> "$K3S_CONF"
     fi
   fi
 
   # Database options
-  echo "etcd-expose-metrics: false" >> $K3S_CONF
-  echo "etcd-snapshot-retention: 14" >> $K3S_CONF
-  echo "etcd-snapshot-schedule-cron: \"0 */12 * * *\"" >> $K3S_CONF
+  echo "etcd-expose-metrics: false" >> "$K3S_CONF"
+  echo "etcd-snapshot-retention: 14" >> "$K3S_CONF"
+  echo "etcd-snapshot-schedule-cron: \"0 */12 * * *\"" >> "$K3S_CONF"
 
   # Admin Kubeconfig Options
-  echo "write-kubeconfig-mode: $K3S_KUBECONFIG_MODE" >> $K3S_CONF
+  echo "write-kubeconfig-mode: $K3S_KUBECONFIG_MODE" >> "$K3S_CONF"
 
   # Listeners Options
-  echo "tls-san:" >> $K3S_CONF
-  echo "  - $K3S_CLUSTER_DOMAIN" >> $K3S_CONF
+  echo "tls-san:" >> "$K3S_CONF"
+  echo "  - $K3S_CLUSTER_DOMAIN" >> "$K3S_CONF"
   #for ip in $K3S_NODES_ALL; do
-  #    echo "  - $ip" >> $K3S_CONF
+  #    echo "  - $ip" >> "$K3S_CONF"
   #done  
   for ip in $K3S_TLSSAN_VIP; do
-      echo "  - $ip" >> $K3S_CONF
+      echo "  - $ip" >> "$K3S_CONF"
   done  
   
   # Secrets Encryption
-  echo "secrets-encryption: true" >> $K3S_CONF
+  echo "secrets-encryption: true" >> "$K3S_CONF"
 
   # Networking
-  echo "cluster-cidr:" >> $K3S_CONF
+  echo "cluster-cidr:" >> "$K3S_CONF"
   for cidr in $K3S_NETWORK_CLUSTER; do
-      echo "  - $cidr" >> $K3S_CONF
+      echo "  - $cidr" >> "$K3S_CONF"
   done
-  echo "service-cidr:" >> $K3S_CONF
+  echo "service-cidr:" >> "$K3S_CONF"
   for cidr in $K3S_NETWORK_SERVICES; do
-      echo "  - $cidr" >> $K3S_CONF
+      echo "  - $cidr" >> "$K3S_CONF"
   done
-  echo "cluster-domain: $K3S_CLUSTER_DOMAIN" >> $K3S_CONF
-  echo "flannel-backend: $K3S_FLANNEL_BACKEND" >> $K3S_CONF
+  echo "cluster-domain: $K3S_CLUSTER_DOMAIN" >> "$K3S_CONF"
+  echo "flannel-backend: $K3S_FLANNEL_BACKEND" >> "$K3S_CONF"
 
   # Kubernetes Components
   if [ -n "$K3S_SERVICE_DISABLE" ]; then
-    echo "disable:" >> $K3S_CONF
+    echo "disable:" >> "$K3S_CONF"
     for service in $K3S_SERVICE_DISABLE; do
-      echo "  - $service" >> $K3S_CONF
+      echo "  - $service" >> "$K3S_CONF"
     done
   fi
-  echo "disable-scheduler: false" >> $K3S_CONF
-  echo "disable-cloud-controller: false" >> $K3S_CONF
-  echo "disable-kube-proxy: false" >> $K3S_CONF
-  echo "disable-network-policy: false" >> $K3S_CONF
-  echo "disable-helm-controller: false" >> $K3S_CONF
-  echo "disable-apiserver: false" >> $K3S_CONF
-  echo "disable-controller-manager: false" >> $K3S_CONF
+  echo "disable-scheduler: false" >> "$K3S_CONF"
+  echo "disable-cloud-controller: false" >> "$K3S_CONF"
+  echo "disable-kube-proxy: false" >> "$K3S_CONF"
+  echo "disable-network-policy: false" >> "$K3S_CONF"
+  echo "disable-helm-controller: false" >> "$K3S_CONF"
+  echo "disable-apiserver: false" >> "$K3S_CONF"
+  echo "disable-controller-manager: false" >> "$K3S_CONF"
 
   # Kube API Server Options
-  echo "kube-apiserver-arg:" >> $K3S_CONF
-  echo "  - \"request-timeout=$K3S_API_SERVER_REQUEST_TIMEOUT\"" >> $K3S_CONF
+  echo "kube-apiserver-arg:" >> "$K3S_CONF"
+  echo "  - \"request-timeout=$K3S_API_SERVER_REQUEST_TIMEOUT\"" >> "$K3S_CONF"
 
   # Kube Controller Manager Options
-  echo "kube-controller-manager-arg:" >> $K3S_CONF
-  echo "  - 'terminated-pod-gc-threshold=$K3S_TERMINATED_POD_GC_THRESHOLD'" >> $K3S_CONF
+  echo "kube-controller-manager-arg:" >> "$K3S_CONF"
+  echo "  - 'terminated-pod-gc-threshold=$K3S_TERMINATED_POD_GC_THRESHOLD'" >> "$K3S_CONF"
   if [ -n "$K3S_NODE_CIDR_SIZE_IPV4" ]; then
-    echo "  - \"node-cidr-mask-size-ipv4=$K3S_NODE_CIDR_SIZE_IPV4\"" >> $K3S_CONF
+    echo "  - \"node-cidr-mask-size-ipv4=$K3S_NODE_CIDR_SIZE_IPV4\"" >> "$K3S_CONF"
   fi
 
   # Kubelet Options
-  echo "kubelet-arg:" >> $K3S_CONF
-  echo "  - \"max-pods=$K3S_MAX_PODS\"" >> $K3S_CONF
-  echo "  - 'streaming-connection-idle-timeout=$K3S_STREAMING_CONNECTION_IDLE_TIMEOUT'" >> $K3S_CONF
-  echo "  - \"tls-cipher-suites=$K3S_TLS_CIPHER_SUITES\"" >> $K3S_CONF
+  echo "kubelet-arg:" >> "$K3S_CONF"
+  echo "  - \"max-pods=$K3S_MAX_PODS\"" >> "$K3S_CONF"
+  echo "  - 'streaming-connection-idle-timeout=$K3S_STREAMING_CONNECTION_IDLE_TIMEOUT'" >> "$K3S_CONF"
+  echo "  - \"tls-cipher-suites=$K3S_TLS_CIPHER_SUITES\"" >> "$K3S_CONF"
 
   # Experimental Options
-  echo "embedded-registry: $K3S_EMBEDDED_REGISTRY" >> $K3S_CONF
+  echo "embedded-registry: $K3S_EMBEDDED_REGISTRY" >> "$K3S_CONF"
 
   # Other Options
-  echo "protect-kernel-defaults: true" >> $K3S_CONF
+  echo "protect-kernel-defaults: true" >> "$K3S_CONF"
 elif exists_in_list "$K3S_NODES_AGENTS" " " $SERVERIP; then
   # Cluster Options
   echo "token: $K3S_AGENT_TOKEN" > $K3S_CONF
-  echo "server: https://$K3S_NODES_FIRST:6443" >> $K3S_CONF
+  echo "server: https://$K3S_NODES_FIRST:6443" >> "$K3S_CONF"
 
   # Kubelet Options
-  echo "kubelet-arg:" >> $K3S_CONF
-  echo "  - \"max-pods=$K3S_MAX_PODS\"" >> $K3S_CONF
-  echo "  - 'streaming-connection-idle-timeout=$K3S_STREAMING_CONNECTION_IDLE_TIMEOUT'" >> $K3S_CONF
-  echo "  - \"tls-cipher-suites=$K3S_TLS_CIPHER_SUITES\"" >> $K3S_CONF
+  echo "kubelet-arg:" >> "$K3S_CONF"
+  echo "  - \"max-pods=$K3S_MAX_PODS\"" >> "$K3S_CONF"
+  echo "  - 'streaming-connection-idle-timeout=$K3S_STREAMING_CONNECTION_IDLE_TIMEOUT'" >> "$K3S_CONF"
+  echo "  - \"tls-cipher-suites=$K3S_TLS_CIPHER_SUITES\"" >> "$K3S_CONF"
 
   # Other Options
-  echo "protect-kernel-defaults: true" >> $K3S_CONF
+  echo "protect-kernel-defaults: true" >> "$K3S_CONF"
 else
   echo " - ERROR: This node is not in the list of K3S Servers or Agents"
   exit 1
@@ -485,12 +505,14 @@ fi
 # Create K3s registries file
 echo ""
 echo " - Create K3s registries file"
-echo 'mirrors:' > $K3S_REGISTRIES
-echo '  docker.io:' >> $K3S_REGISTRIES
-echo '  registry.k8s.io:' >> $K3S_REGISTRIES
-echo '  ghcr.io:' >> $K3S_REGISTRIES
-echo '  quay.io:' >> $K3S_REGISTRIES
-echo '  "*":' >> $K3S_REGISTRIES
+tee "$K3S_REGISTRIES" > /dev/null <<EOF
+mirrors:
+  docker.io:
+  registry.k8s.io:
+  ghcr.io:
+  quay.io:
+  "*":
+EOF
 
 # Install Wireguard if needed
 if [[ $K3S_FLANNEL_BACKEND == "wireguard-native" ]]; then
@@ -570,7 +592,7 @@ echo "# ------------------------------------------------------------------------
 
 echo ""
 echo " - Reboot"
-echo "   Please reboot your system to activate all changes."
+echo "   Please reboot your system to apply changes."
 
 # -------------------------------------------------------------------------------------
 

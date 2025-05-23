@@ -21,6 +21,9 @@
 
 set -u -o pipefail
 
+LOG_FILE="11-install-k3s.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 echo ""
 echo ""
 echo "# ============================================================================="
@@ -131,8 +134,21 @@ echo "# ------------------------------------------------------------------------
 echo ""
 echo " - Loading environment variables from '$ENV_FILE'"
 set -o allexport
-source "$ENV_FILE"
-set +o allexport
+if ! source "$ENV_FILE"; then
+  echo " - ERROR: Could not load environment file '$ENV_FILE'"
+  exit 1
+fi
+set +o allexportreboot
+
+echo ""
+echo " - Validating required environment variables"
+REQUIRED_VARS=(HOST_NAME HOST_CHASSIS HOST_DEPLOYMENT HOST_LOCATION ADMIN_EMAIL ADMIN_IPS ADMIN_PUBLICKEY ADMIN_USER NTP_SERVER NTP_FALLBACKSERVER TIMEZONE SSH_GROUP SSH_PORT ISSUE_SHORT ISSUE_TEXT MOTD_TEXT AIDE_ENABLE AUDIT_ENABLE PSAD_ENABLE)
+for var in "${REQUIRED_VARS[@]}"; do
+  if [ -z "${!var:-}" ]; then
+    echo " - ERROR: Required variable '$var' not set in environment file"
+    exit 1
+  fi
+done
 
 echo ""
 echo " - Setting some path variables"
