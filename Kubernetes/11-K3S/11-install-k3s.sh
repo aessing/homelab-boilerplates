@@ -169,7 +169,10 @@ echo ""
 echo " - Setting some other variables"
 K3S_TLS_CIPHER_SUITES="TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
 K3S_API_SERVER_REQUEST_TIMEOUT="300s"
-K3S_NODES_ALL="$K3S_NODES_SERVERS $K3S_NODES_AGENTS"
+K3S_NODES_ALL="$K3S_NODES_SERVERS"
+if [ -n "${K3S_NODES_AGENTS:-}" ]; then
+  K3S_NODES_ALL+=" $K3S_NODES_AGENTS"
+fi
 K3S_STREAMING_CONNECTION_IDLE_TIMEOUT="5m"
 K3S_TERMINATED_POD_GC_THRESHOLD="10"
 ETCD_VERSION=$(curl -sL https://api.github.com/repos/etcd-io/etcd/releases | jq -r ".[0].name")
@@ -299,26 +302,26 @@ if exists_in_list "$K3S_NODES_SERVERS" " " $SERVERIP; then
   echo ""
   echo " - Allow admins to connect to Kubernetes API Server"
   for ip in $ADMIN_IPS; do
-    ufw allow from "$ip" to any port 6443 proto tcp comment 'Allow admins to connect to Kubernetes API Server'
+    ufw allow from "$ip" to any port 6443 proto tcp comment 'K3S API TCP - Admins'
   done
 
   echo ""
   echo " - Allow server nodes to connect to Kubernetes API Server"
   for ip in $K3S_NODES_SERVERS; do
-    ufw allow from "$ip" to any port 6443 proto tcp comment 'Allow K3s Servers to connect to Kubernetes API Server'
+    ufw allow from "$ip" to any port 6443 proto tcp comment 'K3S API TCP - Server Nodes'
   done
 
   echo ""
   echo " - Allow agent nodes to connect to Kubernetes API Server"
   for ip in $K3S_NODES_AGENTS; do
-    ufw allow from "$ip" to any port 6443 proto tcp comment 'Allow K3s Agents to connect to Kubernetes API Server'
+    ufw allow from "$ip" to any port 6443 proto tcp comment 'K3S API TCP - Agent Nodes'
   done
 
   if [ $K3S_NODES_SERVERS_COUNT -ge 3 ]; then
     echo ""
     echo " - Allow embedded etcd communication"
     for ip in $K3S_NODES_SERVERS; do
-      ufw allow from "$ip" to any port 2379:2380 proto tcp comment 'Allow etcd communication between K3s Servers'
+      ufw allow from "$ip" to any port 2379:2380 proto tcp comment 'ETCD TCP - Server Nodes'
     done
   fi
 fi
@@ -326,42 +329,42 @@ fi
 echo ""
 echo " - Allow communication between nodes for embedded distributed registry (Spegel)"
 for ip in $K3S_NODES_ALL; do
-  ufw allow from "$ip" to any port 5001 proto tcp comment 'Allow communication between nodes for embedded distributed registry (Spegel)'
+  ufw allow from "$ip" to any port 5001 proto tcp comment 'Embedded distributed registry (Spegel) TCP - All Nodes'
 done
 
 echo ""
 echo " - Allow communication between nodes for Kubelet metrics"
 for ip in $K3S_NODES_ALL; do
-  ufw allow from "$ip" to any port 10250 proto tcp comment 'Allow communication between nodes for Kubelet metrics'
+  ufw allow from "$ip" to any port 10250 proto tcp comment 'Kubelet metrics - All Nodes'
 done
 
 if [[ "$K3S_FLANNEL_BACKEND" == "vxlan" ]]; then
   echo ""
   echo " - Allow communication between nodes for Flannel VXLAN"
   for ip in $K3S_NODES_ALL; do
-    ufw allow from "$ip" to any port 8472 proto udp comment 'Allow communication between nodes for Flannel VXLAN'
+    ufw allow from "$ip" to any port 8472 proto udp comment 'Flannel VXLAN UDP - All Nodes'
   done
 elif [[ "$K3S_FLANNEL_BACKEND" == "wireguard-native" ]]; then
   echo ""
   echo " - Allow communication between nodes for Flannel Wireguard"
   for ip in $K3S_NODES_ALL; do
-    ufw allow from "$ip" to any port 51820 proto udp comment 'Allow communication between nodes for Flannel Wireguard IPv4'
-    ufw allow from "$ip" to any port 51821 proto udp comment 'Allow communication between nodes for Flannel Wireguard IPv6'
+    ufw allow from "$ip" to any port 51820 proto udp comment 'Flannel Wireguard IPv4 UDP - All Nodes'
+    ufw allow from "$ip" to any port 51821 proto udp comment 'Flannel Wireguard IPv6 UDP - All Nodes'
   done
 fi
 
 echo ""
 echo " - Allow pods and services network communication"
-ufw allow from $K3S_NETWORK_CLUSTER to any comment 'Allow pod network communication'
-ufw allow in on cni0 from $K3S_NETWORK_CLUSTER comment 'Allow pod network communication'
-ufw allow in on kube-bridge from $K3S_NETWORK_CLUSTER comment 'Allow pod network communication'
-ufw allow from $K3S_NETWORK_SERVICES to any comment 'Allow service network communication'
-ufw allow in on cni0 from $K3S_NETWORK_SERVICES comment 'Allow pod network communication'
-ufw allow in on kube-bridge from $K3S_NETWORK_SERVICES comment 'Allow pod network communication'
-ufw allow in on cni0 comment 'Allow CNI network communication'
-ufw allow out on cni0 comment 'Allow CNI network communication'
-ufw allow in on flannel.1 comment 'Allow FLANNEL network communication'
-ufw allow out on flannel.1 comment 'Allow FLANNEL network communication'
+ufw allow from $K3S_NETWORK_CLUSTER to any comment 'POD communication - ANY'
+ufw allow in on cni0 from $K3S_NETWORK_CLUSTER comment 'POD communication - CNI0'
+ufw allow in on kube-bridge from $K3S_NETWORK_CLUSTER comment 'POD communication - KUBE-BRIDGE'
+ufw allow from $K3S_NETWORK_SERVICES to any comment 'Service communication - ANY'
+ufw allow in on cni0 from $K3S_NETWORK_SERVICES comment 'Service communication - CNI0'
+ufw allow in on kube-bridge from $K3S_NETWORK_SERVICES comment 'CNI communication - KUBE-BRIDGE'
+ufw allow in on cni0 comment 'Network IN - CNI0'
+ufw allow out on cni0 comment 'Network OUT - CNI0'
+ufw allow in on flannel.1 comment 'Network IN - FLANNEL.1'
+ufw allow out on flannel.1 comment 'Network OUT - FLANNEL.1'
 
 echo ""
 echo " - Allow routed traffic"

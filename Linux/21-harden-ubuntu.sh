@@ -1448,7 +1448,7 @@ ufw allow out on lo
 echo ""
 echo " - Allow admins to connect to SSH"
 for admin_ip in $ADMIN_IPS; do
-  ufw allow from $admin_ip to any port $SSH_PORT proto tcp comment 'Allow admins to connect to the server SSH'
+  ufw allow from $admin_ip to any port $SSH_PORT proto tcp comment 'SSH TCP - Admins'
 done
 
 echo ""

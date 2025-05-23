@@ -17,6 +17,9 @@
 
 set -u -o pipefail
 
+LOG_FILE="11-configure-firewall.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 echo ""
 echo ""
 echo "# ============================================================================="
@@ -126,8 +129,22 @@ echo "# ------------------------------------------------------------------------
 echo ""
 echo " - Loading environment variables from '$ENV_FILE'"
 set -o allexport
-source "$ENV_FILE"
+if ! source "$ENV_FILE"; then
+  echo " - ERROR: Could not load environment file '$ENV_FILE'"
+  exit 1
+fi
 set +o allexport
+
+echo ""
+echo " - Validating required environment variables"
+REQUIRED_VARS=(K3S_NODES_SERVERS)
+for var in "${REQUIRED_VARS[@]}"; do
+  if [ -z "${!var:-}" ]; then
+    echo " - ERROR: Required variable '$var' not set in environment file"
+    exit 1
+  fi
+done
+
 
 # -------------------------------------------------------------------------------------
 
@@ -139,11 +156,19 @@ echo "# ------------------------------------------------------------------------
 
 echo ""
 echo " - Allow K3S nodes to connect to each other for MetalLB"
-K3S_NODES_ALL="$K3S_NODES_SERVERS $K3S_NODES_AGENTS"
+K3S_NODES_ALL="$K3S_NODES_SERVERS"
+if [ -n "${K3S_NODES_AGENTS:-}" ]; then
+  K3S_NODES_ALL+=" $K3S_NODES_AGENTS"
+fi
+
 for ip in $K3S_NODES_ALL; do
-  ufw allow from "$ip" to any port 7946 proto tcp comment 'Allow K3S nodes to connect to each other for MetalLB'
-  ufw allow from "$ip" to any port 7946 proto udp comment 'Allow K3S nodes to connect to each other for MetalLB'
+  ufw allow from "$ip" to any port 7946 proto tcp comment 'MetalLB UDP - All Nodes'
+  ufw allow from "$ip" to any port 7946 proto udp comment 'MetalLB UDP - All Nodes'
 done
+
+echo ""
+echo " - Reloading UFW to apply all new rules"
+ufw reload
 
 # -------------------------------------------------------------------------------------
 
