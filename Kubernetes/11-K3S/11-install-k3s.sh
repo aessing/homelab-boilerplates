@@ -97,6 +97,14 @@ if ! lsb_release -i | grep -sq 'Ubuntu'; then
 fi
 
 echo ""
+echo " - Is jq installed?"
+if ! command -v jq &> /dev/null; then
+  echo " -  - 'jq' is required but not installed."
+  echo
+  exit 1
+fi
+
+echo ""
 echo " - Have you started the script with parameter?"
 if [ "$#" -ne 1 ]; then
   echo ""

@@ -18,6 +18,9 @@
 
 set -u -o pipefail
 
+LOG_FILE="11-install-kube-vip.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 echo ""
 echo ""
 echo "# ============================================================================="
@@ -91,6 +94,14 @@ if ! lsb_release -i | grep -sq 'Ubuntu'; then
 fi
 
 echo ""
+echo " - Is jq installed?"
+if ! command -v jq &> /dev/null; then
+  echo " -  - 'jq' is required but not installed."
+  echo
+  exit 1
+fi
+
+echo ""
 echo " - Have you started the script with parameter?"
 if [ "$#" -ne 1 ]; then
   echo ""
@@ -127,13 +138,26 @@ echo "# ------------------------------------------------------------------------
 echo ""
 echo " - Loading environment variables from '$ENV_FILE'"
 set -o allexport
-source "$ENV_FILE"
+if ! source "$ENV_FILE"; then
+  echo " - ERROR: Could not load environment file '$ENV_FILE'"
+  exit 1
+fi
 set +o allexport
 
 echo ""
+echo " - Validating required environment variables"
+REQUIRED_VARS=(K3S_NODES_SERVERS K3S_TLSSAN_VIP)
+for var in "${REQUIRED_VARS[@]}"; do
+  if [ -z "${!var:-}" ]; then
+    echo " - ERROR: Required variable '$var' not set in environment file"
+    exit 1
+  fi
+done
+
+echo ""
 echo " - Set some variables"
-for ip in "$K3S_NODES_SERVERS"; do
-  int=$(ip -o -4 addr list | awk -v ip="$ip" '$4 ~ "^"ip"/" {print $2}')
+for ip in $K3S_NODES_SERVERS; do
+  int=$(ip -4 route | grep "$ip" | awk '{print $3}')
   if [ -n "$int" ]; then
     INTERFACE=$int
     break
