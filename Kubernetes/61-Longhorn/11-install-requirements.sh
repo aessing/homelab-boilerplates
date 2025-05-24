@@ -23,6 +23,9 @@
 
 set -u -o pipefail
 
+LOG_FILE="11-install-requirements.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 echo ""
 echo ""
 echo "# ============================================================================="
@@ -84,16 +87,14 @@ echo " - Are you root?"
 if [ "$EUID" -ne 0 ]; then
   echo ""
   echo " - Not root or not enough privileges. Exiting."
-  echo
   exit 1
 fi
 
 echo ""
 echo " - Are you running Ubuntu?"
-if ! lsb_release -i | grep -sq 'Ubuntu'; then
+if [ "$(lsb_release -is 2>/dev/null)" != "Ubuntu" ]; then
   echo ""
   echo " - Ubuntu only. Exiting."
-  echo
   exit 1
 fi
 

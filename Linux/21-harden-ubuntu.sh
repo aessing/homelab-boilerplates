@@ -86,16 +86,14 @@ echo " - Are you root?"
 if [ "$EUID" -ne 0 ]; then
   echo ""
   echo " - Not root or not enough privileges. Exiting."
-  echo
   exit 1
 fi
 
 echo ""
 echo " - Are you running Ubuntu?"
-if ! lsb_release -i | grep -sq 'Ubuntu'; then
+if [ "$(lsb_release -is 2>/dev/null)" != "Ubuntu" ]; then
   echo ""
   echo " - Ubuntu only. Exiting."
-  echo
   exit 1
 fi
 
@@ -106,7 +104,6 @@ if [ "$#" -ne 1 ]; then
   echo " - Script needs environment file with variables as parameter."
   echo "   Usage: $0 <server-name> || <env-file-name-without-extension>"
   echo "   Exiting."
-  echo
   exit 1
 fi
 
@@ -119,7 +116,6 @@ if [ ! -f "$ENV_FILE" ]; then
   echo " - Script needs environment file with variables."
   echo "   File '$ENV_FILE' not found!"
   echo "   Exiting."
-  echo
   exit 1
 fi
 

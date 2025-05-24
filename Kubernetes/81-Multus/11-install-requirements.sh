@@ -23,6 +23,9 @@
 
 set -u -o pipefail
 
+LOG_FILE="11-install-requirements.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 echo ""
 echo ""
 echo "# ============================================================================="
@@ -60,6 +63,15 @@ cd "$SCRIPT_DIR" || {
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
+echo "# VARIABLES (`date '+%F %T.%N'`)"
+echo "# -----------------------------------------------------------------------------"
+APPARMOR_FILE="/etc/apparmor.d/busybox"
+
+# -------------------------------------------------------------------------------------
+
+echo ""
+echo ""
+echo "# -----------------------------------------------------------------------------"
 echo "# PERFORMING SOME CHECKS (`date '+%F %T.%N'`)"
 echo "# -----------------------------------------------------------------------------"
 
@@ -84,16 +96,29 @@ echo " - Are you root?"
 if [ "$EUID" -ne 0 ]; then
   echo ""
   echo " - Not root or not enough privileges. Exiting."
-  echo
   exit 1
 fi
 
 echo ""
 echo " - Are you running Ubuntu?"
-if ! lsb_release -i | grep -sq 'Ubuntu'; then
+if [ "$(lsb_release -is 2>/dev/null)" != "Ubuntu" ]; then
   echo ""
   echo " - Ubuntu only. Exiting."
-  echo
+  exit 1
+fi
+
+echo ""
+echo " - Is APPARMOR installed?"
+if ! [ -x "$(command -v apparmor_parser)" ]; then
+  echo ""
+  echo " - APPARMOR not installed. Exiting."
+  exit 1
+fi
+
+echo ""
+echo " - Check if APPARMOR busybox config exists"
+if [ ! -f "$APPARMOR_FILE" ]; then
+  echo " - Error: $APPARMOR_FILE not found."
   exit 1
 fi
 
@@ -107,19 +132,26 @@ echo "# ------------------------------------------------------------------------
 
 echo ""
 echo " - Adding some config line to APPARMOR busybox"
-sed -i '/  include if exists <local\/busybox>/a \
-\
-  # Required for MULTUS on K3S to deploy and run\
-  owner /etc/ld.so.cache** r,\
-  owner /opt/cni/bin/** r,\
-  owner /proc/** r,\
-  owner /host/opt/cni/bin/** mrw,\
-  owner /lib64/** mr,\
-  owner /usr/lib64/** mr,' "/etc/apparmor.d/busybox"
+APPARMOR_BLOCK="\
+  # Required for MULTUS on K3S to deploy and run
+  owner /etc/ld.so.cache** r,
+  owner /opt/cni/bin/** r,
+  owner /proc/** r,
+  owner /host/opt/cni/bin/** mrw,
+  owner /lib64/** mr,
+  owner /usr/lib64/** mr,"
+
+if ! grep -q "Required for MULTUS on K3S" "$APPARMOR_FILE"; then
+  sed -i '/  include if exists <local\/busybox>/a \
+'"$APPARMOR_BLOCK" "$APPARMOR_FILE"
+  echo " - AppArmor config updated."
+else
+  echo " - AppArmor config already contains required block."
+fi
 
 echo ""
 echo " - Parsing APPARMOR busybox config"
-apparmor_parser -r /etc/apparmor.d/busybox
+apparmor_parser -r "$APPARMOR_FILE"
 
 echo ""
 echo " - Reloading APPARMOR"
