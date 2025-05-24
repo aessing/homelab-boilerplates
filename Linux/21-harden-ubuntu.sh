@@ -21,6 +21,9 @@
 
 set -u -o pipefail
 
+LOG_FILE="11-install-k3s.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 echo ""
 echo ""
 echo "# ============================================================================="
@@ -83,16 +86,14 @@ echo " - Are you root?"
 if [ "$EUID" -ne 0 ]; then
   echo ""
   echo " - Not root or not enough privileges. Exiting."
-  echo
   exit 1
 fi
 
 echo ""
 echo " - Are you running Ubuntu?"
-if ! lsb_release -i | grep -sq 'Ubuntu'; then
+if [ "$(lsb_release -is 2>/dev/null)" != "Ubuntu" ]; then
   echo ""
   echo " - Ubuntu only. Exiting."
-  echo
   exit 1
 fi
 
@@ -103,7 +104,6 @@ if [ "$#" -ne 1 ]; then
   echo " - Script needs environment file with variables as parameter."
   echo "   Usage: $0 <server-name> || <env-file-name-without-extension>"
   echo "   Exiting."
-  echo
   exit 1
 fi
 
@@ -116,7 +116,6 @@ if [ ! -f "$ENV_FILE" ]; then
   echo " - Script needs environment file with variables."
   echo "   File '$ENV_FILE' not found!"
   echo "   Exiting."
-  echo
   exit 1
 fi
 
@@ -131,8 +130,21 @@ echo "# ------------------------------------------------------------------------
 echo ""
 echo " - Loading environment variables from '$ENV_FILE'"
 set -o allexport
-source "$ENV_FILE"
-set +o allexport
+if ! source "$ENV_FILE"; then
+  echo " - ERROR: Could not load environment file '$ENV_FILE'"
+  exit 1
+fi
+set +o allexportreboot
+
+echo ""
+echo " - Validating required environment variables"
+REQUIRED_VARS=(HOST_NAME HOST_CHASSIS HOST_DEPLOYMENT HOST_LOCATION ADMIN_EMAIL ADMIN_IPS ADMIN_PUBLICKEY ADMIN_USER NTP_SERVER NTP_FALLBACKSERVER TIMEZONE SSH_GROUP SSH_PORT ISSUE_SHORT ISSUE_TEXT MOTD_TEXT AIDE_ENABLE AUDIT_ENABLE PSAD_ENABLE)
+for var in "${REQUIRED_VARS[@]}"; do
+  if [ -z "${!var:-}" ]; then
+    echo " - ERROR: Required variable '$var' not set in environment file"
+    exit 1
+  fi
+done
 
 echo ""
 echo " - Setting some path variables"
@@ -1432,7 +1444,7 @@ ufw allow out on lo
 echo ""
 echo " - Allow admins to connect to SSH"
 for admin_ip in $ADMIN_IPS; do
-  ufw allow from $admin_ip to any port $SSH_PORT proto tcp comment 'Allow admins to connect to the server SSH'
+  ufw allow from $admin_ip to any port $SSH_PORT proto tcp comment 'SSH TCP - Admins'
 done
 
 echo ""

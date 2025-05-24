@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+sortOptions:
+  # If not specified, HelmChart will be deployed before HelmChartConfig - This can lead to unconfigured HelmChart deployments
+  order: fifo
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  - transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/component: loadbalancer
+      app.kubernetes.io/instance: metallb
+      app.kubernetes.io/name: metallb
+      app.kubernetes.io/part-of: system-services
+
+resources:
+  - ../../base
+
+patches:
+  # https://github.com/metallb/metallb
+  - path: ./patches/version.json
+    target:
+      group: helm.cattle.io
+      version: v1
+      kind: HelmChart
+  - path: ./patches/ip-range.json
+    target:
+      group: metallb.io
+      version: v1beta1
+      kind: IPAddressPool
+      name: default-pool

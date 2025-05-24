@@ -1,0 +1,9 @@
+[
+  { "op": "replace", "path": "/spec/acme/email", "value": "###_ADMIN_EMAIL_ADDRESS_###" },
+  { "op": "replace", "path": "/spec/acme/solvers/0/dns01/azureDNS/clientID", "value": "###_SERVICE_PRINCIPAL_CLIENT_ID_###" },
+  { "op": "replace", "path": "/spec/acme/solvers/0/dns01/azureDNS/environment", "value": "AzurePublicCloud" },
+  { "op": "replace", "path": "/spec/acme/solvers/0/dns01/azureDNS/hostedZoneName", "value": "###_FQDN_OF_DNS_ZONE_###" },
+  { "op": "replace", "path": "/spec/acme/solvers/0/dns01/azureDNS/resourceGroupName", "value": "###_AZURE_RESOURCE_GROUP_NAME_###" },
+  { "op": "replace", "path": "/spec/acme/solvers/0/dns01/azureDNS/subscriptionID", "value": "###_AZURE_SUBSCRIPTION_ID_###" },
+  { "op": "replace", "path": "/spec/acme/solvers/0/dns01/azureDNS/tenantID", "value": "###_AZURE_TENANT_ID_###" }
+]

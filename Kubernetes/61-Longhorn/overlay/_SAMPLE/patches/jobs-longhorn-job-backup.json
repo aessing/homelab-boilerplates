@@ -1,0 +1,4 @@
+[
+  { "op": "replace", "path": "/spec/cron", "value": "###_CRON_STYLE_SCHEDULE_###" },
+  { "op": "replace", "path": "/spec/retain", "value": ###_NUMBER_OF_BACKUPS_### }
+]

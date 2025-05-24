@@ -1,0 +1,15 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: metallb
+spec:
+  valuesContent: |-
+    rbac:
+      create: true
+    speaker:
+      frr:
+        enabled: false
+    crds:
+      enabled: true
+      validationFailurePolicy: Fail

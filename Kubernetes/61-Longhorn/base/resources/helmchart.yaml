@@ -1,0 +1,10 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: longhorn
+spec:
+  repo: https://charts.longhorn.io
+  chart: longhorn
+  helmVersion: v3
+  bootstrap: true
