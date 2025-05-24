@@ -132,20 +132,21 @@ echo "# ------------------------------------------------------------------------
 
 echo ""
 echo " - Adding some config line to APPARMOR busybox"
-APPARMOR_BLOCK="\
+APPARMOR_BLOCK='
   # Required for MULTUS on K3S to deploy and run
   owner /etc/ld.so.cache** r,
   owner /opt/cni/bin/** r,
   owner /proc/** r,
   owner /host/opt/cni/bin/** mrw,
   owner /lib64/** mr,
-  owner /usr/lib64/** mr,"
+  owner /usr/lib64/** mr,'
 
 if ! grep -q "Required for MULTUS on K3S" "$APPARMOR_FILE"; then
-  sed -i '/  include if exists <local\/busybox>/a \
-'"$APPARMOR_BLOCK" "$APPARMOR_FILE"
+  sed -i "/  include if exists <local\/busybox>/r /dev/stdin" "$APPARMOR_FILE" <<<"$APPARMOR_BLOCK"
+  echo ""
   echo " - AppArmor config updated."
 else
+  echo ""
   echo " - AppArmor config already contains required block."
 fi
 
