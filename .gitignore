@@ -11,6 +11,11 @@ _ToDo/
 !**/overlay/_SAMPLE/
 !**/overlay/_SAMPLE/**
 
+# Ignore all kustomize overlays except _SAMPLE
+**/components/*
+!**/components/_SAMPLE/
+!**/components/_SAMPLE/**
+
 # ----------------------------- macOS ----------------------------- #
 # General
 .DS_Store

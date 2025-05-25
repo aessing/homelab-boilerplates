@@ -1,0 +1,88 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nameserver
+  annotations:
+    configmap.reloader.stakater.com/reload: ''
+    secret.reloader.stakater.com/reload: 'nameserver-certificate'
+spec:
+  replicas: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  template:
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: bind
+          image: ghcr.io/aessing/bind:0.0.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: 16Mi
+              cpu: 0.02
+            limits:
+              memory: 32Mi
+              cpu: 0.1
+          ports:
+            - containerPort: 53
+              protocol: TCP
+              name: bind-tcp
+            - containerPort: 53
+              protocol: UDP
+              name: bind-udp
+            - containerPort: 443
+              protocol: TCP
+              name: https
+            - containerPort: 853
+              protocol: TCP
+              name: bind-dot
+          startupProbe:
+            exec:
+              command: ['/usr/bin/dig', '@127.0.0.1', 'localhost']
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            exec:
+              command: ['/usr/bin/dig', '@127.0.0.1', 'localhost']
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command: ['/usr/bin/dig', '@127.0.0.1', 'localhost']
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          volumeMounts:
+            - name: bind-config-vol
+              mountPath: /etc/bind/named.conf
+              subPath: named.conf
+              readOnly: true
+            - name: bind-zones-vol
+              mountPath: /var/lib/bind/zones
+              readOnly: true
+            - name: bind-certificate-vol
+              mountPath: /etc/bind/cert
+              readOnly: true
+      volumes:
+        - name: bind-config-vol
+          configMap:
+            name: nameserver-config
+        - name: bind-zones-vol
+          configMap:
+            name: nameserver-zones
+        - name: bind-certificate-vol
+          secret:
+            secretName: nameserver-certificate
