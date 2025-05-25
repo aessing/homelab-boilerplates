@@ -17,6 +17,17 @@ spec:
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 60
+      securityContext:
+        fsGroup: 101
+      initContainers:
+        - name: fix-perms
+          image: busybox:0.0.0
+          command: ['sh', '-c', 'chown -R 100:101 /run/chrony /var/lib/chrony && chmod 700 /run/chrony /var/lib/chrony']
+          volumeMounts:
+            - name: chrony-drift
+              mountPath: /var/lib/chrony
+            - name: chrony-run
+              mountPath: /run/chrony
       containers:
         - name: chrony
           image: ghcr.io/aessing/chronyd:0.0.0
@@ -28,11 +39,6 @@ spec:
             limits:
               memory: 16Mi
               cpu: 0.1
-          #securityContext:
-          #  capabilities:
-          #    add: ["SYS_TIME"]
-          #  runAsNonRoot: true
-          #  allowPrivilegeEscalation: false
           ports:
             - containerPort: 123
               protocol: UDP
