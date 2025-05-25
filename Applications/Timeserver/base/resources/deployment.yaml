@@ -28,6 +28,11 @@ spec:
             limits:
               memory: 16Mi
               cpu: 0.1
+          #securityContext:
+          #  capabilities:
+          #    add: ["SYS_TIME"]
+          #  runAsNonRoot: true
+          #  allowPrivilegeEscalation: false
           ports:
             - containerPort: 123
               protocol: UDP
@@ -61,7 +66,15 @@ spec:
               mountPath: /etc/chrony/chrony.conf
               subPath: chrony.conf
               readOnly: true
+            - name: chrony-drift
+              mountPath: /var/lib/chrony
+            - name: chrony-run
+              mountPath: /run/chrony
       volumes:
         - name: chrony-config
           configMap:
             name: timeserver-config
+        - name: chrony-drift
+          emptyDir: {}
+        - name: chrony-run
+          emptyDir: {}
