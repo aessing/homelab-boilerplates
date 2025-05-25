@@ -5,7 +5,7 @@ metadata:
   name: timeserver-replicatransformer
 replica:
   name: timeserver
-  count: NUMBER_OF_REPLICAS
+  count: ###NUMBER_OF_REPLICAS###
 fieldSpecs:
   - path: spec/replicas
     create: true

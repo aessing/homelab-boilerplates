@@ -23,10 +23,10 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              memory: 4Mi
+              memory: 8Mi
               cpu: 0.01
             limits:
-              memory: 8Mi
+              memory: 16Mi
               cpu: 0.1
           ports:
             - containerPort: 123
@@ -43,19 +43,19 @@ spec:
           readinessProbe:
             exec:
               command: ['/usr/bin/chronyc', 'tracking']
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 3
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 3
           livenessProbe:
             exec:
               command: ['/usr/bin/chronyc', 'tracking']
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 3
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 5
             successThreshold: 1
-            failureThreshold: 3
+            failureThreshold: 5
           volumeMounts:
             - name: chrony-config
               mountPath: /etc/chrony/chrony.conf

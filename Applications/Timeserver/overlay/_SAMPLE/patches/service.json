@@ -1,1 +1,1 @@
-[{ "op": "replace", "path": "/metadata/annotations/metallb.universe.tf~1loadBalancerIPs", "value": "IP_ADDRESS_FOR_SERVICE_FROM_METALLB_IP_RANGE" }]
+[{ "op": "replace", "path": "/metadata/annotations/metallb.universe.tf~1loadBalancerIPs", "value": "###IP_ADDRESS_FOR_SERVICE_FROM_METALLB_IP_RANGE###" }]
