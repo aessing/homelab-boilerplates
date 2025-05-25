@@ -1,0 +1,33 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-production-default
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-production-default-accountkey
+    solvers:
+      - dns01:
+          azureDNS:
+            clientSecretSecretRef:
+              name: letsencrypt-serviceprincipal
+              key: client-secret
+
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging-default
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-staging-default-accountkey
+    solvers:
+      - dns01:
+          azureDNS:
+            clientSecretSecretRef:
+              name: letsencrypt-serviceprincipal
+              key: client-secret

@@ -1,0 +1,27 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: ipallowlist-admin
+  labels:
+    kustomize-base: overlay
+spec:
+  ipAllowList:
+    sourceRange:
+      -  ###_IP_ADRESS/CIDRANGE_###
+      -  ###_IP_ADRESS/CIDRANGE_###
+      -  ###_IP_ADRESS/CIDRANGE_###
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: MiddlewareTCP
+metadata:
+  name: ipallowlist-admin
+  labels:
+    kustomize-base: overlay
+spec:
+  ipAllowList:
+    sourceRange:
+      -  ###_IP_ADRESS/CIDRANGE_###
+      -  ###_IP_ADRESS/CIDRANGE_###
+      -  ###_IP_ADRESS/CIDRANGE_###

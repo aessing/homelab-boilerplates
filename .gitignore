@@ -11,7 +11,7 @@ _ToDo/
 !**/overlay/_SAMPLE/
 !**/overlay/_SAMPLE/**
 
-# Ignore all kustomize overlays except _SAMPLE
+# Ignore all kustomize components except _SAMPLE
 **/components/*
 !**/components/_SAMPLE/
 !**/components/_SAMPLE/**

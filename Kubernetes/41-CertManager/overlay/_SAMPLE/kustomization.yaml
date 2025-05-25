@@ -1,0 +1,39 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+sortOptions:
+  # If not specified, HelmChart will be deployed before HelmChartConfig - This can lead to unconfigured HelmChart deployments
+  order: fifo
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  - transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/component: certificates
+      app.kubernetes.io/instance: cert-manager
+      app.kubernetes.io/name: cert-manager
+      app.kubernetes.io/part-of: system-services
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/letsencrypt-serviceprincipal.yaml
+
+patches:
+  # https://github.com/cert-manager/cert-manager
+  - path: ./patches/version.json
+    target:
+      group: helm.cattle.io
+      version: v1
+      kind: HelmChart
+  - path: ./patches/clusterissuers-default.json
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: ClusterIssuer
+      name: letsencrypt-.*-default

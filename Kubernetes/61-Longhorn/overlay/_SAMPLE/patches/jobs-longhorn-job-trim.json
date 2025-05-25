@@ -1,0 +1,1 @@
+[{ "op": "replace", "path": "/spec/cron", "value": "###_CRON_STYLE_SCHEDULE_###" }]

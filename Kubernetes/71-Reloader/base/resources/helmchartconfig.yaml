@@ -1,0 +1,16 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: reloader
+spec:
+  valuesContent: |-
+    fullnameOverride: 'reloader'
+    reloader:
+      ignoreNamespaces: 'certmgr-system,kube-node-lease,kube-public,kube-system,longhorn-system,metallb-system,multus-system,reloader-system,traefik-system' # Comma separated list of namespaces to ignore
+      namespaceSelector: 'reloader=true' # Comma separated list of k8s label selectors for namespaces selection
+      resourceLabelSelector: 'reloader=true' # Comma separated list of k8s label selectors for configmap/secret selection
+      watchGlobally: true
+      enableHA: false # Set to true to enable leadership election allowing you to run multiple replicas
+      deployment:
+        replicas: 1

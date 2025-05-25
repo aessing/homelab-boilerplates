@@ -1,0 +1,23 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: CHANGE_ME
+      kind: Rule
+      middlewares:
+        - name: chain-admin
+          namespace: traefik-system
+        - name: traefik-dashboard-basicauth
+          namespace: traefik-system
+      services:
+        - name: api@internal
+          kind: TraefikService
+  tls:
+    secretName: traefik-dashboard-certificate

@@ -1,8 +1,8 @@
-![Banner of the repository](media/banner.png)
+![Banner of the repository](.github/media/banner.jpg)
 
-# Andre’s Boilerplate Repository
+# Andre’s Homelab Boilerplates
 
-Welcome to my personal collection of boilerplates and configuration templates!
+Welcome to my personal collection of boilerplates and configuration templates from my Homelab!
 This repository serves as a starting point for a variety of tools, technologies, and projects I frequently work with.
 
 You’ll find ready-to-use templates for different stacks and scenarios — from development environments to deployment setups. These boilerplates aim to speed up project bootstrapping and maintain consistency across projects.
