@@ -5,9 +5,6 @@ metadata:
   name: fortnitestats
   labels:
     app.kubernetes.io/component: 'job'
-  annotations:
-    configmap.reloader.stakater.com/reload: ''
-    secret.reloader.stakater.com/reload: ''
 spec:
   schedule: '*/5 * * * *' # every five minutes
   jobTemplate:
@@ -35,10 +32,10 @@ spec:
                 readOnlyRootFilesystem: true
               resources:
                 requests:
-                  cpu: 0.1
+                  cpu: 0.15
                   memory: 32Mi
                 limits:
-                  cpu: 0.2
+                  cpu: 0.25
                   memory: 64Mi
               env:
                 - name: FORTNITE_API_TOKEN
