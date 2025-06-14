@@ -1,0 +1,64 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailrise
+  labels:
+    app.kubernetes.io/component: 'application' # The component within the architecture
+  annotations:
+    configmap.reloader.stakater.com/reload: ''
+    secret.reloader.stakater.com/reload: 'mailrise-certificate'
+spec:
+  replicas: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: 'application' # The component within the architecture
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 180
+      securityContext:
+        fsGroup: 999
+      containers:
+        - name: mailrise
+          image: ghcr.io/yoryan/mailrise:0.0.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            seccompProfile:
+              type: RuntimeDefault
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 0.02
+            limits:
+              memory: 64Mi
+              cpu: 0.25
+          ports:
+            - containerPort: 465
+              protocol: TCP
+              name: mailsecure
+          volumeMounts:
+            - name: mailrise-config-vol
+              mountPath: /etc/mailrise.conf
+              subPath: mailrise.conf
+              readOnly: true
+            - name: mailrise-certificate-vol
+              mountPath: /etc/mailrise/cert
+              readOnly: true
+      volumes:
+        - name: mailrise-config-vol
+          configMap:
+            name: mailrise-config
+        - name: mailrise-certificate-vol
+          secret:
+            secretName: mailrise-certificate

@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mailrise
+  labels:
+    reloader.stakater.com/reload: 'enabled'
