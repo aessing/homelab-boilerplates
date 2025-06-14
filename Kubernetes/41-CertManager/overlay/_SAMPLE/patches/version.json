@@ -1,1 +1,1 @@
-[{ "op": "replace", "path": "/spec/version", "value": "v1.17.2" }]
+[{ "op": "replace", "path": "/spec/version", "value": "v1.18.0" }]
