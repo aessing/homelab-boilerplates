@@ -189,10 +189,46 @@ sudo reboot
 
 ## Root Partition not extended
 
+### For Disk <= 2TB
+
 In rare cases the root partition may not be automatically extended to use the full disk space available on the SD card or SSD. If this happens, you can manually extend the root partition using the `growpart` command.
 
 ```bash
 sudo growpart /dev/sda 2
+```
+
+Afterwards, you can resize the filesystem to use the newly extended partition:
+
+```bash
+sudo resize2fs /dev/sda2
+```
+
+### For Disk > 2TB
+
+The `growpart` command may not work for disks larger than 2TB. In this case, you can use the `parted` command to resize the partition.
+
+First, check the current partition layout:
+
+```bash
+sudo parted /dev/sda print
+```
+
+If the second partition (usually `/dev/sda2`) does not occupy the full disk space, you can resize it with the following command to extend it to the maximum size possible (2TB limit for MBR partitioning):
+
+```bash
+sudo parted /dev/sda resizepart 2 4294967295s
+```
+
+Tell the system to re-read the partition table:
+
+```bash
+sudo partprobe
+```
+
+After resizing the partition, you can then resize the filesystem:
+
+```bash
+sudo resize2fs /dev/sda2
 ```
 
 Afterwards, you can resize the filesystem to use the newly extended partition:
