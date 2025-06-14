@@ -4,4 +4,4 @@ kind: Namespace
 metadata:
   name: nameserver
   labels:
-    reloader.stakater.com/reload: 'disabled'
+    reloader.stakater.com/reload: 'enabled'
