@@ -16,6 +16,10 @@ labels:
 resources:
   - ../../base
 
+generators:
+  - ./generators/secret-mailrise-services.yaml
+  - ./generators/secret-mailrise-users.yaml
+
 patches:
   - path: ./patches/certificate.json
     target:
@@ -38,4 +42,4 @@ transformers:
   - ./transformers/replicas.yaml
 
 components:
-  - ../../components/_SAMPLE
+  - ../../components/internal

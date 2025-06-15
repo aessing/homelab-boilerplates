@@ -47,6 +47,11 @@ spec:
             - containerPort: 465
               protocol: TCP
               name: mailsecure
+          envFrom:
+            - secretRef:
+                name: mailrise-services
+            - secretRef:
+                name: mailrise-users
           volumeMounts:
             - name: mailrise-config-vol
               mountPath: /etc/mailrise.conf

@@ -5,7 +5,7 @@ metadata:
   name: mailrise-replicatransformer
 replica:
   name: mailrise
-  count: ###NUMBER_OF_REPLICAS###
+  count: 1
 fieldSpecs:
   - path: spec/replicas
     create: true
