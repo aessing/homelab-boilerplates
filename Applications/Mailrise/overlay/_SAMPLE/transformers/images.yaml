@@ -1,0 +1,8 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: mailrise-imagetransformer
+imageTag:
+  name: ghcr.io/yoryan/mailrise
+  newTag: latest
