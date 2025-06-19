@@ -5,6 +5,8 @@ metadata:
   name: influxdb
   labels:
     app.kubernetes.io/component: 'security'
+  annotations:
+    reloader.stakater.com/match: 'true' # Marks the config/secret as eligible for reload in search mode
 spec:
   secretName: influxdb-certificate
   # 90d certificate lifetime
