@@ -53,10 +53,10 @@ spec:
           resources:
             requests:
               cpu: 0.1
-              memory: 1Gi
+              memory: 512Mi
             limits:
-              cpu: 2
-              memory: 2Gi
+              cpu: 1
+              memory: 1Gi
           env:
             - name: INFLUXD_REPORTING_DISABLED
               value: 'true'

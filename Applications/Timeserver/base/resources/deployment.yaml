@@ -50,11 +50,11 @@ spec:
             readOnlyRootFilesystem: false
           resources:
             requests:
-              memory: 8Mi
+              memory: 4Mi
               cpu: 0.01
             limits:
-              memory: 16Mi
-              cpu: 0.25
+              memory: 8Mi
+              cpu: 0.1
           ports:
             - containerPort: 123
               protocol: UDP

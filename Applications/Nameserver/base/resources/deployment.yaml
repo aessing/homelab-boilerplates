@@ -38,11 +38,11 @@ spec:
             readOnlyRootFilesystem: false
           resources:
             requests:
-              memory: 32Mi
+              memory: 16Mi
               cpu: 0.02
             limits:
-              memory: 64Mi
-              cpu: 0.25
+              memory: 32Mi
+              cpu: 0.1
           ports:
             - containerPort: 53
               protocol: TCP
