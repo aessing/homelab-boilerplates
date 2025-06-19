@@ -5,7 +5,7 @@ metadata:
   name: uptimekuma-replicatransformer
 replica:
   name: uptimekuma
-  count: ###NUMBER_OF_REPLICAS(1)###
+  count: 1
 fieldSpecs:
   - path: spec/replicas
     create: false
@@ -26,7 +26,7 @@ metadata:
   name: uptimekuma-database-replicatransformer
 replica:
   name: uptimekuma-database
-  count: ###NUMBER_OF_REPLICAS(1)###
+  count: 1
 fieldSpecs:
   - path: spec/replicas
     create: false
