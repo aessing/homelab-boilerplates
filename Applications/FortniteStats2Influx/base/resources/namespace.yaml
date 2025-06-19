@@ -4,4 +4,5 @@ kind: Namespace
 metadata:
   name: fortnitestats
   labels:
-    reloader.stakater.com/reload: 'disabled'
+    # Not needed for a cronjob
+    reloader.stakater.com/reload: 'disabled' # Enables reloader for this namespace
