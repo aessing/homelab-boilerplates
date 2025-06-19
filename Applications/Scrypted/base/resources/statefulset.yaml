@@ -137,4 +137,4 @@ spec:
         storageClassName: longhorn-retain
         resources:
           requests:
-            storage: 1Gi
+            storage: 0Gi

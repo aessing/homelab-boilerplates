@@ -4,4 +4,4 @@ kind: Namespace
 metadata:
   name: timeserver
   labels:
-    reloader.stakater.com/reload: 'disabled'
+    reloader.stakater.com/reload: 'disabled' # Enables reloader for this namespace

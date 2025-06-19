@@ -5,7 +5,7 @@ metadata:
   name: influxdb-replicatransformer
 replica:
   name: influxdb
-  count: ###NUMBER_OF_REPLICAS(1)###
+  count: 1
 fieldSpecs:
   - path: spec/replicas
     create: false

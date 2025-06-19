@@ -11,7 +11,7 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 2.0.0-beta-rootless.2 # The current version of the application
+      app.kubernetes.io/version: 2.0.0-beta-rootless.3 # The current version of the application
 
 resources:
   - ../../base
@@ -31,6 +31,18 @@ patches:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
+  - path: ./patches/pvc-application.json
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: uptimekuma
+  - path: ./patches/pvc-database.json
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: uptimekuma-database
   - path: ./patches/resource-quota.json
     target:
       version: v1

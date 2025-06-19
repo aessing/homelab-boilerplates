@@ -5,8 +5,17 @@ metadata:
   name: influxdb
   labels:
     app.kubernetes.io/component: 'security'
+  annotations:
+    # Only used with Traefik Ingress Controller.
+    reloader.stakater.com/match: 'false' # Marks the config/secret as eligible for reload in search mode
 spec:
   secretName: influxdb-certificate
+  secretTemplate:
+    labels:
+      app.kubernetes.io/component: 'security' # The component within the architecture
+    annotations:
+      # Only used with Traefik Ingress Controller.
+      reloader.stakater.com/match: 'false' # Marks the config/secret as eligible for reload in search mode
   # 90d certificate lifetime
   duration: 2160h
   # 15d renew before cert gets expires

@@ -1,0 +1,14 @@
+[
+  {
+    "comment": "Config Volume",
+    "op": "replace",
+    "path": "/spec/volumeClaimTemplates/0/spec/resources/requests/storage",
+    "value": "1Gi"
+  },
+  {
+    "comment": "Data Volume",
+    "op": "replace",
+    "path": "/spec/volumeClaimTemplates/1/spec/resources/requests/storage",
+    "value": "8Gi"
+  }
+]
