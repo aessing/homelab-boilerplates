@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scrypted
+  labels:
+    app.kubernetes.io/component: 'application'
+spec:
+  selector:
+    app.kubernetes.io/component: 'application'
+  clusterIP: None
+  ports:
+    - protocol: TCP
+      port: 10080
+      targetPort: 10080
+      name: http
+    - protocol: TCP
+      port: 10443
+      targetPort: 10443
+      name: https
+  type: ClusterIP

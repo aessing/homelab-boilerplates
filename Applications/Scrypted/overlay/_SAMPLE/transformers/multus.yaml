@@ -1,0 +1,23 @@
+---
+- op: replace
+  path: /spec/config
+  value: |
+    {
+      "cniVersion": "0.3.1",
+      "type": "ipvlan",
+      "master": "###INTERFACE_NAME###",
+      "mode": "l2",
+      "ipam": {
+        "type": "static",
+        "addresses": [
+          {
+            "address": "0.0.0.0/0",
+            "gateway": "0.0.0.0"
+          }
+        ],
+        "routes": [
+          { "dst": "0.0.0.0/0" },
+          { "dst": "0.0.0.0/0" }
+        ]
+      }
+    }
