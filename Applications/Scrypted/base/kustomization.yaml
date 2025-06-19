@@ -17,5 +17,7 @@ configMapGenerator:
     options:
       labels:
         app.kubernetes.io/component: 'application' # The component within the architecture
+      annotations:
+        reloader.stakater.com/match: 'true' # Marks the config/secret as eligible for reload in search mode
     files:
       - ./configs/convertCerts.sh

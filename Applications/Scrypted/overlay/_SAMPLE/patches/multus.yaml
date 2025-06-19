@@ -11,13 +11,14 @@
         "type": "static",
         "addresses": [
           {
-            "address": "0.0.0.0/0",
-            "gateway": "0.0.0.0"
+            "address": "###IP_ADDRESS_FOR_CONTAINER###/###CIDR###",
+            "gateway": "###GATEWAY_IP_ADDRESS###"
           }
         ],
         "routes": [
-          { "dst": "0.0.0.0/0" },
-          { "dst": "0.0.0.0/0" }
+          { "dst": "###SUBNET_FOR_ROUTING###/###CIDR###" },
+          { "dst": "###SUBNET_FOR_ROUTING###/###CIDR###" },
+          { "dst": "###SUBNET_FOR_ROUTING###/###CIDR###" }
         ]
       }
     }
