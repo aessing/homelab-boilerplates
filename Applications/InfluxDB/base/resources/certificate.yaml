@@ -6,7 +6,8 @@ metadata:
   labels:
     app.kubernetes.io/component: 'security'
   annotations:
-    reloader.stakater.com/match: 'true' # Marks the config/secret as eligible for reload in search mode
+    # Only used with Traefik Ingress Controller.
+    reloader.stakater.com/match: 'false' # Marks the config/secret as eligible for reload in search mode
 spec:
   secretName: influxdb-certificate
   secretTemplate:
