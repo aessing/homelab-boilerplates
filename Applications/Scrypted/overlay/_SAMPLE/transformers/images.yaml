@@ -1,0 +1,16 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: scrypted-imagetransformer
+imageTag:
+  name: ghcr.io/koush/scrypted
+  newTag: v0.139.0-noble-full
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: busybox-imagetransformer
+imageTag:
+  name: busybox
+  newTag: 1.37.0
