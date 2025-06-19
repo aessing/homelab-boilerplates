@@ -5,7 +5,8 @@ metadata:
   name: mailrise
   labels:
     app.kubernetes.io/component: 'security' # The component within the architecture
-    reloader.stakater.com/reload: 'enabled'
+  annotations:
+    reloader.stakater.com/match: 'true' # Marks the config/secret as eligible for reload in search mode
 spec:
   secretName: mailrise-certificate
   # 90d certificate lifetime
