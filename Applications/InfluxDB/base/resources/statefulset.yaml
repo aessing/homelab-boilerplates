@@ -112,7 +112,7 @@ spec:
         storageClassName: longhorn-retain
         resources:
           requests:
-            storage: 1Gi
+            storage: 0Gi
     - metadata:
         name: influxdb-data
       spec:
@@ -121,4 +121,4 @@ spec:
         storageClassName: longhorn-retain
         resources:
           requests:
-            storage: 16Gi
+            storage: 0Gi
