@@ -16,32 +16,32 @@
 
 set -euo pipefail
 
-echo "🔍 Suche nach Pods mit PVCs in allen relevanten Namespaces..."
+echo "🔍 Searching for pods with PVCs in all relevant namespaces..."
 
-# Liste aller auszuschließenden Namespaces (Regex sicher)
+# List of all excluded namespaces (Regex safe)
 excluded_namespaces="certmgr-system|kube-node-lease|kube-public|kube-system|kube-system|longhorn-system|metallb-system|multus-system|reloader-system|traefik-system"
 
-# Hole alle Namespaces außer den ausgeschlossenen
+# Get all namespaces except the excluded ones
 namespaces=$(kubectl get ns -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep -Ev "^($excluded_namespaces)$")
 
 for ns in $namespaces; do
     echo "📂 Namespace: $ns"
 
-    # Hole alle Pods in diesem Namespace
+    # Get all pods in this namespace
     pods=$(kubectl get pods -n "$ns" -o jsonpath='{.items[*].metadata.name}')
 
     for pod in $pods; do
-        # Prüfe, ob der Pod PVCs verwendet
+        # Check if the pod uses PVCs
         uses_pvc=$(kubectl get pod "$pod" -n "$ns" -o json | jq '.spec.volumes[]? | select(.persistentVolumeClaim != null)' | wc -l)
 
         if [[ "$uses_pvc" -gt 0 ]]; then
-            echo "➡️  Pod mit PVC: $pod"
+            echo "➡️  Pod with PVC: $pod"
 
-            # Hole alle Container im Pod
+            # Get all containers in the pod
             containers=$(kubectl get pod "$pod" -n "$ns" -o jsonpath='{.spec.containers[*].name}')
             for container in $containers; do
                 echo "  📦 Container: $container"
-                kubectl exec -n "$ns" -c "$container" "$pod" -- df -h || echo "  ⚠️ Fehler beim Ausführen in $pod/$container"
+                kubectl exec -n "$ns" -c "$container" "$pod" -- df -h || echo "  ⚠️ Error executing in $pod/$container"
                 echo ""
             done
         fi
