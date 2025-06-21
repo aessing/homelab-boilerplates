@@ -18,7 +18,7 @@ set -euo pipefail
 
 echo "🔍 Searching for pods with PVCs in all relevant namespaces..."
 
-# List of all excluded namespaces (Regex safe)
+# List of all excluded namespaces (Regex-safe)
 excluded_namespaces="certmgr-system|kube-node-lease|kube-public|kube-system|kube-system|longhorn-system|metallb-system|multus-system|reloader-system|traefik-system"
 
 # Get all namespaces except the excluded ones
