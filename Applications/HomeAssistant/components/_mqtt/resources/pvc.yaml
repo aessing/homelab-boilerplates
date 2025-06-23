@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mqtt-data
+  labels:
+    app.kubernetes.io/component: 'mqtt'
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-delete
+  resources:
+    requests:
+      storage: 1Gi

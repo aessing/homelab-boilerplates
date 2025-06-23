@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: homeassistant
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  #- transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: 2025.6.1 # The current version of the application
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/secret-mqtt-user.yaml
+
+patches:
+  - path: ./patches/resource-quota.json
+    target:
+      version: v1
+      kind: ResourceQuota
+  - path: ./patches/service-mqtt.json
+    target:
+      version: v1
+      kind: Service
+      name: mqtt
+
+transformers:
+  # https://github.com/eclipse-mosquitto/mosquitto
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml
