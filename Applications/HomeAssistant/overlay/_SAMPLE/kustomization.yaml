@@ -17,9 +17,16 @@ resources:
   - ../../base
 
 generators:
+  - ./generators/secret-mqtt-acl.yaml
   - ./generators/secret-mqtt-user.yaml
 
 patches:
+  - path: ./patches/certificate-mqtt.json
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+      name: mqtt
   - path: ./patches/resource-quota.json
     target:
       version: v1
