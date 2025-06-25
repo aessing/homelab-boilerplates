@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/component: 'mqtt'
   annotations:
     #reloader.stakater.com/auto: 'true' # Reloads workload when any referenced ConfigMap or Secret changes
-    reloader.stakater.com/search: 'false' # Enables search mode (only reloads if matching secrets/configMaps are found)
+    reloader.stakater.com/search: 'true' # Enables search mode (only reloads if matching secrets/configMaps are found)
     #configmap.reloader.stakater.com/auto: 'true' # Reloads only when referenced ConfigMap(s) change
     #configmap.reloader.stakater.com/reload: '' # Reloads when specific ConfigMap(s) change, regardless of how they're used
     #secret.reloader.stakater.com/auto: 'true' # Reloads only when referenced Secret(s) change
@@ -32,19 +32,25 @@ spec:
       initContainers:
         - name: mqtt-init
           image: busybox:0.0.0
-          command:
-            [
+          command: [
               '/bin/sh',
               '-c',
-              'mkdir -p /mosquitto/config; cp -f /mosquitto-config/* /mosquitto/config/; chown 1883:1883 /mosquitto/config/*; chmod 440 /mosquitto/config/*;',
+              'mkdir -p /mosquitto/config;
+              cp -f /mosquitto-temp/* /mosquitto/config/;
+              chown 1883:1883 /mosquitto/config/*;
+              chmod 440 /mosquitto/config/*;',
             ]
           volumeMounts:
             - name: mqtt-config-vol
-              mountPath: /mosquitto-config/mosquitto.conf
+              mountPath: /mosquitto-temp/mosquitto.conf
               subPath: mosquitto.conf
               readOnly: true
+            - name: mqtt-acl-vol
+              mountPath: /mosquitto-temp/acl
+              subPath: acl
+              readOnly: true
             - name: mqtt-user-vol
-              mountPath: /mosquitto-config/passwd
+              mountPath: /mosquitto-temp/passwd
               subPath: passwd
               readOnly: true
             - name: mqtt-data-vol
@@ -70,11 +76,14 @@ spec:
               memory: 16Mi
             limits:
               cpu: 0.25
-              memory: 32Mi
+              memory: 64Mi
           ports:
             - containerPort: 1883
               protocol: TCP
               name: mqtt
+            - containerPort: 8883
+              protocol: TCP
+              name: mqtts
           startupProbe:
             tcpSocket:
               port: mqtt
@@ -102,10 +111,17 @@ spec:
           volumeMounts:
             - name: mqtt-data-vol
               mountPath: '/mosquitto'
+            - name: mqtt-certificate-vol
+              mountPath: '/mosquitto/certs'
+              readOnly: true
       volumes:
         - name: mqtt-config-vol
           configMap:
             name: mqtt-config
+            defaultMode: 0440
+        - name: mqtt-acl-vol
+          secret:
+            secretName: mqtt-acl
             defaultMode: 0440
         - name: mqtt-user-vol
           secret:
@@ -114,3 +130,6 @@ spec:
         - name: mqtt-data-vol
           persistentVolumeClaim:
             claimName: mqtt-data
+        - name: mqtt-certificate-vol
+          secret:
+            secretName: mqtt-certificate

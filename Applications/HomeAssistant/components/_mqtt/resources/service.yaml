@@ -10,10 +10,13 @@ metadata:
 spec:
   selector:
     app.kubernetes.io/component: 'mqtt'
-  clusterIP: None
   ports:
     - protocol: TCP
       port: 1883
       targetPort: 1883
       name: mqtt
+    - protocol: TCP
+      port: 8883
+      targetPort: 8883
+      name: mqtts
   type: LoadBalancer
