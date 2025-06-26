@@ -6,5 +6,7 @@ resources:
   - ./resources/resource-quota.yaml
 
 components:
+  - ../components/_editor
+  - ../components/_homeassistant
   - ../components/_mqtt
   - ../components/_recorder

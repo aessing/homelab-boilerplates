@@ -2,9 +2,9 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: recorder
+  name: editor
   labels:
-    app.kubernetes.io/component: 'recorder'
+    app.kubernetes.io/component: 'editor'
   annotations:
     #reloader.stakater.com/auto: 'true' # Reloads workload when any referenced ConfigMap or Secret changes
     reloader.stakater.com/search: 'false' # Enables search mode (only reloads if matching secrets/configMaps are found)
@@ -14,10 +14,10 @@ metadata:
     #secret.reloader.stakater.com/reload: '' # Reloads when specific Secret(s) change, regardless of how they're used
     reloader.stakater.com/rollout-strategy: 'rollout' # Specifies the rollout strategy for the workload (rollout (default) / restart)
 spec:
-  serviceName: recorder
+  serviceName: editor
   selector:
     matchLabels:
-      app.kubernetes.io/component: 'recorder'
+      app.kubernetes.io/component: 'editor'
   replicas: 0
   persistentVolumeClaimRetentionPolicy:
     whenScaled: Retain
@@ -29,93 +29,106 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: 'recorder'
+        app.kubernetes.io/component: 'editor'
     spec:
       restartPolicy: Always
-      terminationGracePeriodSeconds: 180
+      terminationGracePeriodSeconds: 60
       securityContext:
-        fsGroup: 999
+        fsGroup: 1000
       containers:
-        - name: recorder
-          image: mariadb:0.0.0
+        - name: editor
+          image: lscr.io/linuxserver/code-server:0.0.0
           imagePullPolicy: IfNotPresent
           securityContext:
-            runAsNonRoot: true
+            runAsNonRoot: false
             allowPrivilegeEscalation: false
-            runAsUser: 999
-            runAsGroup: 999
+            runAsUser: 1000
+            runAsGroup: 1000
             capabilities:
               drop:
                 - ALL
+              add:
+                - CHOWN
+                - FOWNER
+                - SETGID
+                - SETUID
             seccompProfile:
               type: RuntimeDefault
-            readOnlyRootFilesystem: false
+            readOnlyRootFilesystem: true
           resources:
             requests:
-              cpu: 0.25
-              memory: 1024Mi
+              cpu: 0.1
+              memory: 256Mi
             limits:
-              cpu: 1
-              memory: 2048Mi
+              cpu: 2
+              memory: 1024Mi
           env:
-            - name: MARIADB_ROOT_PASSWORD
+            - name: DEFAULT_WORKSPACE
+              value: /config/workspace
+            - name: HASHED_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: recorder-root
+                  name: editor-user
                   key: password
-            - name: MARIADB_DATABASE
-              valueFrom:
-                secretKeyRef:
-                  name: recorder-user
-                  key: database
-            - name: MARIADB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: recorder-user
-                  key: username
-            - name: MARIADB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: recorder-user
-                  key: password
+            - name: PUID
+              value: '1000'
+            - name: PGID
+              value: '1000'
+            - name: PWA_APPNAME
+              value: 'Home Assistant Editor'
           ports:
-            - containerPort: 3306
+            - containerPort: 8443
               protocol: TCP
-              name: mysql
-          lifecycle:
-            preStop:
-              exec:
-                command: ['/bin/sh', '-c', 'mysqladmin --protocol=socket --user=root --password=$MARIADB_ROOT_PASSWORD shutdown']
+              name: http
           startupProbe:
-            exec:
-              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 3
             successThreshold: 1
             failureThreshold: 30
           readinessProbe:
-            exec:
-              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 3
           livenessProbe:
-            exec:
-              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
             initialDelaySeconds: 60
             periodSeconds: 60
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 5
           volumeMounts:
-            - mountPath: /var/lib/mysql
-              name: recorder-data
+            - mountPath: /config
+              name: editor-config
+            - mountPath: /config/workspace/code-server
+              name: editor-config
+            - mountPath: /config/workspace/homeassistant
+              name: homeassistant-data-vol
+            - mountPath: /run
+              name: run-tmpfs
+      volumes:
+        - name: homeassistant-data-vol
+          persistentVolumeClaim:
+            claimName: homeassistant-data
+        - name: run-tmpfs
+          emptyDir:
+            medium: Memory
   volumeClaimTemplates:
     - metadata:
-        name: recorder-data
+        name: editor-config
         labels:
           app.kubernetes.io/component: 'recorder'
       spec:
@@ -124,4 +137,4 @@ spec:
         storageClassName: longhorn-retain
         resources:
           requests:
-            storage: 0Gi
+            storage: 1Gi

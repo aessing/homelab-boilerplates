@@ -112,10 +112,10 @@ spec:
             failureThreshold: 5
           volumeMounts:
             - mountPath: /var/lib/mysql
-              name: recorder-data
+              name: recorder
   volumeClaimTemplates:
     - metadata:
-        name: recorder-data
+        name: recorder
         labels:
           app.kubernetes.io/component: 'recorder'
       spec:

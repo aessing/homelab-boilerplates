@@ -1,0 +1,52 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: homeassistant
+  labels:
+    app.kubernetes.io/component: 'security'
+  annotations:
+    # Only used with Traefik Ingress Controller.
+    reloader.stakater.com/match: 'true' # Marks the config/secret as eligible for reload in search mode
+spec:
+  secretName: homeassistant-certificate
+  secretTemplate:
+    labels:
+      app.kubernetes.io/component: 'security' # The component within the architecture
+    annotations:
+      # Only used with Traefik Ingress Controller.
+      reloader.stakater.com/match: 'false' # Marks the config/secret as eligible for reload in search mode
+  # 90d certificate lifetime
+  duration: 2160h
+  # 15d renew before cert gets expires
+  renewBefore: 360h
+  subject:
+    organizations:
+      - CHANGE_ME
+  isCA: false
+  privateKey:
+    algorithm: ECDSA
+    #encoding: PKCS1
+    size: 384
+    # cert-manager regenerates a new private key on each issuance
+    rotationPolicy: Always
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  # At least one of a DNS Name, URI, or IP address is required.
+  dnsNames:
+    - CHANGE_ME
+    - CHANGE_ME
+  #uris:
+  # - spiffe://cluster.local/ns/sandbox/sa/example
+  #ipAddresses:
+  # - 10.15.64.11
+  issuerRef:
+    name: letsencrypt-staging-default
+    # We can reference ClusterIssuers by changing the kind here.
+    # The default value is Issuer (i.e. a locally namespaced Issuer)
+    kind: ClusterIssuer
+    # This is optional since cert-manager will default to this value however
+    # if you are using an external issuer, change this to that issuer group.
+    group: cert-manager.io
