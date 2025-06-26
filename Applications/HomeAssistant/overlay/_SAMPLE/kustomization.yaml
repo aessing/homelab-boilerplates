@@ -19,6 +19,8 @@ resources:
 generators:
   - ./generators/secret-mqtt-acl.yaml
   - ./generators/secret-mqtt-user.yaml
+  - ./generators/secret-recorder-root.yaml
+  - ./generators/secret-recorder-user.yaml
 
 patches:
   - path: ./patches/certificate-mqtt.json
@@ -27,6 +29,12 @@ patches:
       version: v1
       kind: Certificate
       name: mqtt
+  - path: ./patches/pvc-recorder.json
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: recorder
   - path: ./patches/resource-quota.json
     target:
       version: v1

@@ -7,3 +7,4 @@ resources:
 
 components:
   - ../components/_mqtt
+  - ../components/_recorder

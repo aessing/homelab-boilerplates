@@ -19,3 +19,24 @@ fieldSpecs:
   - path: spec/replicas
     create: true
     kind: StatefulSet
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: recorder-replicatransformer
+replica:
+  name: recorder
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: false
+    kind: Deployment
+  - path: spec/replicas
+    create: false
+    kind: ReplicationController
+  - path: spec/replicas
+    create: false
+    kind: ReplicaSet
+  - path: spec/replicas
+    create: true
+    kind: StatefulSet
