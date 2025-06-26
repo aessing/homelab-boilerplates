@@ -18,5 +18,5 @@ spec:
     - protocol: TCP
       port: 8883
       targetPort: 8883
-      name: mqtts
+      name: mqtt-tls
   type: LoadBalancer

@@ -83,7 +83,7 @@ spec:
               name: mqtt
             - containerPort: 8883
               protocol: TCP
-              name: mqtts
+              name: mqtt-tls
           startupProbe:
             tcpSocket:
               port: mqtt
