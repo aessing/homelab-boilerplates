@@ -33,8 +33,6 @@ spec:
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 60
-      securityContext:
-        fsGroup: 1000
       containers:
         - name: editor
           image: lscr.io/linuxserver/code-server:0.0.0
@@ -42,19 +40,19 @@ spec:
           securityContext:
             runAsNonRoot: false
             allowPrivilegeEscalation: false
-            runAsUser: 1000
-            runAsGroup: 1000
             capabilities:
               drop:
                 - ALL
               add:
                 - CHOWN
+                - DAC_OVERRIDE
+                - DAC_READ_SEARCH
                 - FOWNER
                 - SETGID
                 - SETUID
             seccompProfile:
               type: RuntimeDefault
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
           resources:
             requests:
               cpu: 0.1
