@@ -20,4 +20,4 @@ spec:
         - name: editor
           port: 8443
   tls:
-    secretName: homeassistant-certificate
+    secretName: editor-certificate

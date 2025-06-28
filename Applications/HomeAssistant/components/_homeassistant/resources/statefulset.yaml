@@ -2,9 +2,9 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: recorder
+  name: homeassistant
   labels:
-    app.kubernetes.io/component: 'recorder'
+    app.kubernetes.io/component: 'application'
   annotations:
     #reloader.stakater.com/auto: 'true' # Reloads workload when any referenced ConfigMap or Secret changes
     reloader.stakater.com/search: 'false' # Enables search mode (only reloads if matching secrets/configMaps are found)
@@ -14,10 +14,10 @@ metadata:
     #secret.reloader.stakater.com/reload: '' # Reloads when specific Secret(s) change, regardless of how they're used
     reloader.stakater.com/rollout-strategy: 'rollout' # Specifies the rollout strategy for the workload (rollout (default) / restart)
 spec:
-  serviceName: recorder
+  serviceName: homeassistant
   selector:
     matchLabels:
-      app.kubernetes.io/component: 'recorder'
+      app.kubernetes.io/component: 'application'
   replicas: 0
   persistentVolumeClaimRetentionPolicy:
     whenScaled: Retain
@@ -29,98 +29,102 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: 'recorder'
+        app.kubernetes.io/component: 'application'
+      annotations:
+        k8s.v1.cni.cncf.io/networks: homeassistant/homeassistant
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 180
       securityContext:
-        fsGroup: 999
+        fsGroup: 1000
+      initContainers:
+        - name: mariadb-wait
+          image: busybox:0.0.0
+          command: ['/bin/sh', '-c', 'until nc -zw10 recorder 3306 >/dev/null 2>&1; do echo waiting for recorder database; sleep 5; done']
       containers:
-        - name: recorder
-          image: mariadb:0.0.0
+        - name: homeassistant
+          image: ghcr.io/home-assistant/home-assistant:0.0.0
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
-            runAsUser: 999
-            runAsGroup: 999
+            runAsUser: 1000
+            runAsGroup: 1000
             capabilities:
               drop:
                 - ALL
             seccompProfile:
               type: RuntimeDefault
             readOnlyRootFilesystem: false
+            privileged: false
           resources:
             requests:
-              cpu: 0.25
+              cpu: 1
               memory: 1024Mi
             limits:
-              cpu: 1
+              cpu: 2
               memory: 2048Mi
           env:
-            - name: MARIADB_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: recorder-root
-                  key: password
-            - name: MARIADB_DATABASE
+            - name: RECORDER_DB
               valueFrom:
                 secretKeyRef:
                   name: recorder-user
                   key: database
-            - name: MARIADB_USER
+            - name: RECORDER_USER
               valueFrom:
                 secretKeyRef:
                   name: recorder-user
                   key: username
-            - name: MARIADB_PASSWORD
+            - name: RECORDER_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: recorder-user
                   key: password
           ports:
-            - containerPort: 3306
+            - containerPort: 8123
               protocol: TCP
-              name: mysql
-          lifecycle:
-            preStop:
-              exec:
-                command: ['/bin/sh', '-c', 'mysqladmin --protocol=socket --user=root --password=$MARIADB_ROOT_PASSWORD shutdown']
+              name: http
           startupProbe:
-            exec:
-              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 3
             successThreshold: 1
             failureThreshold: 30
           readinessProbe:
-            exec:
-              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 3
           livenessProbe:
-            exec:
-              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
             initialDelaySeconds: 60
             periodSeconds: 60
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 5
           volumeMounts:
-            - mountPath: /var/lib/mysql
-              name: recorder
+            - mountPath: /config
+              name: homeassistant-config
   volumeClaimTemplates:
     - metadata:
-        name: recorder
+        name: homeassistant-config
         labels:
-          app.kubernetes.io/component: 'recorder'
+          app.kubernetes.io/component: 'homeassistant'
       spec:
         accessModes:
-          - ReadWriteOnce
+          - ReadWriteMany
         storageClassName: longhorn-retain
         resources:
           requests:

@@ -4,5 +4,6 @@ kind: Component
 resources:
   - ./resources/certificate.yaml
   - ./resources/ingressroute.yaml
-  - ./resources/pvc.yaml
+  - ./resources/multus.yaml
   - ./resources/service.yaml
+  - ./resources/statefulset.yaml
