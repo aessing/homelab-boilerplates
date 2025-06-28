@@ -8,13 +8,13 @@ replica:
   count: 1
 fieldSpecs:
   - path: spec/replicas
-    create: false
+    create: true
     kind: Deployment
   - path: spec/replicas
-    create: false
+    create: true
     kind: ReplicationController
   - path: spec/replicas
-    create: false
+    create: true
     kind: ReplicaSet
   - path: spec/replicas
     create: true
@@ -29,13 +29,13 @@ replica:
   count: 1
 fieldSpecs:
   - path: spec/replicas
-    create: false
+    create: true
     kind: Deployment
   - path: spec/replicas
-    create: false
+    create: true
     kind: ReplicationController
   - path: spec/replicas
-    create: false
+    create: true
     kind: ReplicaSet
   - path: spec/replicas
     create: true
