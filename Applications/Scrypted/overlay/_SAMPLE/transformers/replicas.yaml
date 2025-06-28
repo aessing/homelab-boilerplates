@@ -5,16 +5,16 @@ metadata:
   name: scrypted-replicatransformer
 replica:
   name: scrypted
-  count: ###NUMBER_OF_REPLICAS(1)###
+  count: 1
 fieldSpecs:
   - path: spec/replicas
-    create: false
+    create: true
     kind: Deployment
   - path: spec/replicas
-    create: false
+    create: true
     kind: ReplicationController
   - path: spec/replicas
-    create: false
+    create: true
     kind: ReplicaSet
   - path: spec/replicas
     create: true
