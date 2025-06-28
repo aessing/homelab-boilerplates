@@ -1,0 +1,23 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: editor
+  labels:
+    app.kubernetes.io/component: 'editor'
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: CHANGE_ME
+      kind: Rule
+      middlewares:
+        - name: chain-admin
+          namespace: traefik-system
+      services:
+        - name: editor
+          port: 8443
+  tls:
+    secretName: editor-certificate

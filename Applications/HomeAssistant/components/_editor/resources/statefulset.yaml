@@ -1,0 +1,133 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: editor
+  labels:
+    app.kubernetes.io/component: 'editor'
+  annotations:
+    #reloader.stakater.com/auto: 'true' # Reloads workload when any referenced ConfigMap or Secret changes
+    reloader.stakater.com/search: 'false' # Enables search mode (only reloads if matching secrets/configMaps are found)
+    #configmap.reloader.stakater.com/auto: 'true' # Reloads only when referenced ConfigMap(s) change
+    #configmap.reloader.stakater.com/reload: '' # Reloads when specific ConfigMap(s) change, regardless of how they're used
+    #secret.reloader.stakater.com/auto: 'true' # Reloads only when referenced Secret(s) change
+    #secret.reloader.stakater.com/reload: '' # Reloads when specific Secret(s) change, regardless of how they're used
+    reloader.stakater.com/rollout-strategy: 'rollout' # Specifies the rollout strategy for the workload (rollout (default) / restart)
+spec:
+  serviceName: editor
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: 'editor'
+  replicas: 0
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Retain
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: 'editor'
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 180
+      containers:
+        - name: editor
+          image: lscr.io/linuxserver/code-server:0.0.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - DAC_OVERRIDE
+                - DAC_READ_SEARCH
+                - FOWNER
+                - SETGID
+                - SETUID
+            seccompProfile:
+              type: RuntimeDefault
+            readOnlyRootFilesystem: false
+          resources:
+            requests:
+              cpu: 0.25
+              memory: 256Mi
+            limits:
+              cpu: 2
+              memory: 1024Mi
+          env:
+            - name: DEFAULT_WORKSPACE
+              value: /config/workspace
+            - name: HASHED_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: editor-user
+                  key: password
+            - name: PUID
+              value: '0'
+            - name: PGID
+              value: '0'
+            - name: PWA_APPNAME
+              value: 'Home Assistant Editor'
+          ports:
+            - containerPort: 8443
+              protocol: TCP
+              name: http
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          volumeMounts:
+            - mountPath: /config
+              name: editor-config
+            - mountPath: /config/workspace/code-server
+              name: editor-config
+            - mountPath: /config/workspace/homeassistant
+              name: homeassistant-config-vol
+      volumes:
+        - name: homeassistant-config-vol
+          persistentVolumeClaim:
+            claimName: homeassistant-config-homeassistant-0
+  volumeClaimTemplates:
+    - metadata:
+        name: editor-config
+        labels:
+          app.kubernetes.io/component: 'editor'
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 0Gi

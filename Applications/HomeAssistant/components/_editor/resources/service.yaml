@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: editor
+  labels:
+    app.kubernetes.io/component: 'editor'
+spec:
+  selector:
+    app.kubernetes.io/component: 'editor'
+  clusterIP: None
+  ports:
+    - protocol: TCP
+      port: 8443
+      targetPort: 8443
+      name: http
+  type: ClusterIP
