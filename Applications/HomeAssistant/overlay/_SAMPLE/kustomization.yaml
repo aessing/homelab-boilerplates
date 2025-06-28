@@ -1,0 +1,99 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: homeassistant
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  #- transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: 2025.6.3 # The current version of the application
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/secret-editor-user.yaml
+  - ./generators/secret-mqtt-acl.yaml
+  - ./generators/secret-mqtt-user.yaml
+  - ./generators/secret-recorder-root.yaml
+  - ./generators/secret-recorder-user.yaml
+
+patches:
+  - path: ./patches/certificate-editor.json
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+      name: editor
+  - path: ./patches/certificate-homeassistant.json
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+      name: homeassistant
+  - path: ./patches/certificate-mqtt.json
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+      name: mqtt
+  - path: ./patches/ingressroute-editor.json
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+      name: editor
+  - path: ./patches/ingressroute-homeassistant.json
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+      name: homeassistant
+  - path: ./patches/multus-homeassistant.yaml
+    target:
+      group: k8s.cni.cncf.io
+      version: v1
+      kind: NetworkAttachmentDefinition
+      name: homeassistant
+  - path: ./patches/pvc-editor.json
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: editor
+  - path: ./patches/pvc-homeassistant.json
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: homeassistant
+  - path: ./patches/pvc-recorder.json
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: recorder
+  - path: ./patches/resource-quota.json
+    target:
+      version: v1
+      kind: ResourceQuota
+  - path: ./patches/service-mqtt.json
+    target:
+      version: v1
+      kind: Service
+      name: mqtt
+
+transformers:
+  # https://hub.docker.com/_/busybox
+  # https://github.com/eclipse-mosquitto/mosquitto
+  # https://hub.docker.com/_/mariadb
+  # https://github.com/linuxserver/docker-code-server
+  # https://github.com/home-assistant/core
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml
