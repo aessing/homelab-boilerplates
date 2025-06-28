@@ -1,0 +1,159 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: editor-to-application
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: application
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: homeassistant
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: editor
+              app.kubernetes.io/name: homeassistant
+      ports:
+        - protocol: TCP
+          port: 8123
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: editor-to-recorder
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: recorder
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: homeassistant
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: editor
+              app.kubernetes.io/name: homeassistant
+      ports:
+        - protocol: TCP
+          port: 3306
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: application-to-mqtt
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: mqtt # The component within the architecture
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: homeassistant
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: application
+              app.kubernetes.io/name: homeassistant
+      ports:
+        - protocol: TCP
+          port: 8883
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: application-to-recorder
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: recorder
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: homeassistant
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: application
+              app.kubernetes.io/name: homeassistant
+      ports:
+        - protocol: TCP
+          port: 3306
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: traefik-to-editor
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: editor
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-system
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - protocol: TCP
+          port: 8443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: traefik-to-application
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: application
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-system
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - protocol: TCP
+          port: 8123
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rfc1918-to-mqtt
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: mqtt # The component within the architecture
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 1883
+        - protocol: TCP
+          port: 8883

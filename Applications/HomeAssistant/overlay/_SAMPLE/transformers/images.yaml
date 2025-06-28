@@ -10,6 +10,22 @@ imageTag:
 apiVersion: builtin
 kind: ImageTagTransformer
 metadata:
+  name: editor-imagetransformer
+imageTag:
+  name: lscr.io/linuxserver/code-server
+  newTag: 4.101.2
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: homeassistant-imagetransformer
+imageTag:
+  name: ghcr.io/home-assistant/home-assistant
+  newTag: 2025.6.3
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
   name: mqtt-imagetransformer
 imageTag:
   name: eclipse-mosquitto
@@ -21,4 +37,6 @@ metadata:
   name: recorder-imagetransformer
 imageTag:
   name: mariadb
-  newTag: 11.7.2
+  newTag: 11.8.2
+---
+

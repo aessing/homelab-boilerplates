@@ -69,9 +69,9 @@ spec:
                   name: editor-user
                   key: password
             - name: PUID
-              value: '1000'
+              value: '0'
             - name: PGID
-              value: '1000'
+              value: '0'
             - name: PWA_APPNAME
               value: 'Home Assistant Editor'
           ports:
