@@ -4,14 +4,14 @@ kind: Certificate
 metadata:
   name: nameserver
   labels:
-    app.kubernetes.io/component: 'security' # The component within the architecture
+    app.kubernetes.io/component: 'application' # The component within the architecture
   annotations:
     reloader.stakater.com/match: 'true' # Marks the config/secret as eligible for reload in search mode
 spec:
   secretName: nameserver-certificate
   secretTemplate:
     labels:
-      app.kubernetes.io/component: 'security' # The component within the architecture
+      app.kubernetes.io/component: 'application' # The component within the architecture
     annotations:
       reloader.stakater.com/match: 'true' # Marks the config/secret as eligible for reload in search mode
   # 90d certificate lifetime
