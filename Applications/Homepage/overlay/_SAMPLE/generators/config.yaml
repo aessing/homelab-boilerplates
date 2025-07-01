@@ -1,0 +1,21 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: homepage-config
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: 'application' # The component within the architecture
+  annotations:
+    # Reloads handled by kustomize with suffix
+    reloader.stakater.com/match: 'false' # Marks the config/secret as eligible for reload in search mode
+files:
+  - ./configs/bookmarks.yaml
+  - ./configs/custom.css
+  - ./configs/custom.js
+  - ./configs/docker.yaml
+  - ./configs/kubernetes.yaml
+  - ./configs/services.yaml
+  - ./configs/settings.yaml
+  - ./configs/widgets.yaml
