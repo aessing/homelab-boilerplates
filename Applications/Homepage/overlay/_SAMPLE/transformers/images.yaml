@@ -1,0 +1,16 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: busybox-imagetransformer
+imageTag:
+  name: busybox
+  newTag: 1.37.0
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: homepage-imagetransformer
+imageTag:
+  name: ghcr.io/gethomepage/homepage
+  newTag: v1.3.2
