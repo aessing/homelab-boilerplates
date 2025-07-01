@@ -6,7 +6,7 @@ metadata:
 labels:
   app.kubernetes.io/name: mailrise # The name of the application
   app.kubernetes.io/instance: mailrise-internal # A unique name identifying the instance of an application
-  app.kubernetes.io/part-of: network-services # The name of a higher level application this one is part of
+  app.kubernetes.io/part-of: communication # The name of a higher level application this one is part of
 fieldSpecs:
   # Labels in metadata
   - path: metadata/labels
