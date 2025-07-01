@@ -100,7 +100,7 @@ spec:
     - metadata:
         name: homeassistant-config
         labels:
-          app.kubernetes.io/component: 'homeassistant'
+          app.kubernetes.io/component: 'application'
       spec:
         accessModes:
           - ReadWriteMany

@@ -131,6 +131,8 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: scrypted-pvc
+        labels:
+          app.kubernetes.io/component: 'application'
       spec:
         accessModes:
           - ReadWriteOnce
