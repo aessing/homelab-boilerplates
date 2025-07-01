@@ -26,7 +26,7 @@ spec:
         app.kubernetes.io/component: 'application' # The component within the architecture
     spec:
       restartPolicy: Always
-      terminationGracePeriodSeconds: 180
+      terminationGracePeriodSeconds: 30
       serviceAccountName: homepage
       automountServiceAccountToken: true
       enableServiceLinks: true
@@ -35,16 +35,21 @@ spec:
           image: 'ghcr.io/gethomepage/homepage:0.0.0'
           imagePullPolicy: IfNotPresent
           securityContext:
-            runAsNonRoot: true
+            runAsNonRoot: false
             allowPrivilegeEscalation: false
-            runAsUser: 1000
-            runAsGroup: 1000
             capabilities:
               drop:
                 - ALL
+              add:
+                - CHOWN
+                - DAC_OVERRIDE
+                - DAC_READ_SEARCH
+                - FOWNER
+                - SETGID
+                - SETUID
             seccompProfile:
               type: RuntimeDefault
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
           resources:
             requests:
               cpu: 0.1
@@ -55,6 +60,10 @@ spec:
           env:
             - name: HOMEPAGE_ALLOWED_HOSTS
               value: gethomepage.dev # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
+            - name: PUID
+              value: '1000'
+            - name: PGID
+              value: '1000'
           ports:
             - name: http
               containerPort: 3000
