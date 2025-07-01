@@ -1,4 +1,4 @@
 [
   { "op": "replace", "path": "/spec/hard/pods", "value": 1 },
-  { "op": "replace", "path": "/spec/hard/persistentvolumeclaims", "value": 0 }
+  { "op": "replace", "path": "/spec/hard/persistentvolumeclaims", "value": 1 }
 ]
