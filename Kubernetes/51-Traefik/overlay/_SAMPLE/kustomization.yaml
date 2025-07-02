@@ -20,7 +20,6 @@ labels:
 
 resources:
   - ../../base
-  - ./resources/middleware-admin.yaml
 
 generators:
   - ./generators/secret-dashboard-auth.yaml

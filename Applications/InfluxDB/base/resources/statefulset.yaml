@@ -106,6 +106,8 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: influxdb-config
+        labels:
+          app.kubernetes.io/component: 'application'
       spec:
         accessModes:
           - ReadWriteOnce
@@ -115,6 +117,8 @@ spec:
             storage: 0Gi
     - metadata:
         name: influxdb-data
+        labels:
+          app.kubernetes.io/component: 'application'
       spec:
         accessModes:
           - ReadWriteOnce

@@ -4,7 +4,7 @@ kind: CronJob
 metadata:
   name: fortnitestats
   labels:
-    app.kubernetes.io/component: 'job'
+    app.kubernetes.io/component: 'application'
   annotations:
     #reloader.stakater.com/auto: 'true' # Reloads workload when any referenced ConfigMap or Secret changes
     reloader.stakater.com/search: 'false' # Enables search mode (only reloads if matching secrets/configMaps are found)
