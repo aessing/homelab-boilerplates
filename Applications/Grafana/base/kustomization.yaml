@@ -8,3 +8,4 @@ resources:
 components:
   - ../components/_database
   - ../components/_haengine
+  - ../components/_renderer
