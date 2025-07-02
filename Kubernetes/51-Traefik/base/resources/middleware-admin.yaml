@@ -10,5 +10,5 @@ spec:
         namespace: traefik-system
       - name: compression
         namespace: traefik-system
-      - name: ipallowlist-admin
+      - name: ipallowlist-rfc1918
         namespace: traefik-system
