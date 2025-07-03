@@ -59,9 +59,6 @@ spec:
                 fieldRef:
                   fieldPath: status.podIP
 
-            - name: GF_INSTALL_PLUGINS
-              value: 'CHANGE_ME'
-
             - name: GF_ENVIRONMENT_LOCAL_FILE_SYSTEM_AVAILABLE
               value: 'false'
 
@@ -70,7 +67,7 @@ spec:
             - name: GF_SERVER_ENFORCE_DOMAIN
               value: 'true'
             - name: GF_SERVER_ROOT_URL
-              value: '%(protocol)s://%(domain)s:/'
+              value: '%(protocol)s://%(domain)s/'
 
             - name: GF_DATABASE_TYPE
               value: 'mysql'
@@ -193,7 +190,7 @@ spec:
             - name: GF_UNIFIED_ALERTING_HA_ADVERTISE_ADDRESS
               value: '$(POD_IP):9094'
             - name: GF_UNIFIED_ALERTING_HA_PEERS
-              value: 'grafana-alerting.grafana:9094'
+              value: 'grafana-alerting:9094'
             - name: GF_UNIFIED_ALERTING_HA_PEER_TIMEOUT
               value: '15s'
             - name: GF_UNIFIED_ALERTING_HA_RECONNECT_TIMEOUT
@@ -290,8 +287,10 @@ spec:
             successThreshold: 1
             failureThreshold: 3
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /robots.txt
               port: grafana
+              scheme: HTTP
             initialDelaySeconds: 60
             periodSeconds: 60
             timeoutSeconds: 5

@@ -19,10 +19,5 @@ spec:
       services:
         - name: grafana
           port: 3000
-          sticky:
-            cookie:
-              httpOnly: true
-              secure: true
-              sameSite: none
   tls:
     secretName: grafana-certificate
