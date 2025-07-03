@@ -141,8 +141,6 @@ spec:
 
             - name: GF_AUTH_LOGIN_COOKIE_NAME
               value: '__Host-grafana_session'
-            - name: GF_AUTH_BASIC_ENABLED
-              value: 'true'
             - name: GF_AUTH_BASIC_PASSWORD_POLICY
               value: 'true'
             - name: GF_AUTH_ANONYMOUS_HIDE_VERSION
