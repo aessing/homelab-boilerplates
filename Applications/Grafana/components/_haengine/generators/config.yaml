@@ -1,0 +1,15 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-haengine-config
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: 'haengine' # The component within the architecture
+  annotations:
+    # Reloads handled by kustomize with suffix
+    reloader.stakater.com/match: 'false' # Marks the config/secret as eligible for reload in search mode
+files:
+  - ./configs/redis.conf
+  - ./configs/redis-full.conf

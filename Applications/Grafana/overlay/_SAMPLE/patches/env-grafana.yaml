@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  template:
+    spec:
+      containers:
+        - name: grafana
+          env:
+            - name: GF_SERVER_DOMAIN
+              value: '###FQDN_OF_APPLICATION###'
+            # - name: GF_INSTALL_PLUGINS
+            #   value: grafana-github,grafana-mqtt'

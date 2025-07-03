@@ -1,0 +1,64 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: grafana
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  #- transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: 12.0.2 # The current version of the application
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/secret-grafana-admin.yaml
+  - ./generators/secret-grafana-database-root.yaml
+  - ./generators/secret-grafana-database-user.yaml
+  - ./generators/secret-grafana-haengine-auth.yaml
+  - ./generators/secret-grafana-metrics.yaml
+  - ./generators/secret-grafana-renderer-auth.yaml
+  - ./generators/secret-grafana-secretkey.yaml
+  - ./generators/secret-grafana-smtp.yaml
+
+patches:
+  - path: ./patches/certificate.json
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+  - path: ./patches/env-grafana.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: grafana
+  - path: ./patches/ingressroute.json
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+  - path: ./patches/pvc-grafana-database.json
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: grafana-database
+  - path: ./patches/resource-quota.json
+    target:
+      version: v1
+      kind: ResourceQuota
+
+transformers:
+  # https://hub.docker.com/_/mariadb
+  # https://hub.docker.com/_/redis/
+  # https://hub.docker.com/r/grafana/grafana-image-renderer
+  # https://hub.docker.com/r/grafana/grafana-oss/tags
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml

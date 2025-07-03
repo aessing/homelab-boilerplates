@@ -1,0 +1,32 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: grafana-database-imagetransformer
+imageTag:
+  name: mysql
+  newTag: 9.3.0
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: grafana-haengine-imagetransformer
+imageTag:
+  name: redis
+  newTag: 8.0.2
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: grafana-renderer-imagetransformer
+imageTag:
+  name: grafana/grafana-image-renderer
+  newTag: 3.12.9
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: grafana-imagetransformer
+imageTag:
+  name: grafana/grafana-oss
+  newTag: 12.0.2

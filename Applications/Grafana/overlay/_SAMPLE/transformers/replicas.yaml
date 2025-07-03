@@ -1,0 +1,84 @@
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: grafana-database-replicatransformer
+replica:
+  name: grafana-database
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: true
+    kind: Deployment
+  - path: spec/replicas
+    create: true
+    kind: ReplicationController
+  - path: spec/replicas
+    create: true
+    kind: ReplicaSet
+  - path: spec/replicas
+    create: true
+    kind: StatefulSet
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: grafana-haengine-replicatransformer
+replica:
+  name: grafana-haengine
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: true
+    kind: Deployment
+  - path: spec/replicas
+    create: true
+    kind: ReplicationController
+  - path: spec/replicas
+    create: true
+    kind: ReplicaSet
+  - path: spec/replicas
+    create: true
+    kind: StatefulSet
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: grafana-renderer-replicatransformer
+replica:
+  name: grafana-renderer
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: true
+    kind: Deployment
+  - path: spec/replicas
+    create: true
+    kind: ReplicationController
+  - path: spec/replicas
+    create: true
+    kind: ReplicaSet
+  - path: spec/replicas
+    create: true
+    kind: StatefulSet
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: grafana-replicatransformer
+replica:
+  name: grafana
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: true
+    kind: Deployment
+  - path: spec/replicas
+    create: true
+    kind: ReplicationController
+  - path: spec/replicas
+    create: true
+    kind: ReplicaSet
+  - path: spec/replicas
+    create: true
+    kind: StatefulSet
