@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/component: 'application' # The component within the architecture
   annotations:
     #reloader.stakater.com/auto: 'true' # Reloads workload when any referenced ConfigMap or Secret changes
-    reloader.stakater.com/search: 'true' # Enables search mode (only reloads if matching secrets/configMaps are found)
+    reloader.stakater.com/search: 'false' # Enables search mode (only reloads if matching secrets/configMaps are found)
     #configmap.reloader.stakater.com/auto: 'true' # Reloads only when referenced ConfigMap(s) change
     #configmap.reloader.stakater.com/reload: '' # Reloads when specific ConfigMap(s) change, regardless of how they're used
     #secret.reloader.stakater.com/auto: 'true' # Reloads only when referenced Secret(s) change
