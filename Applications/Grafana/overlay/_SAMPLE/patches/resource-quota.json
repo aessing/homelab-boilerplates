@@ -1,0 +1,4 @@
+[
+  { "op": "replace", "path": "/spec/hard/pods", "value": 4 },
+  { "op": "replace", "path": "/spec/hard/persistentvolumeclaims", "value": 1 }
+]
