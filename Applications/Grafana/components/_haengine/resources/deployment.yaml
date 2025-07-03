@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grafana-oss-haengine
+  name: grafana-haengine
   labels:
     app.kubernetes.io/component: 'haengine'
   annotations:
@@ -30,7 +30,7 @@ spec:
       securityContext:
         fsGroup: 999
       containers:
-        - name: grafana-oss-haengine
+        - name: grafana-haengine
           image: redis:0.0.0
           command: ['redis-server']
           args: ['/conf/redis-full.conf', '--requirepass', '$(REDIS_AUTH)']
@@ -57,7 +57,7 @@ spec:
             - name: REDIS_AUTH
               valueFrom:
                 secretKeyRef:
-                  name: grafana-oss-haengine-auth
+                  name: grafana-haengine-auth
                   key: authkey
           ports:
             - containerPort: 6379
@@ -88,15 +88,15 @@ spec:
             successThreshold: 1
             failureThreshold: 5
           volumeMounts:
-            - name: grafana-oss-haengine-config-vol
+            - name: grafana-haengine-config-vol
               mountPath: /conf/redis.conf
               subPath: redis.conf
               readOnly: true
-            - name: grafana-oss-haengine-config-vol
+            - name: grafana-haengine-config-vol
               mountPath: /conf/redis-full.conf
               subPath: redis-full.conf
               readOnly: true
       volumes:
-        - name: grafana-oss-haengine-config-vol
+        - name: grafana-haengine-config-vol
           configMap:
-            name: grafana-oss-haengine-config
+            name: grafana-haengine-config

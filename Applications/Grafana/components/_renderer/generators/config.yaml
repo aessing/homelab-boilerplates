@@ -2,7 +2,7 @@
 apiVersion: builtin
 kind: ConfigMapGenerator
 metadata:
-  name: grafana-oss-renderer-config
+  name: grafana-renderer-config
 behavior: create
 options:
   labels:

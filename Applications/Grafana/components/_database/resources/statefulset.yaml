@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: grafana-oss-database
+  name: grafana-database
   labels:
     app.kubernetes.io/component: 'database'
   annotations:
@@ -14,7 +14,7 @@ metadata:
     #secret.reloader.stakater.com/reload: '' # Reloads when specific Secret(s) change, regardless of how they're used
     reloader.stakater.com/rollout-strategy: 'rollout' # Specifies the rollout strategy for the workload (rollout (default) / restart)
 spec:
-  serviceName: grafana-oss-database
+  serviceName: grafana-database
   selector:
     matchLabels:
       app.kubernetes.io/component: 'database'
@@ -36,8 +36,8 @@ spec:
       securityContext:
         fsGroup: 999
       containers:
-        - name: grafana-oss-database
-          image: mariadb:0.0.0
+        - name: grafana-database
+          image: mysql:0.0.0
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsNonRoot: true
@@ -58,25 +58,25 @@ spec:
               cpu: 1
               memory: 1024Mi
           env:
-            - name: MARIADB_ROOT_PASSWORD
+            - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: grafana-oss-database-root
+                  name: grafana-database-root
                   key: password
-            - name: MARIADB_DATABASE
+            - name: MYSQL_DATABASE
               valueFrom:
                 secretKeyRef:
-                  name: grafana-oss-database-user
+                  name: grafana-database-user
                   key: database
-            - name: MARIADB_USER
+            - name: MYSQL_USER
               valueFrom:
                 secretKeyRef:
-                  name: grafana-oss-database-user
+                  name: grafana-database-user
                   key: username
-            - name: MARIADB_PASSWORD
+            - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: grafana-oss-database-user
+                  name: grafana-database-user
                   key: password
           ports:
             - containerPort: 3306
@@ -85,10 +85,10 @@ spec:
           lifecycle:
             preStop:
               exec:
-                command: ['/bin/sh', '-c', 'mysqladmin --protocol=socket --user=root --password=$MARIADB_ROOT_PASSWORD shutdown']
+                command: ['/bin/sh', '-c', 'mysqladmin --protocol=socket --user=root --password=$MYSQL_ROOT_PASSWORD shutdown']
           startupProbe:
             exec:
-              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+              command: ['/bin/sh', '-c', 'mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD']
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 3
@@ -96,7 +96,7 @@ spec:
             failureThreshold: 30
           readinessProbe:
             exec:
-              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+              command: ['/bin/sh', '-c', 'mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD']
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 5
@@ -104,7 +104,7 @@ spec:
             failureThreshold: 3
           livenessProbe:
             exec:
-              command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']
+              command: ['/bin/sh', '-c', 'mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD']
             initialDelaySeconds: 60
             periodSeconds: 60
             timeoutSeconds: 5
@@ -112,10 +112,10 @@ spec:
             failureThreshold: 5
           volumeMounts:
             - mountPath: /var/lib/mysql
-              name: grafana-oss-database-data
+              name: grafana-database-data
   volumeClaimTemplates:
     - metadata:
-        name: grafana-oss-database-data
+        name: grafana-database-data
         labels:
           app.kubernetes.io/component: 'database'
       spec:

@@ -2,7 +2,7 @@
 apiVersion: builtin
 kind: ConfigMapGenerator
 metadata:
-  name: grafana-oss-haengine-config
+  name: grafana-haengine-config
 behavior: create
 options:
   labels:

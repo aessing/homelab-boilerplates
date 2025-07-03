@@ -6,6 +6,7 @@ resources:
   - ./resources/resource-quota.yaml
 
 components:
+  - ../components/_application
   - ../components/_database
   - ../components/_haengine
   - ../components/_renderer

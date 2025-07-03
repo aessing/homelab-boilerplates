@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grafana-oss-renderer
+  name: grafana-renderer
   labels:
     app.kubernetes.io/component: 'renderer'
   annotations:
@@ -30,7 +30,7 @@ spec:
       securityContext:
         fsGroup: 472
       containers:
-        - name: grafana-oss-renderer
+        - name: grafana-renderer
           image: grafana/grafana-image-renderer:0.0.0
           imagePullPolicy: IfNotPresent
           securityContext:
@@ -55,7 +55,7 @@ spec:
             - name: AUTH_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: grafana-oss-renderer-auth
+                  name: grafana-renderer-auth
                   key: authkey
           ports:
             - containerPort: 8081
@@ -92,11 +92,11 @@ spec:
             successThreshold: 1
             failureThreshold: 5
           volumeMounts:
-            - name: grafana-oss-renderer-config-vol
+            - name: grafana-renderer-config-vol
               mountPath: /usr/src/app/config.json
               subPath: config.json
               readOnly: true
       volumes:
-        - name: grafana-oss-renderer-config-vol
+        - name: grafana-renderer-config-vol
           configMap:
-            name: grafana-oss-renderer-config
+            name: grafana-renderer-config

@@ -1,0 +1,299 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  labels:
+    app.kubernetes.io/component: 'application' # The component within the architecture
+  annotations:
+    #reloader.stakater.com/auto: 'true' # Reloads workload when any referenced ConfigMap or Secret changes
+    reloader.stakater.com/search: 'false' # Enables search mode (only reloads if matching secrets/configMaps are found)
+    #configmap.reloader.stakater.com/auto: 'true' # Reloads only when referenced ConfigMap(s) change
+    #configmap.reloader.stakater.com/reload: '' # Reloads when specific ConfigMap(s) change, regardless of how they're used
+    #secret.reloader.stakater.com/auto: 'true' # Reloads only when referenced Secret(s) change
+    #secret.reloader.stakater.com/reload: '' # Reloads when specific Secret(s) change, regardless of how they're used
+    reloader.stakater.com/rollout-strategy: 'rollout' # Specifies the rollout strategy for the workload (rollout (default) / restart)
+spec:
+  replicas: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: 'application' # The component within the architecture
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        fsGroup: 472
+        supplementalGroups:
+          - 0
+      containers:
+        - name: grafana
+          image: grafana/grafana-oss:0.0.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            runAsUser: 472
+            runAsGroup: 472
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+            readOnlyRootFilesystem: false
+          resources:
+            requests:
+              cpu: 0.25
+              memory: 512Mi
+            limits:
+              cpu: 2
+              memory: 2048Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+
+            - name: GF_INSTALL_PLUGINS
+              value: 'CHANGE_ME'
+
+            - name: GF_ENVIRONMENT_LOCAL_FILE_SYSTEM_AVAILABLE
+              value: 'false'
+
+            - name: GF_SERVER_DOMAIN
+              value: 'grafana.sample.com'
+            - name: GF_SERVER_ENFORCE_DOMAIN
+              value: 'true'
+            - name: GF_SERVER_ROOT_URL
+              value: '%(protocol)s://%(domain)s:/'
+
+            - name: GF_DATABASE_TYPE
+              value: 'mysql'
+            - name: GF_DATABASE_HOST
+              value: 'grafana-database'
+            - name: GF_DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-database-user
+                  key: database
+            - name: GF_DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-database-user
+                  key: username
+            - name: GF_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-database-user
+                  key: password
+
+            - name: GF_ANALYTICS_REPORTING_ENABLED
+              value: 'false'
+            - name: GF_ANALYTICS_CHECK_FOR_UPDATES
+              value: 'true'
+            - name: GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES
+              value: 'true'
+            - name: GF_ANALYTICS_FEEDBACK_LINKS_ENABLED
+              value: 'false'
+
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-admin
+                  key: username
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-admin
+                  key: password
+            - name: GF_SECURITY_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-admin
+                  key: email
+            - name: GF_SECURITY_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-secretkey
+                  key: key
+            - name: GF_SECURITY_COOKIE_SECURE
+              value: 'true'
+            - name: GF_SECURITY_COOKIE_SAMESITE
+              value: 'strict'
+            - name: GF_SECURITY_STRICT_TRANSPORT_SECURITY
+              value: 'true'
+            - name: GF_SECURITY_STRICT_TRANSPORT_SECURITY_PRELOAD
+              value: 'true'
+            - name: GF_SECURITY_CONTENT_SECURITY_POLICY
+              value: 'true'
+
+            - name: GF_SNAPSHOTS_EXTERNAL_ENABLED
+              value: 'false'
+
+            - name: GF_USERS_VERIFY_EMAIL_ENABLED
+              value: 'true'
+            - name: GF_USERS_DEFAULT_THEME
+              value: 'system'
+            - name: GF_USERS_DEFAULT_LANGUAGE
+              value: 'de-DE'
+
+            - name: GF_AUTH_LOGIN_COOKIE_NAME
+              value: '__Host-grafana_session'
+            - name: GF_AUTH_BASIC_ENABLED
+              value: 'true'
+            - name: GF_AUTH_BASIC_PASSWORD_POLICY
+              value: 'true'
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: 'false'
+            - name: GF_AUTH_ANONYMOUS_HIDE_VERSION
+              value: 'true'
+
+            - name: GF_SMTP_ENABLED
+              value: 'true'
+            - name: GF_SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-smtp
+                  key: smtphost
+            - name: GF_SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-smtp
+                  key: username
+            - name: GF_SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-smtp
+                  key: password
+            - name: GF_SMTP_FROM_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-smtp
+                  key: fromaddress
+            - name: GF_SMTP_FROM_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-smtp
+                  key: fromname
+
+            - name: GF_LOG_MODE
+              value: console
+            - name: GF_LOG_LEVEL
+              value: info
+
+            - name: GF_UNIFIED_ALERTING_ENABLED
+              value: 'true'
+            - name: GF_UNIFIED_ALERTING_HA_LISTEN_ADDRESS
+              value: '$(POD_IP):9094'
+            - name: GF_UNIFIED_ALERTING_HA_ADVERTISE_ADDRESS
+              value: '$(POD_IP):9094'
+            - name: GF_UNIFIED_ALERTING_HA_PEERS
+              value: 'grafana-alerting.grafana:9094'
+            - name: GF_UNIFIED_ALERTING_HA_PEER_TIMEOUT
+              value: '15s'
+            - name: GF_UNIFIED_ALERTING_HA_RECONNECT_TIMEOUT
+              value: '2m'
+
+            - name: GF_NEWS_NEWS_FEED_ENABLED
+              value: 'false'
+
+            - name: GF_METRICS_ENABLED
+              value: 'true'
+            - name: GF_METRICS_BASIC_AUTH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-metrics
+                  key: username
+            - name: GF_METRICS_BASIC_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-metrics
+                  key: password
+
+            - name: GF_RENDERING_RENDERER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-renderer-auth
+                  key: authkey
+            - name: GF_RENDERING_SERVER_URL
+              value: 'http://grafana-renderer:8081/render'
+            - name: GF_RENDERING_CALLBACK_URL
+              value: 'http://grafana:3000/'
+            - name: GF_RENDERING_CONCURRENT_RENDER_REQUEST_LIMIT
+              value: '10'
+
+            - name: GF_LIVE_HA_ENGINE
+              value: 'redis'
+            - name: GF_LIVE_HA_ENGINE_ADDRESS
+              value: 'grafana-haengine:6379'
+            - name: GF_LIVE_HA_ENGINE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-haengine-auth
+                  key: authkey
+
+            - name: GF_DATE_FORMATS_FULL_DATE
+              value: 'YYYY-MM-DD HH:mm:ss'
+            - name: GF_DATE_FORMATS_INTERVAL_SECOND
+              value: 'HH:mm:ss'
+            - name: GF_DATE_FORMATS_INTERVAL_MINUTE
+              value: 'HH:mm'
+            - name: GF_DATE_FORMATS_INTERVAL_HOUR
+              value: 'DD.MM. HH:mm'
+            - name: GF_DATE_FORMATS_INTERVAL_DAY
+              value: 'DD.MM.'
+            - name: GF_DATE_FORMATS_INTERVAL_MONTH
+              value: 'YYYY-MM'
+            - name: GF_DATE_FORMATS_INTERVAL_YEAR
+              value: 'YYYY'
+            - name: GF_DATE_FORMATS_DEFAULT_TIMEZONE
+              value: 'browser'
+
+            - name: GF_PUBLIC_DASHBOARDS_ENABLED
+              value: 'false'
+
+            - name: GF_SUPPORT_BUNDLES_ENABLED
+              value: 'false'
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+              name: grafana
+            - containerPort: 9094
+              protocol: TCP
+              name: gossip-tcp
+            - containerPort: 9094
+              protocol: UDP
+              name: gossip-udp
+          startupProbe:
+            httpGet:
+              path: /robots.txt
+              port: grafana
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /robots.txt
+              port: grafana
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: grafana
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5

@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: grafana-oss
+  name: grafana
 spec:
   hard:
     pods: 0
