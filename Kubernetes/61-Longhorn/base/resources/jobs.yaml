@@ -8,6 +8,7 @@ spec:
   cron: 0 2 * * *
   groups:
     - default
+    - backup-only
   labels: {}
   name: longhorn-job-backup
   retain: 35
@@ -22,7 +23,7 @@ spec:
   concurrency: 1
   cron: 0 0/4 * * *
   groups:
-    - default
+    - snapshot-only
   labels: {}
   name: longhorn-job-snapshot
   retain: 6
@@ -38,6 +39,7 @@ spec:
   cron: 0 4 * * 0
   groups:
     - default
+    - trim-only
   labels: {}
   name: longhorn-job-trim
   retain: 0

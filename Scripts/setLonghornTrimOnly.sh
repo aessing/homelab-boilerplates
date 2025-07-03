@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+# =============================================================================
+# Helper Script: setLonghornTrimOnly.sh
+# Sets the label 'recurring-job-group.longhorn.io/trim-only=enabled' on a
+# specified Longhorn volume
+# -----------------------------------------------------------------------------
+# Developer.......: Andre Essing (https://github.com/aessing)
+#                                (https://www.linkedin.com/in/aessing/)
+# Inspired by.....: ChatGPT (https://chat.openai.com/)
+# -----------------------------------------------------------------------------
+# THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
+# EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+# =============================================================================
+
+set -euo pipefail
+
+# Colors
+YELLOW='\033[1;33m'
+GREEN='\033[1;32m'
+RED='\033[1;31m'
+CYAN='\033[1;36m'
+NC='\033[0m' # No Color
+
+# Check for required parameter
+if [ "$#" -ne 1 ]; then
+  echo -e "${YELLOW}❌ Usage: $0 <volume-name>${NC}\n"
+  exit 1
+fi
+
+VOLUME_NAME="$1"
+NAMESPACE="longhorn-system"
+
+echo -e "${CYAN}\n==============================================="
+echo -e "🚀 Longhorn Volume Label Setter"
+echo -e "===============================================${NC}\n"
+echo -e ""
+
+echo -e "${YELLOW}🔖 Setting label 'recurring-job-group.longhorn.io/trim-only=enabled' on volume ${VOLUME_NAME}...${NC}"
+kubectl -n "$NAMESPACE" label volume "$VOLUME_NAME" recurring-job-group.longhorn.io/trim-only=enabled --overwrite
+echo -e ""
+
+echo -e "${YELLOW}🧹 Removing label 'recurring-job-group.longhorn.io/default' from volume ${VOLUME_NAME}...${NC}"
+kubectl -n "$NAMESPACE" label volume "$VOLUME_NAME" recurring-job-group.longhorn.io/default-
+echo -e ""
+
+echo -e "\n${GREEN}✅ All done! Labels updated for volume ${VOLUME_NAME}.${NC}\n"
+echo -e ""
