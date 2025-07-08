@@ -14,6 +14,8 @@ metadata:
     #secret.reloader.stakater.com/reload: '' # Reloads when specific Secret(s) change, regardless of how they're used
     reloader.stakater.com/rollout-strategy: 'rollout' # Specifies the rollout strategy for the workload (rollout (default) / restart)
 spec:
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
   schedule: '*/5 * * * *' # every five minutes
   jobTemplate:
     spec:

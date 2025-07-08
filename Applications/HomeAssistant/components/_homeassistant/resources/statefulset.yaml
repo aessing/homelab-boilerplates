@@ -14,6 +14,7 @@ metadata:
     #secret.reloader.stakater.com/reload: '' # Reloads when specific Secret(s) change, regardless of how they're used
     reloader.stakater.com/rollout-strategy: 'rollout' # Specifies the rollout strategy for the workload (rollout (default) / restart)
 spec:
+  revisionHistoryLimit: 3
   serviceName: homeassistant
   selector:
     matchLabels:
