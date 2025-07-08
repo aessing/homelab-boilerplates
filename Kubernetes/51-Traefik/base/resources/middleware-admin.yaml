@@ -6,9 +6,13 @@ metadata:
 spec:
   chain:
     middlewares:
-      - name: headers-default
+      - name: forwarded-headers
         namespace: traefik-system
-      - name: compression
+      - name: secure-headers
+        namespace: traefik-system
+      - name: rate-limit
         namespace: traefik-system
       - name: ipallowlist-rfc1918
+        namespace: traefik-system
+      - name: compression
         namespace: traefik-system
