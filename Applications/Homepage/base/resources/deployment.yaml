@@ -37,7 +37,7 @@ spec:
           image: busybox:0.0.0
           command: ['sh', '-c', 'mkdir -p /app/public/images && chown -R 1000:1000 /app/public/images']
           volumeMounts:
-            - name: homepage-public-custom-vol
+            - name: homepage-public-vol
               mountPath: /app/public/images
       containers:
         - name: homepage
@@ -132,7 +132,7 @@ spec:
             - mountPath: /app/config/widgets.yaml
               name: homepage-config-vol
               subPath: widgets.yaml
-            - name: homepage-public-custom-vol
+            - name: homepage-public-vol
               mountPath: /app/public/images
               subPath: images
             - mountPath: /app/config/logs
@@ -141,8 +141,8 @@ spec:
         - name: homepage-config-vol
           configMap:
             name: homepage-config
-        - name: homepage-public-custom-vol
+        - name: homepage-public-vol
           persistentVolumeClaim:
-            claimName: homepage-public-custom
+            claimName: homepage-public
         - name: logs
           emptyDir: {}
