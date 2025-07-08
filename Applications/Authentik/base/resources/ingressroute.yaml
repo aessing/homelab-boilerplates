@@ -4,7 +4,7 @@ kind: IngressRoute
 metadata:
   name: authentik
   labels:
-    app.kubernetes.io/component: 'application'
+    app.kubernetes.io/component: 'server'
   annotations:
     kubernetes.io/ingress.class: traefik-external
 spec:

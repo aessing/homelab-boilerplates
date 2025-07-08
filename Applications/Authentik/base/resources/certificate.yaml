@@ -4,7 +4,7 @@ kind: Certificate
 metadata:
   name: authentik
   labels:
-    app.kubernetes.io/component: 'application'
+    app.kubernetes.io/component: 'server'
   annotations:
     # Only used with Traefik Ingress Controller.
     reloader.stakater.com/match: 'false' # Marks the config/secret as eligible for reload in search mode
@@ -12,7 +12,7 @@ spec:
   secretName: authentik-certificate
   secretTemplate:
     labels:
-      app.kubernetes.io/component: 'application' # The component within the architecture
+      app.kubernetes.io/component: 'server' # The component within the architecture
     annotations:
       # Only used with Traefik Ingress Controller.
       reloader.stakater.com/match: 'false' # Marks the config/secret as eligible for reload in search mode
