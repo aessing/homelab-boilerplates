@@ -1,0 +1,10 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: authentik
+spec:
+  repo: https://charts.goauthentik.io
+  chart: authentik
+  helmVersion: v3
+  bootstrap: false
