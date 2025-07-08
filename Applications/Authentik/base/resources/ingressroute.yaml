@@ -17,7 +17,7 @@ spec:
         - name: chain-default
           namespace: traefik-system
       services:
-        - name: authentik
+        - name: authentik-server
           port: 80
           sticky:
             cookie:
