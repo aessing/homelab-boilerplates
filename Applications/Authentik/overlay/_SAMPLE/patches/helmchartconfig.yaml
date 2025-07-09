@@ -1,0 +1,221 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: authentik
+spec:
+  valuesContent: >-
+    authentik:
+      # -- Secret key used for cookie singing and unique user IDs,
+      # don't change this after the first install
+      # (Required)  To generate a secret key run the following command:
+      #             echo $(openssl rand -base64 64 | tr -d '\n')
+      secret_key: '###SECRET_KEY###'
+      email:
+        host: '###SMTP_HOST###'
+        port: ###SMTP_HOST_PORT###
+        username: '###SMTP_USERNAME###'
+        password: '###SMTP_PASSWORD###'
+        use_tls: true
+        use_ssl: false
+        timeout: 30
+        from: '###FROM_EMAIL_STRING###'
+      error_reporting:
+        enabled: false
+        send_pii: false
+      disable_update_check: false
+      disable_startup_analytics: true
+      postgresql:
+        password: '###POSTGRESQL_PASSWORD###'
+      redis:
+        password: '###REDIS_PASSWORD###'
+
+    server:
+      replicas: 1
+      initContainers:
+        - name: init
+          image: busybox:latest
+          command:
+            - 'sh'
+            - '-c'
+            - |
+              echo "========================================="
+              echo " 📁 Initializing media permissions"
+              echo "========================================="
+              echo ""
+              echo "📋 [1/4] Checking current permissions..."
+              ls -la /media
+              echo ""
+              echo "👤 [2/4] Changing ownership to uid:gid 1000:1000..."
+              chown 1000:1000 /media
+              echo "Ownership changed successfully"
+              echo ""
+              echo "🔐 [3/4] Setting permissions (770)..."
+              chmod 770 /media
+              echo "Permissions updated successfully"
+              echo ""
+              echo "🔍 [4/4] Verifying final permissions..."
+              ls -la /media
+              echo ""
+              echo "========================================="
+              echo " ✨ Permissions successfully configured!"
+              echo "========================================="
+              echo ""
+          volumeMounts:
+            - name: authentik-media-vol
+              mountPath: /media
+      volumeMounts:
+        - name: authentik-media-vol
+          mountPath: /media
+      volumes:
+        - name: authentik-media-vol
+          persistentVolumeClaim:
+            claimName: authentik-media
+
+    worker:
+      replicas: 1
+      initContainers:
+        - name: init
+          image: busybox:latest
+          command:
+            - 'sh'
+            - '-c'
+            - |
+              echo "================================================="
+              echo " 📁 Initializing certs and templates permissions"
+              echo "================================================="
+              echo ""
+              echo "📋 [1/4] Checking current permissions..."
+              ls -la /certs
+              ls -la /templates
+              echo ""
+              echo "👤 [2/4] Changing ownership to uid:gid 1000:1000..."
+              chown 1000:1000 /certs
+              chown 1000:1000 /templates
+              echo "Ownership changed successfully"
+              echo ""
+              echo "🔐 [3/4] Setting permissions (770)..."
+              chmod 770 /certs
+              chmod 770 /templates
+              echo "Permissions updated successfully"
+              echo ""
+              echo "🔍 [4/4] Verifying final permissions..."
+              ls -la /certs
+              ls -la /templates
+              echo ""
+              echo "================================================="
+              echo " ✨ Permissions successfully configured!"
+              echo "================================================="
+              echo ""
+          volumeMounts:
+            - name: authentik-certs-vol
+              mountPath: /certs
+            - name: authentik-templates-vol
+              mountPath: /templates
+      volumeMounts:
+        - name: authentik-certs-vol
+          mountPath: /certs
+        - name: authentik-templates-vol
+          mountPath: /templates
+      volumes:
+        - name: authentik-certs-vol
+          persistentVolumeClaim:
+            claimName: authentik-certs
+        - name: authentik-templates-vol
+          persistentVolumeClaim:
+            claimName: authentik-templates
+      startupProbe:
+        exec:
+          command:
+            - ak
+            - healthcheck
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 3
+        successThreshold: 1
+        failureThreshold: 30
+      readinessProbe:
+        exec:
+          command:
+            - ak
+            - healthcheck
+        initialDelaySeconds: 30
+        periodSeconds: 30
+        timeoutSeconds: 5
+        successThreshold: 1
+        failureThreshold: 3
+      livenessProbe:
+        exec:
+          command:
+            - ak
+            - healthcheck
+        initialDelaySeconds: 60
+        periodSeconds: 60
+        timeoutSeconds: 5
+        successThreshold: 1
+        failureThreshold: 5
+
+    postgresql:
+      enabled: true
+      auth:
+        password: '###POSTGRESQL_PASSWORD###'
+      primary:
+        persistence:
+          enabled: true
+          volumeName: 'postgresql-data'
+          storageClass: 'longhorn-retain'
+          size: 8Gi
+
+    redis:
+      enabled: true
+      auth:
+        enabled: true
+        password: '###REDIS_PASSWORD###'
+      persistence:
+        enabled: true
+        storageClass: 'longhorn-delete'
+        size: 8Gi
+
+    additionalObjects:
+      - apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          name: authentik-media
+          namespace: authentik
+          labels:
+            app: authentik
+        spec:
+          accessModes:
+            - ReadWriteMany
+          storageClassName: longhorn-retain
+          resources:
+            requests:
+              storage: 1Gi
+      - apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          name: authentik-certs
+          namespace: authentik
+          labels:
+            app: authentik
+        spec:
+          accessModes:
+            - ReadWriteMany
+          storageClassName: longhorn-retain
+          resources:
+            requests:
+              storage: 1Gi
+      - apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          name: authentik-templates
+          namespace: authentik
+          labels:
+            app: authentik
+        spec:
+          accessModes:
+            - ReadWriteMany
+          storageClassName: longhorn-retain
+          resources:
+            requests:
+              storage: 1Gi
