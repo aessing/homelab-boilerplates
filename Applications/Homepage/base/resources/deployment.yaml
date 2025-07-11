@@ -63,10 +63,10 @@ spec:
           resources:
             requests:
               cpu: 0.1
-              memory: 64Mi
-            limits:
-              cpu: 0.5
               memory: 128Mi
+            limits:
+              cpu: 0.25
+              memory: 256Mi
           env:
             - name: HOMEPAGE_ALLOWED_HOSTS
               value: gethomepage.dev # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
@@ -83,9 +83,9 @@ spec:
               path: /
               port: http
               scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 30
           readinessProbe:
@@ -93,9 +93,9 @@ spec:
               path: /
               port: http
               scheme: HTTP
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 5
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 3
           livenessProbe:
@@ -103,11 +103,11 @@ spec:
               path: /
               port: http
               scheme: HTTP
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             periodSeconds: 60
-            timeoutSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
-            failureThreshold: 5
+            failureThreshold: 3
           volumeMounts:
             - mountPath: /app/config/bookmarks.yaml
               name: homepage-config-vol

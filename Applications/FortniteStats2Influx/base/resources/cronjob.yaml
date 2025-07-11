@@ -42,11 +42,11 @@ spec:
                 readOnlyRootFilesystem: true
               resources:
                 requests:
-                  cpu: 0.1
-                  memory: 32Mi
+                  cpu: 0.15
+                  memory: 48Mi
                 limits:
-                  cpu: 0.2
-                  memory: 64Mi
+                  cpu: 0.3
+                  memory: 128Mi
               env:
                 - name: FORTNITE_API_TOKEN
                   valueFrom:

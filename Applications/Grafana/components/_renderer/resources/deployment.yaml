@@ -48,10 +48,10 @@ spec:
           resources:
             requests:
               cpu: 0.1
-              memory: 256Mi
+              memory: 64Mi
             limits:
-              cpu: 2
-              memory: 1024Mi
+              cpu: 1
+              memory: 256Mi
           env:
             - name: AUTH_TOKEN
               valueFrom:
@@ -67,9 +67,9 @@ spec:
               path: /
               port: http
               scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 30
           readinessProbe:
@@ -77,9 +77,9 @@ spec:
               path: /
               port: http
               scheme: HTTP
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 5
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 3
           livenessProbe:
@@ -87,11 +87,11 @@ spec:
               path: /
               port: http
               scheme: HTTP
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             periodSeconds: 60
-            timeoutSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
-            failureThreshold: 5
+            failureThreshold: 3
           volumeMounts:
             - name: grafana-renderer-config-vol
               mountPath: /usr/src/app/config.json
