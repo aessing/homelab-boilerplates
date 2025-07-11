@@ -39,7 +39,7 @@ patches:
     target:
       version: v1
       kind: PersistentVolumeClaim
-      name: homepage-public-custom
+      name: homepage-public
   - path: ./patches/resource-quota.json
     target:
       version: v1
