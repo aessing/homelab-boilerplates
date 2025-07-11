@@ -39,11 +39,11 @@ spec:
             readOnlyRootFilesystem: false
           resources:
             requests:
-              memory: 16Mi
-              cpu: 0.02
+              memory: 128Mi
+              cpu: 0.05
             limits:
-              memory: 32Mi
-              cpu: 0.1
+              memory: 256Mi
+              cpu: 0.2
           ports:
             - containerPort: 53
               protocol: TCP
@@ -60,27 +60,27 @@ spec:
           startupProbe:
             exec:
               command: ['/usr/bin/dig', '@127.0.0.1', 'localhost']
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 3
+            initialDelaySeconds: 5
+            periodSeconds: 2
+            timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 30
           readinessProbe:
             exec:
               command: ['/usr/bin/dig', '@127.0.0.1', 'localhost']
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 5
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
-            failureThreshold: 3
+            failureThreshold: 2
           livenessProbe:
             exec:
               command: ['/usr/bin/dig', '@127.0.0.1', 'localhost']
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             periodSeconds: 60
-            timeoutSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
-            failureThreshold: 5
+            failureThreshold: 3
           volumeMounts:
             - name: bind-config-vol
               mountPath: /etc/bind/named.conf
