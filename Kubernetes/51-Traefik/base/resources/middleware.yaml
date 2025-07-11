@@ -2,18 +2,9 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: headers-default
+  name: forwarded-headers
 spec:
   headers:
-    browserXssFilter: true
-    contentTypeNosniff: true
-    frameDeny: true
-    forceSTSHeader: true
-    referrerPolicy: strict-origin-when-cross-origin
-    stsIncludeSubdomains: true
-    stsPreload: true
-    stsSeconds: 15552000
-    customFrameOptionsValue: SAMEORIGIN
     customRequestHeaders:
       X-Forwarded-Proto: https
 
@@ -21,9 +12,36 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: compression
+  name: security-headers
 spec:
-  compress: {}
+  headers:
+    browserXssFilter: true
+    contentTypeNosniff: true
+    frameDeny: true
+    forceSTSHeader: true
+    stsIncludeSubdomains: true
+    stsPreload: true
+    stsSeconds: 15552000
+    referrerPolicy: strict-origin-when-cross-origin
+    customFrameOptionsValue: SAMEORIGIN
+    accessControlAllowHeaders:
+      - 'Authorization'
+      - 'Content-Type'
+      - 'X-Requested-With'
+      - 'X-Forwarded-For'
+      - 'X-Forwarded-Proto'
+      - 'Upgrade'
+      - 'Connection'
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: rate-limit
+spec:
+  rateLimit:
+    average: 100
+    burst: 50
 
 ---
 apiVersion: traefik.io/v1alpha1
@@ -41,13 +59,25 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
+  name: compression
+spec:
+  compress: {}
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
   name: chain-default
 spec:
   chain:
     middlewares:
-      - name: headers-default
+      - name: forwarded-headers
         namespace: traefik-system
-      - name: compression
+      - name: security-headers
+        namespace: traefik-system
+      - name: rate-limit
         namespace: traefik-system
       - name: ipallowlist-rfc1918
+        namespace: traefik-system
+      - name: compression
         namespace: traefik-system

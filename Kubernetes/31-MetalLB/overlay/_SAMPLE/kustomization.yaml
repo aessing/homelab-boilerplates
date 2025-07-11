@@ -8,7 +8,7 @@ sortOptions:
 buildMetadata:
   - managedByLabel
   - originAnnotations
-  - transformerAnnotations
+  # - transformerAnnotations
 
 labels:
   - includeSelectors: false

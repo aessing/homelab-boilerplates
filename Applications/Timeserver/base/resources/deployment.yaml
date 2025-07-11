@@ -14,6 +14,7 @@ metadata:
     #secret.reloader.stakater.com/reload: '' # Reloads when specific Secret(s) change, regardless of how they're used
     reloader.stakater.com/rollout-strategy: 'rollout' # Specifies the rollout strategy for the workload (rollout (default) / restart)
 spec:
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app.kubernetes.io/component: 'application' # The component within the architecture
@@ -50,11 +51,11 @@ spec:
             readOnlyRootFilesystem: false
           resources:
             requests:
-              memory: 4Mi
+              memory: 8Mi
               cpu: 0.01
             limits:
-              memory: 8Mi
-              cpu: 0.1
+              memory: 32Mi
+              cpu: 0.05
           ports:
             - containerPort: 123
               protocol: UDP
@@ -62,27 +63,27 @@ spec:
           startupProbe:
             exec:
               command: ['/usr/bin/chronyc', 'tracking']
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 30
           readinessProbe:
             exec:
               command: ['/usr/bin/chronyc', 'tracking']
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 5
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 3
           livenessProbe:
             exec:
               command: ['/usr/bin/chronyc', 'tracking']
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             periodSeconds: 60
-            timeoutSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
-            failureThreshold: 5
+            failureThreshold: 3
           volumeMounts:
             - name: chrony-config
               mountPath: /etc/chrony/chrony.conf
