@@ -12,7 +12,6 @@ resources:
   - ./resources/middleware.yaml
   - ./resources/middleware-tcp.yaml
   - ./resources/middleware-admin.yaml
-  - ./resources/middleware-dashboard.yaml
   - ./resources/ingressroute-dashboard.yaml
 
 transformers:

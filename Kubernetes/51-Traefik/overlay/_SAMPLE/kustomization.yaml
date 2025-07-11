@@ -8,7 +8,7 @@ sortOptions:
 buildMetadata:
   - managedByLabel
   - originAnnotations
-  - transformerAnnotations
+  # - transformerAnnotations
 
 labels:
   - includeSelectors: false
@@ -20,6 +20,7 @@ labels:
 
 resources:
   - ../../base
+  - ./resources/middleware-dashboard-auth.yaml
 
 generators:
   - ./generators/secret-dashboard-auth.yaml
@@ -49,4 +50,4 @@ patches:
       kind: IngressRoute
   - path: ./patches/namespace.json
     target:
-      labelSelector: 'kustomize-base=overlay'
+      name: traefik-dashboard-basicauth
