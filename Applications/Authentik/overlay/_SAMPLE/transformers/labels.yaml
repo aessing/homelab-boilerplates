@@ -1,0 +1,33 @@
+---
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: authentik-label-transformer
+labels:
+  app.kubernetes.io/name: authentik # The name of the application
+  app.kubernetes.io/instance: authentik # A unique name identifying the instance of an application
+  app.kubernetes.io/part-of: authentik # The name of a higher level application this one is part of
+fieldSpecs:
+  # Labels in metadata
+  - path: metadata/labels
+    create: true
+  # Labels in Service selector
+  - path: spec/selector
+    create: true
+    kind: Service
+  # Labels in Deployment/StatefulSet selector
+  - path: spec/selector/matchLabels
+    create: true
+    kind: Deployment
+  - path: spec/selector/matchLabels
+    create: true
+    kind: StatefulSet
+  - path: spec/template/metadata/labels
+    create: true
+    kind: Deployment
+  - path: spec/template/metadata/labels
+    create: true
+    kind: StatefulSet
+  - path: spec/volumeClaimTemplates/metadata/labels
+    create: true
+    kind: StatefulSet

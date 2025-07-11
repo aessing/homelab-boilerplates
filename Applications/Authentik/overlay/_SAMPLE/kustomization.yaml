@@ -10,30 +10,17 @@ buildMetadata:
   - originAnnotations
   # - transformerAnnotations
 
-labels:
-  - includeSelectors: false
-    pairs:
-      app.kubernetes.io/component: ingress-controller
-      app.kubernetes.io/instance: traefik
-      app.kubernetes.io/name: traefik
-      app.kubernetes.io/part-of: system-services
-
 resources:
   - ../../base
-  - ./resources/middleware-dashboard-auth.yaml
-
-generators:
-  - ./generators/secret-dashboard-auth.yaml
 
 patches:
-  # https://github.com/traefik/traefik
-  # https://github.com/traefik/traefik-helm-chart
+  # https://github.com/goauthentik/authentik
   - path: ./patches/version.json
     target:
       group: helm.cattle.io
       version: v1
       kind: HelmChart
-  - path: ./patches/certificate-dashboard.json
+  - path: ./patches/certificate.json
     target:
       group: cert-manager.io
       version: v1
@@ -43,11 +30,11 @@ patches:
       group: helm.cattle.io
       version: v1
       kind: HelmChartConfig
-  - path: ./patches/ingressroute-dashboard.json
+  - path: ./patches/ingressroute.json
     target:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
-  - path: ./patches/namespace.json
-    target:
-      name: traefik-dashboard-basicauth
+
+transformers:
+  - ./transformers/labels.yaml

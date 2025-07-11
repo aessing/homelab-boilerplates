@@ -1,1 +1,1 @@
-[{ "op": "replace", "path": "/metadata/namespace", "value": "traefik-system" }]
+[{ "op": "add", "path": "/metadata/namespace", "value": "traefik-system" }]
