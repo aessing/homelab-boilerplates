@@ -6,7 +6,7 @@ metadata:
 spec:
   valuesContent: >-
     authentik:
-      # -- Secret key used for cookie singing and unique user IDs,
+      # -- Secret key used for cookie signing and unique user IDs,
       # don't change this after the first install
       # (Required)  To generate a secret key run the following command:
       #             echo $(openssl rand -base64 64 | tr -d '\n')
