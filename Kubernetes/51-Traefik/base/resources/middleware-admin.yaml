@@ -8,7 +8,7 @@ spec:
     middlewares:
       - name: forwarded-headers
         namespace: traefik-system
-      - name: secure-headers
+      - name: security-headers
         namespace: traefik-system
       - name: rate-limit
         namespace: traefik-system
