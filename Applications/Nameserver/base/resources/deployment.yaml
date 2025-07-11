@@ -61,7 +61,7 @@ spec:
             exec:
               command: ['/usr/bin/dig', '@127.0.0.1', 'localhost']
             initialDelaySeconds: 5
-            periodSeconds: 2
+            periodSeconds: 5
             timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 30
@@ -72,7 +72,7 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             successThreshold: 1
-            failureThreshold: 2
+            failureThreshold: 3
           livenessProbe:
             exec:
               command: ['/usr/bin/dig', '@127.0.0.1', 'localhost']
