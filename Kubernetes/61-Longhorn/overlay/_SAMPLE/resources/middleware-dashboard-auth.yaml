@@ -1,0 +1,9 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: longhorn-dashboard-basicauth
+spec:
+  basicAuth:
+    secret: longhorn-dashboard-basicauth
+    removeHeader: true

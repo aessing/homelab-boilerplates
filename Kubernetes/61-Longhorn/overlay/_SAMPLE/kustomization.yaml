@@ -20,6 +20,7 @@ labels:
 
 resources:
   - ../../base
+  - ./resources/middleware-dashboard-auth.yaml
 
 generators:
   - ./generators/secret-dashboard-auth.yaml
@@ -32,7 +33,6 @@ patches:
       group: helm.cattle.io
       version: v1
       kind: HelmChart
-
   - path: ./patches/certificate-dashboard.json
     target:
       group: cert-manager.io
@@ -68,7 +68,10 @@ patches:
       name: longhorn-job-trim
   - path: ./patches/namespace.json
     target:
-      labelSelector: 'kustomize-base=overlay'
+      name: longhorn-dashboard-basicauth
+  - path: ./patches/namespace.json
+    target:
+      name: longhorn-backup-secret-azure
   - path: ./patches/storageclass.json
     target:
       group: storage.k8s.io
