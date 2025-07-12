@@ -44,10 +44,10 @@ spec:
             readOnlyRootFilesystem: true
           resources:
             requests:
-              memory: 32Mi
+              memory: 64Mi
               cpu: 0.01
             limits:
-              memory: 64Mi
+              memory: 128Mi
               cpu: 0.1
           ports:
             - containerPort: 465
@@ -58,6 +58,30 @@ spec:
                 name: mailrise-services
             - secretRef:
                 name: mailrise-users
+          startupProbe:
+            tcpSocket:
+              port: mailsecure
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            tcpSocket:
+              port: mailsecure
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: mailsecure
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 3
           volumeMounts:
             - name: mailrise-config-vol
               mountPath: /etc/mailrise.conf

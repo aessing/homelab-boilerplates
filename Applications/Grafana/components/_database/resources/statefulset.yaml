@@ -53,10 +53,10 @@ spec:
             readOnlyRootFilesystem: false
           resources:
             requests:
-              cpu: 0.25
-              memory: 256Mi
+              cpu: 0.1
+              memory: 768Mi
             limits:
-              cpu: 1
+              cpu: 0.5
               memory: 1024Mi
           env:
             - name: MYSQL_ROOT_PASSWORD
@@ -90,27 +90,27 @@ spec:
           startupProbe:
             exec:
               command: ['/bin/sh', '-c', 'mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD']
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 30
           readinessProbe:
             exec:
               command: ['/bin/sh', '-c', 'mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD']
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 5
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 3
           livenessProbe:
             exec:
               command: ['/bin/sh', '-c', 'mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD']
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             periodSeconds: 60
-            timeoutSeconds: 5
+            timeoutSeconds: 2
             successThreshold: 1
-            failureThreshold: 5
+            failureThreshold: 3
           volumeMounts:
             - mountPath: /var/lib/mysql
               name: grafana-database-data
