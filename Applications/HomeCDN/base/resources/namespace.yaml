@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: homecdn
+  labels:
+    reloader.stakater.com/reload: 'disabled' # Enables reloader for this namespace
+
