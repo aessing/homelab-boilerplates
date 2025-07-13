@@ -35,11 +35,6 @@ patches:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
-  - path: ./patches/pvc.json
-    target:
-      version: v1
-      kind: PersistentVolumeClaim
-      name: homepage-public
   - path: ./patches/resource-quota.json
     target:
       version: v1

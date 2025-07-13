@@ -8,7 +8,6 @@ metadata:
 spec:
   selector:
     app.kubernetes.io/name: homepage
-  clusterIP: None
   ports:
     - protocol: TCP
       port: 3000

@@ -8,7 +8,6 @@ resources:
   - ./resources/deployment.yaml
   - ./resources/ingressroute.yaml
   - ./resources/namespace.yaml
-  - ./resources/pvc.yaml
   - ./resources/resource-quota.yaml
   - ./resources/secret.yaml
   - ./resources/service.yaml
