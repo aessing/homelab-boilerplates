@@ -230,9 +230,3 @@ After resizing the partition, you can then resize the filesystem:
 ```bash
 sudo resize2fs /dev/sda2
 ```
-
-Afterwards, you can resize the filesystem to use the newly extended partition:
-
-```bash
-sudo resize2fs /dev/sda2
-```
