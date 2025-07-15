@@ -48,10 +48,10 @@ spec:
           resources:
             requests:
               cpu: 0.1
-              memory: 64Mi
+              memory: 128Mi
             limits:
               cpu: 1
-              memory: 256Mi
+              memory: 512Mi
           env:
             - name: AUTH_TOKEN
               valueFrom:

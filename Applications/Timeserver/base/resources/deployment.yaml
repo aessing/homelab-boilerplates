@@ -52,7 +52,7 @@ spec:
           resources:
             requests:
               memory: 8Mi
-              cpu: 0.02
+              cpu: 0.03
             limits:
               memory: 32Mi
               cpu: 0.1
