@@ -35,7 +35,7 @@ spec:
         k8s.v1.cni.cncf.io/networks: scrypted/scrypted
     spec:
       restartPolicy: Always
-      terminationGracePeriodSeconds: 180
+      terminationGracePeriodSeconds: 30
       initContainers:
         - name: scrypted-init
           image: busybox:0.0.0

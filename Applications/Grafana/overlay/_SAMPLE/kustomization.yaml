@@ -55,7 +55,7 @@ patches:
       kind: ResourceQuota
 
 transformers:
-  # https://hub.docker.com/_/mariadb
+  # https://hub.docker.com/_/mysql
   # https://hub.docker.com/_/redis/
   # https://hub.docker.com/r/grafana/grafana-image-renderer
   # https://hub.docker.com/r/grafana/grafana-oss/tags

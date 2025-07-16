@@ -5,7 +5,7 @@ metadata:
   name: timeserver-imagetransformer
 imageTag:
   name: ghcr.io/aessing/chronyd
-  newTag: 1.4.0
+  newTag: 1.4.2
 ---
 apiVersion: builtin
 kind: ImageTagTransformer

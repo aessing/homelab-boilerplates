@@ -11,7 +11,7 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 2025.6.3 # The current version of the application
+      app.kubernetes.io/version: 2025.7.2 # The current version of the application
 
 resources:
   - ../../base
@@ -90,7 +90,7 @@ patches:
 
 transformers:
   # https://hub.docker.com/_/busybox
-  # https://github.com/eclipse-mosquitto/mosquitto
+  # https://hub.docker.com/_/eclipse-mosquitto
   # https://hub.docker.com/_/mariadb
   # https://github.com/linuxserver/docker-code-server
   # https://github.com/home-assistant/core

@@ -13,7 +13,7 @@ metadata:
   name: grafana-haengine-imagetransformer
 imageTag:
   name: redis
-  newTag: 8.0.2
+  newTag: 8.0.3
 ---
 apiVersion: builtin
 kind: ImageTagTransformer

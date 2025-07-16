@@ -21,7 +21,7 @@ metadata:
   name: homeassistant-imagetransformer
 imageTag:
   name: ghcr.io/home-assistant/home-assistant
-  newTag: 2025.6.3
+  newTag: 2025.7.2
 ---
 apiVersion: builtin
 kind: ImageTagTransformer
@@ -29,7 +29,7 @@ metadata:
   name: mqtt-imagetransformer
 imageTag:
   name: eclipse-mosquitto
-  newTag: 2.0.21
+  newTag: 2.0.22
 ---
 apiVersion: builtin
 kind: ImageTagTransformer
@@ -38,5 +38,3 @@ metadata:
 imageTag:
   name: mariadb
   newTag: 11.8.2
----
-

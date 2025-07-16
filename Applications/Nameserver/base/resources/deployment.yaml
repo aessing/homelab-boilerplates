@@ -27,7 +27,7 @@ spec:
         app.kubernetes.io/component: 'application' # The component within the architecture
     spec:
       restartPolicy: Always
-      terminationGracePeriodSeconds: 180
+      terminationGracePeriodSeconds: 30
       containers:
         - name: bind
           image: ghcr.io/aessing/bind:0.0.0

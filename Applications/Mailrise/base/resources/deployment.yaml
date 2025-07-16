@@ -27,7 +27,7 @@ spec:
         app.kubernetes.io/component: 'application' # The component within the architecture
     spec:
       restartPolicy: Always
-      terminationGracePeriodSeconds: 180
+      terminationGracePeriodSeconds: 30
       securityContext:
         fsGroup: 999
       containers:
