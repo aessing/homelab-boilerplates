@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# If you change namespace, you must change the namespace in the patches/target-namespace.json file
+namespace: cattle-system
+
+resources:
+  - ./resources/namespace.yaml
+  - ./resources/helmchartconfig.yaml
+  - ./resources/helmchart.yaml
+  - ./resources/certificate.yaml
+  - ./resources/ingressroute.yaml
+
+transformers:
+  # HelmChart and HelmChartConfigs needs to be deployed in namespace kube-system
+  - ./transformers/helmchartconfig.yaml
+  - ./transformers/helmchart.yaml
+
+patches:
+  # If you change target-namespace, you must change the namespace above
+  - path: ./patches/target-namespace.json
+    target:
+      group: helm.cattle.io
+      version: v1
+      kind: HelmChart

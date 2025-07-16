@@ -1,0 +1,10 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: rancher
+spec:
+  repo: https://releases.rancher.com/server-charts/stable
+  chart: rancher-stable
+  helmVersion: v3
+  bootstrap: false
