@@ -1,0 +1,10 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: loki
+spec:
+  repo: https://grafana.github.io/helm-charts
+  chart: loki
+  helmVersion: v3
+  bootstrap: false
