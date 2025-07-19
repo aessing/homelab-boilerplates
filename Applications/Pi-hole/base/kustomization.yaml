@@ -12,7 +12,7 @@ resources:
   - ./resources/statefulset.yaml
 
 patches:
-  - path: ./patches/environment.yaml
+  - path: ./patches/config.yaml
     target:
       group: apps
       version: v1

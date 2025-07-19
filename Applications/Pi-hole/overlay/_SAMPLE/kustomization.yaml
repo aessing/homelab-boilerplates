@@ -26,7 +26,7 @@ patches:
       group: cert-manager.io
       version: v1
       kind: Certificate
-  - path: ./patches/environment.yaml
+  - path: ./patches/config.yaml
     target:
       group: apps
       version: v1
