@@ -25,6 +25,8 @@ spec:
               value: 'true'
             - name: FTLCONF_dns_analyzeOnlyAandAAAA
               value: 'false'
+            - name: FTLCONF_dns_domain
+              value: 'lan'
             - name: FTLCONF_dns_piholePTR
               value: 'NONE'
             - name: FTLCONF_dns_replyWhenBusy
@@ -46,7 +48,7 @@ spec:
             - name: FTLCONF_dns_listeningMode
               value: 'single'
             - name: FTLCONF_dns_queryLogging
-              value: 'true'
+              value: 'false'
             - name: FTLCONF_dns_cnameRecords
               value: ''
             - name: FTLCONF_dns_port
@@ -244,7 +246,7 @@ spec:
             - name: FTLCONF_misc_privacylevel
               value: '0'
             - name: FTLCONF_misc_etc_dnsmasq_d
-              value: 'false'
+              value: 'true'
             - name: FTLCONF_misc_dnsmasq_lines
               value: ''
             - name: FTLCONF_misc_extraLogging

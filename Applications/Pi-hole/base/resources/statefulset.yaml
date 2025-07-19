@@ -102,17 +102,19 @@ spec:
           volumeMounts:
             - mountPath: /etc/pihole
               name: pihole-config
-              subPath: pihole
-            - mountPath: /etc/dnsmasq.d
-              name: pihole-config
-              subPath: dnsmasq
             - name: pihole-conditional-forwarders
               mountPath: /etc/dnsmasq.d/01-custom-forwarders.conf
-              subPath: 01-custom-forward.conf
+              subPath: 01-custom-forwarders.conf
+            - name: dshm
+              mountPath: /dev/shm
       volumes:
         - name: pihole-conditional-forwarders
           configMap:
             name: pihole-conditional-forwarders
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
   volumeClaimTemplates:
     - metadata:
         name: pihole-config

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pihole
+spec:
+  template:
+    spec:
+      containers:
+        - name: pihole
+          env:
+            - name: FTLCONF_dns_upstreams
+              value: '###FORWARDER_IP_ADDRESS###'
+            - name: FTLCONF_dns_interface
+              value: 'net1'
+            - name: FTLCONF_webserver_domain
+              value: '###FQDN_OF_APPLICATION###'
+            - name: FTLCONF_webserver_acl
+              value: '+127.0.0.1,+###SUBNET/CIDR_OF_CLUSTER_POD_NETWORK_WHERE_TRAEFIK_IS_IN###'
+            - name: FTLCONF_webserver_interface_boxed
+              value: 'true'
+            - name: FTLCONF_webserver_interface_theme
+              value: 'default-auto'
+            - name: FTLCONF_webserver_api_temp_unit
+              value: 'C'
