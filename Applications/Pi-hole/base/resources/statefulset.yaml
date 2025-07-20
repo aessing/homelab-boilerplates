@@ -41,6 +41,9 @@ spec:
       containers:
         - name: pihole
           image: pihole/pihole:0.0.0
+          command: ['/bin/sh', '-c']
+          args:
+            - chmod 644 /macvendor.db && exec start.sh
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsNonRoot: false
