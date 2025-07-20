@@ -1,0 +1,17 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: unbound-configs
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: 'application' # The component within the architecture
+  annotations:
+    # Reloads handled by kustomize with suffix
+    reloader.stakater.com/match: 'false' # Marks the config/secret as eligible for reload in search mode
+files:
+  - ./configs/unbound.conf
+  - ./configs/a-records.conf
+  - ./configs/forward-records.conf
+  - ./configs/srv-records.conf

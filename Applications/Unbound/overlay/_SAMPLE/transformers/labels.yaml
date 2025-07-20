@@ -2,9 +2,9 @@
 apiVersion: builtin
 kind: LabelTransformer
 metadata:
-  name: pihole-label-transformer
+  name: unbound-label-transformer
 labels:
-  app.kubernetes.io/name: pihole # The name of the application
+  app.kubernetes.io/name: unbound # The name of the application
   app.kubernetes.io/instance: nameserver-internal # A unique name identifying the instance of an application
   app.kubernetes.io/part-of: networking # The name of a higher level application this one is part of
 fieldSpecs:

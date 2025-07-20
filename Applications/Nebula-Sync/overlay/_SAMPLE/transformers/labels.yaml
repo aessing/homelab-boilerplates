@@ -5,7 +5,7 @@ metadata:
   name: nebula-sync-label-transformer
 labels:
   app.kubernetes.io/name: nebula-sync # The name of the application
-  app.kubernetes.io/instance: nebula-sync-internal # A unique name identifying the instance of an application
+  app.kubernetes.io/instance: nameserver-internal # A unique name identifying the instance of an application
   app.kubernetes.io/part-of: networking # The name of a higher level application this one is part of
 fieldSpecs:
   # Labels in metadata
