@@ -254,7 +254,7 @@ spec:
             - name: FTLCONF_misc_readOnly
               value: 'false'
             - name: FTLCONF_misc_check_load
-              value: 'true'
+              value: 'false'
             - name: FTLCONF_misc_check_shmem
               value: '90'
             - name: FTLCONF_misc_check_disk

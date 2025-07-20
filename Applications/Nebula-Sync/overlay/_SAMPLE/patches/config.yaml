@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nebula-sync
+spec:
+  template:
+    spec:
+      containers:
+        - name: nebula-sync
+          env:
+            - name: FULL_SYNC
+              value: 'true'
+            - name: CRON
+              value: '*/15 * * * *'
+            - name: RUN_GRAVITY
+              value: 'true'
+            - name: CLIENT_SKIP_TLS_VERIFICATION
+              value: 'false'
+            - name: CLIENT_RETRY_DELAY_SECONDS
+              value: '15'
+            - name: CLIENT_TIMEOUT_SECONDS
+              value: '45'
+            # - name: SYNC_CONFIG_DNS
+            #   value: 'true'
+            # - name: SYNC_CONFIG_DHCP
+            #   value: 'true'
+            # - name: SYNC_CONFIG_NTP
+            #   value: 'true'
+            # - name: SYNC_CONFIG_RESOLVER
+            #   value: 'true'
+            # - name: SYNC_CONFIG_DATABASE
+            #   value: 'true'
+            # - name: SYNC_CONFIG_MISC
+            #   value: 'true'
+            # - name: SYNC_CONFIG_DEBUG
+            #   value: 'true'
+            # - name: SYNC_GRAVITY_DHCP_LEASES
+            #   value: 'true'
+            # - name: SYNC_GRAVITY_GROUP
+            #   value: 'true'
+            # - name: SYNC_GRAVITY_AD_LIST
+            #   value: 'true'
+            # - name: SYNC_GRAVITY_AD_LIST_BY_GROUP
+            #   value: 'true'
+            # - name: SYNC_GRAVITY_DOMAIN_LIST
+            #   value: 'true'
+            # - name: SYNC_GRAVITY_DOMAIN_LIST_BY_GROUP
+            #   value: 'true'
+            # - name: SYNC_GRAVITY_CLIENT
+            #   value: 'true'
+            # - name: SYNC_GRAVITY_CLIENT_BY_GROUP
+            #   value: 'true'
