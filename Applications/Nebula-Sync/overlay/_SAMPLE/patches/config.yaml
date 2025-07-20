@@ -9,7 +9,7 @@ spec:
         - name: nebula-sync
           env:
             - name: FULL_SYNC
-              value: 'true'
+              value: 'false'
             - name: CRON
               value: '*/15 * * * *'
             - name: RUN_GRAVITY
@@ -20,33 +20,40 @@ spec:
               value: '15'
             - name: CLIENT_TIMEOUT_SECONDS
               value: '45'
-            # - name: SYNC_CONFIG_DNS
-            #   value: 'true'
-            # - name: SYNC_CONFIG_DHCP
-            #   value: 'true'
-            # - name: SYNC_CONFIG_NTP
-            #   value: 'true'
-            # - name: SYNC_CONFIG_RESOLVER
-            #   value: 'true'
-            # - name: SYNC_CONFIG_DATABASE
-            #   value: 'true'
-            # - name: SYNC_CONFIG_MISC
-            #   value: 'true'
-            # - name: SYNC_CONFIG_DEBUG
-            #   value: 'true'
-            # - name: SYNC_GRAVITY_DHCP_LEASES
-            #   value: 'true'
-            # - name: SYNC_GRAVITY_GROUP
-            #   value: 'true'
-            # - name: SYNC_GRAVITY_AD_LIST
-            #   value: 'true'
-            # - name: SYNC_GRAVITY_AD_LIST_BY_GROUP
-            #   value: 'true'
-            # - name: SYNC_GRAVITY_DOMAIN_LIST
-            #   value: 'true'
-            # - name: SYNC_GRAVITY_DOMAIN_LIST_BY_GROUP
-            #   value: 'true'
-            # - name: SYNC_GRAVITY_CLIENT
-            #   value: 'true'
-            # - name: SYNC_GRAVITY_CLIENT_BY_GROUP
-            #   value: 'true'
+            - name: WEBHOOK_SYNC_SUCCESS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: nebula-sync-uptimekuma
+                  key: pushURL
+            - name: WEBHOOK_SYNC_SUCCESS_METHOD
+              value: 'GET'
+            - name: SYNC_CONFIG_DNS
+              value: 'false'
+            - name: SYNC_CONFIG_DHCP
+              value: 'false'
+            - name: SYNC_CONFIG_NTP
+              value: 'false'
+            - name: SYNC_CONFIG_RESOLVER
+              value: 'false'
+            - name: SYNC_CONFIG_DATABASE
+              value: 'false'
+            - name: SYNC_CONFIG_MISC
+              value: 'false'
+            - name: SYNC_CONFIG_DEBUG
+              value: 'false'
+            - name: SYNC_GRAVITY_DHCP_LEASES
+              value: 'true'
+            - name: SYNC_GRAVITY_GROUP
+              value: 'true'
+            - name: SYNC_GRAVITY_AD_LIST
+              value: 'true'
+            - name: SYNC_GRAVITY_AD_LIST_BY_GROUP
+              value: 'true'
+            - name: SYNC_GRAVITY_DOMAIN_LIST
+              value: 'true'
+            - name: SYNC_GRAVITY_DOMAIN_LIST_BY_GROUP
+              value: 'true'
+            - name: SYNC_GRAVITY_CLIENT
+              value: 'true'
+            - name: SYNC_GRAVITY_CLIENT_BY_GROUP
+              value: 'true'
