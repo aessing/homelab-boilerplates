@@ -1,0 +1,8 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: nebula-sync-imagetransformer
+imageTag:
+  name: ghcr.io/lovelaze/nebula-sync
+  newTag: v0.11.0

@@ -1,0 +1,261 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pihole
+spec:
+  template:
+    spec:
+      containers:
+        - name: pihole
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+
+            - name: FTLCONF_dns_CNAMEdeepInspect
+              value: 'true'
+            - name: FTLCONF_dns_blockESNI
+              value: 'true'
+            - name: FTLCONF_dns_EDNS0ECS
+              value: 'true'
+            - name: FTLCONF_dns_ignoreLocalhost
+              value: 'true'
+            - name: FTLCONF_dns_showDNSSEC
+              value: 'true'
+            - name: FTLCONF_dns_analyzeOnlyAandAAAA
+              value: 'false'
+            - name: FTLCONF_dns_domain
+              value: 'lan'
+            - name: FTLCONF_dns_piholePTR
+              value: 'NONE'
+            - name: FTLCONF_dns_replyWhenBusy
+              value: 'ALLOW'
+            - name: FTLCONF_dns_blockTTL
+              value: '2'
+            - name: FTLCONF_dns_hosts
+              value: ''
+            - name: FTLCONF_dns_domainNeeded
+              value: 'true'
+            - name: FTLCONF_dns_expandHosts
+              value: 'false'
+            - name: FTLCONF_dns_bogusPriv
+              value: 'false'
+            - name: FTLCONF_dns_dnssec
+              value: 'false'
+            - name: FTLCONF_dns_hostRecord
+              value: ''
+            - name: FTLCONF_dns_listeningMode
+              value: 'single'
+            - name: FTLCONF_dns_queryLogging
+              value: 'false'
+            - name: FTLCONF_dns_cnameRecords
+              value: ''
+            - name: FTLCONF_dns_port
+              value: '53'
+            - name: FTLCONF_dns_cache_size
+              value: '10000'
+            - name: FTLCONF_dns_cache_optimizer
+              value: '3600'
+            - name: FTLCONF_dns_cache_upstreamBlockedTTL
+              value: '86400'
+            - name: FTLCONF_dns_blocking_active
+              value: 'true'
+            - name: FTLCONF_dns_blocking_mode
+              value: 'NULL'
+            - name: FTLCONF_dns_blocking_edns
+              value: 'TEXT'
+            - name: FTLCONF_dns_specialDomains_mozillaCanary
+              value: 'true'
+            - name: FTLCONF_dns_specialDomains_iCloudPrivateRelay
+              value: 'true'
+            - name: FTLCONF_dns_specialDomains_designatedResolver
+              value: 'true'
+            - name: FTLCONF_dns_reply_host_force4
+              value: 'false'
+            - name: FTLCONF_dns_reply_host_force6
+              value: 'false'
+            - name: FTLCONF_dns_reply_host_IPv4
+              value: '0.0.0.0'
+            - name: FTLCONF_dns_reply_host_IPv6
+              value: '::'
+            - name: FTLCONF_dns_reply_blocking_force4
+              value: 'false'
+            - name: FTLCONF_dns_reply_blocking_force6
+              value: 'false'
+            - name: FTLCONF_dns_reply_blocking_IPv4
+              value: '0.0.0.0'
+            - name: FTLCONF_dns_reply_blocking_IPv6
+              value: '::'
+            - name: FTLCONF_dns_rateLimit_count
+              value: '1000'
+            - name: FTLCONF_dns_rateLimit_interval
+              value: '60'
+
+            - name: FTLCONF_dhcp_active
+              value: 'false'
+            - name: FTLCONF_dhcp_start
+              value: '192.168.0.10'
+            - name: FTLCONF_dhcp_end
+              value: '192.168.0.250'
+            - name: FTLCONF_dhcp_router
+              value: '192.168.0.1'
+            - name: FTLCONF_dhcp_netmask
+              value: '255.255.255.0'
+            - name: FTLCONF_dhcp_leaseTime
+              value: '1d'
+            - name: FTLCONF_dhcp_ipv6
+              value: 'false'
+            - name: FTLCONF_dhcp_rapidCommit
+              value: 'false'
+            - name: FTLCONF_dhcp_multiDNS
+              value: 'false'
+            - name: FTLCONF_dhcp_logging
+              value: 'false'
+            - name: FTLCONF_dhcp_ignoreUnknownClients
+              value: 'false'
+            - name: FTLCONF_dhcp_hosts
+              value: ''
+
+            - name: FTLCONF_ntp_ipv4_active
+              value: 'false'
+            - name: FTLCONF_ntp_ipv4_address
+              value: '0.0.0.0'
+            - name: FTLCONF_ntp_ipv6_active
+              value: 'false'
+            - name: FTLCONF_ntp_ipv6_address
+              value: '::'
+            - name: FTLCONF_ntp_sync_active
+              value: 'false'
+            - name: FTLCONF_ntp_sync_server
+              value: 'pool.ntp.org'
+            - name: FTLCONF_ntp_sync_interval
+              value: '3600'
+            - name: FTLCONF_ntp_sync_count
+              value: '8'
+            - name: FTLCONF_ntp_sync_rtc_set
+              value: 'false'
+            - name: FTLCONF_ntp_sync_rtc_device
+              value: ''
+            - name: FTLCONF_ntp_sync_rtc_utc
+              value: 'true'
+
+            - name: FTLCONF_resolver_resolveIPv4
+              value: 'true'
+            - name: FTLCONF_resolver_resolveIPv6
+              value: 'true'
+            - name: FTLCONF_resolver_networkNames
+              value: 'true'
+            - name: FTLCONF_resolver_refreshNames
+              value: 'IPV4_ONLY'
+
+            - name: FTLCONF_database_DBimport
+              value: 'true'
+            - name: FTLCONF_database_maxDBdays
+              value: '365'
+            - name: FTLCONF_database_DBinterval
+              value: '60'
+            - name: FTLCONF_database_useWAL
+              value: 'true'
+            - name: FTLCONF_database_network_parseARPcache
+              value: 'true'
+            - name: FTLCONF_database_network_expire
+              value: '365'
+
+            - name: FTLCONF_webserver_port
+              value: '$(POD_IP):80'
+            - name: FTLCONF_webserver_threads
+              value: '50'
+            - name: FTLCONF_webserver_headers
+              value: |
+                X-DNS-Prefetch-Control: off
+                Content-Security-Policy: default-src 'self' 'unsafe-inline';
+                X-Frame-Options: DENY
+                X-XSS-Protection: 0
+                X-Content-Type-Options: nosniff
+                Referrer-Policy: strict-origin-when-cross-origin
+            - name: FTLCONF_webserver_serve_all
+              value: 'false'
+            - name: FTLCONF_webserver_session_timeout
+              value: '900'
+            - name: FTLCONF_webserver_session_restore
+              value: 'true'
+            - name: FTLCONF_webserver_tls_cert
+              value: ''
+            - name: FTLCONF_webserver_paths_webroot
+              value: '/var/www/html'
+            - name: FTLCONF_webserver_paths_webhome
+              value: '/admin/'
+            - name: FTLCONF_webserver_paths_prefix
+              value: ''
+
+            - name: FTLCONF_webserver_api_max_sessions
+              value: '16'
+            - name: FTLCONF_webserver_api_prettyJSON
+              value: 'false'
+            - name: FTLCONF_webserver_api_pwhash
+              value: ''
+            - name: FTLCONF_webserver_api_totp_secret
+              value: ''
+            - name: FTLCONF_webserver_api_app_pwhash
+              value: ''
+            - name: FTLCONF_webserver_api_app_sudo
+              value: 'false'
+            - name: FTLCONF_webserver_api_cli_pw
+              value: 'true'
+            - name: FTLCONF_webserver_api_excludeClients
+              value: ''
+            - name: FTLCONF_webserver_api_excludeDomains
+              value: ''
+            - name: FTLCONF_webserver_api_maxHistory
+              value: '86400'
+            - name: FTLCONF_webserver_api_maxClients
+              value: '10'
+            - name: FTLCONF_webserver_api_client_history_global_max
+              value: 'true'
+            - name: FTLCONF_webserver_api_allow_destructive
+              value: 'false'
+            - name: FTLCONF_webserver_api_temp_limit
+              value: '60'
+
+            - name: FTLCONF_files_pid
+              value: '/run/pihole-FTL.pid'
+            - name: FTLCONF_files_database
+              value: '/etc/pihole/pihole-FTL.db'
+            - name: FTLCONF_files_gravity
+              value: '/etc/pihole/gravity.db'
+            - name: FTLCONF_files_gravity_tmp
+              value: '/tmp'
+            - name: FTLCONF_files_macvendor
+              value: '/macvendor.db'
+            - name: FTLCONF_files_pcap
+              value: ''
+            - name: FTLCONF_files_log_ftl
+              value: '/var/log/pihole/FTL.log'
+            - name: FTLCONF_files_log_dnsmasq
+              value: '/var/log/pihole/pihole.log'
+            - name: FTLCONF_files_log_webserver
+              value: '/var/log/pihole/webserver.log'
+
+            - name: FTLCONF_misc_nice
+              value: '0'
+            - name: FTLCONF_misc_delay_startup
+              value: '0'
+            - name: FTLCONF_misc_addr2line
+              value: 'true'
+            - name: FTLCONF_misc_privacylevel
+              value: '0'
+            - name: FTLCONF_misc_etc_dnsmasq_d
+              value: 'true'
+            - name: FTLCONF_misc_dnsmasq_lines
+              value: ''
+            - name: FTLCONF_misc_extraLogging
+              value: 'false'
+            - name: FTLCONF_misc_readOnly
+              value: 'false'
+            - name: FTLCONF_misc_check_load
+              value: 'false'
+            - name: FTLCONF_misc_check_shmem
+              value: '90'
+            - name: FTLCONF_misc_check_disk
+              value: '90'
