@@ -56,11 +56,11 @@ spec:
             readOnlyRootFilesystem: false
           resources:
             requests:
-              cpu: 0.1
-              memory: 384Mi
+              cpu: 1
+              memory: 1Gi
             limits:
-              cpu: 0.5
-              memory: 768Mi
+              cpu: 2
+              memory: 2Gi
           env:
             - name: DEFAULT_WORKSPACE
               value: /config/workspace

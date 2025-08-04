@@ -47,6 +47,32 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  name: editor-to-mqtt
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: mqtt # The component within the architecture
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: homeassistant
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: editor
+              app.kubernetes.io/name: homeassistant
+      ports:
+        - protocol: TCP
+          port: 1883
+        - protocol: TCP
+          port: 8883
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
   name: application-to-mqtt
 spec:
   podSelector:
