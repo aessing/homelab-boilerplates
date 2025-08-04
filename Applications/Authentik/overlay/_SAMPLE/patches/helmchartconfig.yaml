@@ -31,7 +31,7 @@ spec:
         password: '###REDIS_PASSWORD###'
 
     server:
-      replicas: 1
+      replicas: 2
       initContainers:
         - name: init
           image: busybox:latest
@@ -73,7 +73,7 @@ spec:
             claimName: authentik-media
 
     worker:
-      replicas: 1
+      replicas: 2
       initContainers:
         - name: init
           image: busybox:latest

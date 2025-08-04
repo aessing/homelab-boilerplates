@@ -13,7 +13,7 @@ metadata:
   name: editor-imagetransformer
 imageTag:
   name: lscr.io/linuxserver/code-server
-  newTag: 4.101.2
+  newTag: 4.102.3
 ---
 apiVersion: builtin
 kind: ImageTagTransformer
@@ -21,7 +21,7 @@ metadata:
   name: homeassistant-imagetransformer
 imageTag:
   name: ghcr.io/home-assistant/home-assistant
-  newTag: 2025.7.2
+  newTag: 2025.7.4
 ---
 apiVersion: builtin
 kind: ImageTagTransformer

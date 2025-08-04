@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/component: 'application'
 spec:
   selector:
-    app.kubernetes.io/name: pihole
+    app.kubernetes.io/component: 'application'
   clusterIP: None
   ports:
     - protocol: TCP
