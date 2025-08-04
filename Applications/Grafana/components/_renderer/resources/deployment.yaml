@@ -29,7 +29,7 @@ spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       securityContext:
-        fsGroup: 472
+        fsGroup: 65532
       containers:
         - name: grafana-renderer
           image: grafana/grafana-image-renderer:0.0.0
@@ -37,8 +37,8 @@ spec:
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
-            runAsUser: 472
-            runAsGroup: 472
+            runAsUser: 65532
+            runAsGroup: 65532
             capabilities:
               drop:
                 - ALL
