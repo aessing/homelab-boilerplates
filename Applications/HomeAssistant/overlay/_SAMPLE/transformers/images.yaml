@@ -21,7 +21,7 @@ metadata:
   name: homeassistant-imagetransformer
 imageTag:
   name: ghcr.io/home-assistant/home-assistant
-  newTag: 2025.7.4
+  newTag: 2025.8.1
 ---
 apiVersion: builtin
 kind: ImageTagTransformer

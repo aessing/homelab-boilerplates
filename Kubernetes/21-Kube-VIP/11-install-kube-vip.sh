@@ -16,6 +16,8 @@
 # WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 # =============================================================================
 
+# https://github.com/kube-vip/kube-vip
+
 set -u -o pipefail
 
 LOG_FILE="11-install-kube-vip.log"

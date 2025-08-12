@@ -17,6 +17,8 @@
 # WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 # =============================================================================
 
+# https://update.k3s.io/v1-release/channels
+
 set -u -o pipefail
 
 LOG_FILE="11-install-k3s.log"
