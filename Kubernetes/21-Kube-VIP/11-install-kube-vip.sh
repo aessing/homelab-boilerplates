@@ -189,6 +189,7 @@ echo " - Deploy kube-vip as a daemonset"
 k3s ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:$KVVERSION vip /kube-vip manifest daemonset \
   --interface $INTERFACE \
   --address $K3S_TLSSAN_VIP \
+  --port 6443 \
   --inCluster \
   --taint \
   --controlplane \

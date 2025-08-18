@@ -8,17 +8,17 @@ spec:
     persistence:
       defaultClass: false
       defaultFsType: ext4
-      defaultClassReplicaCount: ###NUMBER_OF_STORAGE_REPLICAS###
+      defaultClassReplicaCount: ###NUMBER_OF_STORAGE_REPLICAS(3)###
       defaultDataLocality: 'best-effort'
       defaultReplicaAutoBalance: 'best-effort'
       reclaimPolicy: 'Delete'
       migratable: false
       removeSnapshotsDuringFilesystemTrim: 'ignored'
     csi:
-      attacherReplicaCount: ###NUMBER_OF_REPLICAS###
-      provisionerReplicaCount: ###NUMBER_OF_REPLICAS###
-      resizerReplicaCount: ###NUMBER_OF_REPLICAS###
-      snapshotterReplicaCount: ###NUMBER_OF_REPLICAS###
+      attacherReplicaCount: ###NUMBER_OF_REPLICAS(2)###
+      provisionerReplicaCount: ###NUMBER_OF_REPLICAS(2)###
+      resizerReplicaCount: ###NUMBER_OF_REPLICAS(1)###
+      snapshotterReplicaCount: ###NUMBER_OF_REPLICAS(1)###
     defaultSettings:
       storageOverProvisioningPercentage: 100
       storageMinimalAvailablePercentage: 10
@@ -26,7 +26,7 @@ spec:
       replicaSoftAntiAffinity: false
       allowVolumeCreationWithDegradedAvailability: false
       defaultDataLocality: 'best-effort'
-      defaultReplicaCount: ###NUMBER_OF_REPLICAS###
+      defaultReplicaCount: ###NUMBER_OF_REPLICAS(3)###
       deletingConfirmationFlag: false
       upgradeChecker: true
       allowCollectingLonghornUsageMetrics: false
@@ -37,10 +37,10 @@ spec:
       backupTargetCredentialSecret: 'longhorn-backup-secret-azure'
       pollInterval: 0
     longhornUI:
-      replicas: ###NUMBER_OF_REPLICAS###
+      replicas: ###NUMBER_OF_REPLICAS(1)###
     longhornConversionWebhook:
-      replicas: ###NUMBER_OF_REPLICAS###
+      replicas: ###NUMBER_OF_REPLICAS(2)###
     longhornAdmissionWebhook:
-      replicas: ###NUMBER_OF_REPLICAS###
+      replicas: ###NUMBER_OF_REPLICAS(2)###
     longhornRecoveryBackend:
-      replicas: ###NUMBER_OF_REPLICAS###
+      replicas: ###NUMBER_OF_REPLICAS(1)###
