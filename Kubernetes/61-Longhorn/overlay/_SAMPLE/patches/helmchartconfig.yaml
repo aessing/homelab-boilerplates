@@ -32,6 +32,7 @@ spec:
       allowCollectingLonghornUsageMetrics: false
       replicaAutoBalance: 'best-effort'
       concurrentAutomaticEngineUpgradePerNodeLimit: 3
+      snapshotMaxCount: 60
     defaultBackupStore:
       backupTarget: '###AZURE_BLOB_STORAGE_URL###'
       backupTargetCredentialSecret: 'longhorn-backup-secret-azure'
