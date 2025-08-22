@@ -5,7 +5,7 @@
 ###############################################################################
 
 # =============================================================================
-# Raise K3s Reliability
+# Set Storage class as non-default
 # -----------------------------------------------------------------------------
 # Developer.......: Andre Essing (https://github.com/aessing)
 #                                (https://www.linkedin.com/in/aessing/)
@@ -22,7 +22,7 @@ set -u -o pipefail
 echo ""
 echo ""
 echo "# ============================================================================="
-echo "# Raise K3s Reliability"
+echo "# Set Storage class as non-default"
 echo "# $(cat /etc/lsb-release | grep -i -E DISTRIB_DESCRIPTION | sed 's/DISTRIB_DESCRIPTION=//' | sed 's/\"//g')"
 echo "# -----------------------------------------------------------------------------"
 echo "# Developer.......: Andre Essing (https://github.com/aessing)"
@@ -40,17 +40,11 @@ echo "# ========================================================================
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# Raise replica count for some deployments (`date '+%F %T.%N'`)"
+echo "# Set Storage class as non-default (`date '+%F %T.%N'`)"
 echo "# -----------------------------------------------------------------------------"
 
-echo " - Raise replica count for coredns deployment in kube-system namespace"
-kubectl -n kube-system patch deployment coredns --type='merge' -p '{"spec":{"replicas":2}}'
-
-echo " - Raise replica count for local-path-provisioner deployment in kube-system namespace"
-kubectl -n kube-system patch deployment local-path-provisioner --type='merge' -p '{"spec":{"replicas":2}}'
-
-echo " - Raise replica count for metrics-server deployment in kube-system namespace"
-kubectl -n kube-system patch deployment metrics-server --type='merge' -p '{"spec":{"replicas":2}}'
+echo " - Removing default annotation from local-path storage class"
+kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
 
 # -------------------------------------------------------------------------------------
 
