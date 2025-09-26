@@ -5,7 +5,7 @@ metadata:
   name: uptimekuma-imagetransformer
 imageTag:
   name: louislam/uptime-kuma
-  newTag: 2.0.0-beta-rootless.3
+  newTag: 2.0.0-beta-rootless.4
 ---
 apiVersion: builtin
 kind: ImageTagTransformer
@@ -13,4 +13,4 @@ metadata:
   name: uptimekuma-database-imagetransformer
 imageTag:
   name: mariadb
-  newTag: 11.8.2
+  newTag: 12.0.2
