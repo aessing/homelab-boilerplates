@@ -20,19 +20,19 @@ spec:
       resizerReplicaCount: ###NUMBER_OF_REPLICAS(1)###
       snapshotterReplicaCount: ###NUMBER_OF_REPLICAS(1)###
     defaultSettings:
-      storageOverProvisioningPercentage: 100
-      storageMinimalAvailablePercentage: 10
-      storageReservedPercentageForDefaultDisk: 10
+      storageOverProvisioningPercentage: '100'
+      storageMinimalAvailablePercentage: '10'
+      storageReservedPercentageForDefaultDisk: '10'
       replicaSoftAntiAffinity: false
       allowVolumeCreationWithDegradedAvailability: false
       defaultDataLocality: 'best-effort'
-      defaultReplicaCount: ###NUMBER_OF_REPLICAS(3)###
+      defaultReplicaCount: '###NUMBER_OF_REPLICAS(3)###'
       deletingConfirmationFlag: false
       upgradeChecker: true
       allowCollectingLonghornUsageMetrics: false
       replicaAutoBalance: 'best-effort'
-      concurrentAutomaticEngineUpgradePerNodeLimit: 3
-      snapshotMaxCount: 60
+      concurrentAutomaticEngineUpgradePerNodeLimit: '3'
+      snapshotMaxCount: '60'
     defaultBackupStore:
       backupTarget: '###AZURE_BLOB_STORAGE_URL###'
       backupTargetCredentialSecret: 'longhorn-backup-secret-azure'

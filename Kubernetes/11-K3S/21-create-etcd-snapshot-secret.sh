@@ -119,7 +119,7 @@ for var in "${REQUIRED_VARS[@]}"; do
 done
 
 # -------------------------------------------------------------------------------------
-
+| kubectl apply -f -
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
@@ -128,7 +128,7 @@ echo "# ------------------------------------------------------------------------
 
 echo ""
 echo " - Creating secret for etcd snapshot S3 configuration in kube-system namespace"
-cat <<EOF | kubectl apply -f -
+cat <<EOF 
 apiVersion: v1
 kind: Secret
 metadata:
@@ -142,7 +142,7 @@ stringData:
   etcd-s3-secret-key: "$K3S_ETCD_SNAPSHPT_S3_SECRET_KEY"
   etcd-s3-bucket: "$K3S_ETCD_SNAPSHOT_S3_BUCKET"
   etcd-s3-region: "$K3S_ETCD_SNAPSHOT_S3_REGION"
-  etcd-s3-folder: "$K3S_ETCD_SNAPSHOT_S3_FOLDER"
+  etcd-s3-folder: "$K3S_ETCD_SNAPSHOT_S3_FOLDER/$(hostname -s)"
   etcd-s3-insecure: "false"
   etcd-s3-timeout: "5m"
   etcd-s3-retention: "$K3S_ETCD_SNAPSHOT_S3_RETENTION"
