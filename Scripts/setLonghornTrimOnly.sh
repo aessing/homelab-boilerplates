@@ -37,8 +37,8 @@ echo -e "🚀 Longhorn Volume Label Setter"
 echo -e "===============================================${NC}\n"
 echo -e ""
 
-echo -e "${YELLOW}🔖 Setting label 'recurring-job-group.longhorn.io/trim-only=enabled' on volume ${VOLUME_NAME}...${NC}"
-kubectl -n "$NAMESPACE" label volume "$VOLUME_NAME" recurring-job-group.longhorn.io/trim-only=enabled --overwrite
+echo -e "${YELLOW}🔖 Setting label 'recurring-job-group.longhorn.io/longhorn-job-trim-weekly=enabled' on volume ${VOLUME_NAME}...${NC}"
+kubectl -n "$NAMESPACE" label volume "$VOLUME_NAME" recurring-job-group.longhorn.io/longhorn-job-trim-weekly=enabled --overwrite
 echo -e ""
 
 echo -e "${YELLOW}🧹 Removing label 'recurring-job-group.longhorn.io/default' from volume ${VOLUME_NAME}...${NC}"

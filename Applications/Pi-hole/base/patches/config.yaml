@@ -62,7 +62,7 @@ spec:
             - name: FTLCONF_dns_blocking_active
               value: 'true'
             - name: FTLCONF_dns_blocking_mode
-              value: 'NULL'
+              value: 'NX'
             - name: FTLCONF_dns_blocking_edns
               value: 'TEXT'
             - name: FTLCONF_dns_specialDomains_mozillaCanary

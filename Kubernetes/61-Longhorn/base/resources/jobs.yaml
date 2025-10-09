@@ -8,11 +8,13 @@ spec:
   cron: 0 2 * * *
   groups:
     - default
-    - backup-only
+    - longhorn-job-backup
   labels: {}
   name: longhorn-job-backup
-  retain: 35
-  task: backup-force-create
+  parameters:
+    full-backup-interval: '7'
+  retain: 30
+  task: backup
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -21,26 +23,74 @@ metadata:
   name: longhorn-job-snapshot
 spec:
   concurrency: 1
-  cron: 0 0/4 * * *
+  cron: 0 */6 * * *
   groups:
-    - snapshot-only
+    - default
+    - longhorn-job-snapshot
   labels: {}
   name: longhorn-job-snapshot
-  retain: 6
-  task: snapshot-force-create
+  retain: 28
+  task: snapshot
 
 ---
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
-  name: longhorn-job-trim
+  name: longhorn-job-snapshot-cleanup
+spec:
+  concurrency: 1
+  cron: 0 5 * * 0
+  groups:
+    - default
+    - longhorn-job-snapshot-cleanup
+  labels: {}
+  name: longhorn-job-snapshot-cleanup
+  parameters: {}
+  retain: 0
+  task: snapshot-cleanup
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: longhorn-job-trim-weekly
 spec:
   concurrency: 1
   cron: 0 4 * * 0
   groups:
     - default
-    - trim-only
+    - longhorn-job-trim-weekly
   labels: {}
-  name: longhorn-job-trim
+  name: longhorn-job-trim-weekly
   retain: 0
   task: filesystem-trim
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: longhorn-job-trim-daily
+spec:
+  concurrency: 1
+  cron: 0 4 * * *
+  groups:
+    - longhorn-job-trim-daily
+  labels: {}
+  name: longhorn-job-trim-daily
+  retain: 0
+  task: filesystem-trim
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: longhorn-job-system-backup
+spec:
+  concurrency: 0
+  cron: 0 0 * * 0
+  labels: {}
+  name: longhorn-job-system-backup
+  parameters:
+    volume-backup-policy: disabled
+  retain: 12
+  task: system-backup
