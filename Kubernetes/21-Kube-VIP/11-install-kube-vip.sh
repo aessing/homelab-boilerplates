@@ -16,6 +16,8 @@
 # WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 # =============================================================================
 
+# https://github.com/kube-vip/kube-vip
+
 set -u -o pipefail
 
 LOG_FILE="11-install-kube-vip.log"
@@ -187,6 +189,7 @@ echo " - Deploy kube-vip as a daemonset"
 k3s ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:$KVVERSION vip /kube-vip manifest daemonset \
   --interface $INTERFACE \
   --address $K3S_TLSSAN_VIP \
+  --port 6443 \
   --inCluster \
   --taint \
   --controlplane \

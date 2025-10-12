@@ -19,6 +19,7 @@ spec:
       services:
         - name: homecdn
           port: 8080
+          passHostHeader: true
           # sticky:
           #   cookie:
           #     httpOnly: true

@@ -6,7 +6,11 @@ metadata:
 spec:
   valuesContent: |-
     installCRDs: true
-    replicaCount: 1
+    replicaCount: 1          # cert-manager controller - 2 for HA
+    cainjector:
+      replicaCount: 1        # cainjector controller - 2 for HA
+    webhook:
+      replicaCount: 1        # webhook controller - 2-3 for HA
     dns01RecursiveNameservers: '9.9.9.9:53,1.1.1.2:53'
     dns01RecursiveNameserversOnly: true
     podDnsPolicy: 'None'

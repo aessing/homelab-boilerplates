@@ -19,5 +19,11 @@ spec:
       services:
         - name: homeassistant
           port: 8123
+          passHostHeader: true
+          # sticky:
+          #   cookie:
+          #     httpOnly: true
+          #     secure: true
+          #     sameSite: none
   tls:
     secretName: homeassistant-certificate

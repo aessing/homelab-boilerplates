@@ -7,7 +7,7 @@ spec:
   valuesContent: >-
     deployment:
       enabled: true
-      replicas: ###NUMBER_OF_REPLICAS###
+      replicas: ###NUMBER_OF_REPLICAS(2)###
     ingressClass:
       enabled: true
       isDefaultClass: true

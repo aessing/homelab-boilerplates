@@ -1,0 +1,8 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: unbound-imagetransformer
+imageTag:
+  name: mvance/unbound-rpi
+  newTag: 1.22.0

@@ -1,0 +1,8 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: pihole-imagetransformer
+imageTag:
+  name: pihole/pihole
+  newTag: 2025.08.0

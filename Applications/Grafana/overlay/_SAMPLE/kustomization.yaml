@@ -11,7 +11,7 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 12.0.2 # The current version of the application
+      app.kubernetes.io/version: 12.1.1 # The current version of the application
 
 resources:
   - ../../base
@@ -55,7 +55,7 @@ patches:
       kind: ResourceQuota
 
 transformers:
-  # https://hub.docker.com/_/mariadb
+  # https://hub.docker.com/_/mysql
   # https://hub.docker.com/_/redis/
   # https://hub.docker.com/r/grafana/grafana-image-renderer
   # https://hub.docker.com/r/grafana/grafana-oss/tags

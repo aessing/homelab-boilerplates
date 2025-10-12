@@ -19,5 +19,11 @@ spec:
       services:
         - name: influxdb
           port: 8086
+          passHostHeader: true
+          # sticky:
+          #   cookie:
+          #     httpOnly: true
+          #     secure: true
+          #     sameSite: none
   tls:
     secretName: influxdb-certificate

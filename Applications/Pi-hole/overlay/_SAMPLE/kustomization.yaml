@@ -1,0 +1,60 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: pihole
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  #- transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: 2025.08.0 # The current version of the application
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/config-pihole-conditional-forwarders.yaml
+  - ./generators/secret-pihole-passwords.yaml
+
+patches:
+  - path: ./patches/certificate.json
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+  - path: ./patches/config.yaml
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: pihole
+  - path: ./patches/ingressroute.json
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+  - path: ./patches/multus.yaml
+    target:
+      group: k8s.cni.cncf.io
+      version: v1
+      kind: NetworkAttachmentDefinition
+  - path: ./patches/pvc.json
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: pihole
+  - path: ./patches/resource-quota.json
+    target:
+      version: v1
+      kind: ResourceQuota
+
+transformers:
+  # https://github.com/pi-hole/docker-pi-hole
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml
