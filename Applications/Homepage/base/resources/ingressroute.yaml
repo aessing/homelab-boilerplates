@@ -19,6 +19,7 @@ spec:
       services:
         - name: homepage
           port: 3000
+          passHostHeader: true
           sticky:
             cookie:
               httpOnly: true

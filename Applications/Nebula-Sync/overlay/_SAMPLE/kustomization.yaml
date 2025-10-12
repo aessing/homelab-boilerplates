@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: nebula-sync
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  #- transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: v0.11.1 # The current version of the application
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/secret-nebula-sync-replicas.yaml
+
+patches:
+  - path: ./patches/config.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: nebula-sync
+  - path: ./patches/resource-quota.json
+    target:
+      version: v1
+      kind: ResourceQuota
+
+transformers:
+  # https://github.com/lovelaze/nebula-sync
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml

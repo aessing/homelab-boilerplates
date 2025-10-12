@@ -54,18 +54,36 @@ patches:
       version: v1beta2
       kind: RecurringJob
       name: longhorn-job-backup
+  - path: ./patches/jobs-longhorn-job-system-backup.json
+    target:
+      group: longhorn.io
+      version: v1beta2
+      kind: RecurringJob
+      name: longhorn-job-system-backup
   - path: ./patches/jobs-longhorn-job-snapshot.json
     target:
       group: longhorn.io
       version: v1beta2
       kind: RecurringJob
       name: longhorn-job-snapshot
-  - path: ./patches/jobs-longhorn-job-trim.json
+  - path: ./patches/jobs-longhorn-job-snapshot-cleanup.json
     target:
       group: longhorn.io
       version: v1beta2
       kind: RecurringJob
-      name: longhorn-job-trim
+      name: longhorn-job-snapshot-cleanup
+  - path: ./patches/jobs-longhorn-job-trim-daily.json
+    target:
+      group: longhorn.io
+      version: v1beta2
+      kind: RecurringJob
+      name: longhorn-job-trim-daily
+  - path: ./patches/jobs-longhorn-job-trim-weekly.json
+    target:
+      group: longhorn.io
+      version: v1beta2
+      kind: RecurringJob
+      name: longhorn-job-trim-weekly
   - path: ./patches/namespace.json
     target:
       name: longhorn-dashboard-basicauth

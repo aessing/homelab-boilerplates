@@ -27,9 +27,9 @@ spec:
         app.kubernetes.io/component: 'renderer'
     spec:
       restartPolicy: Always
-      terminationGracePeriodSeconds: 60
+      terminationGracePeriodSeconds: 30
       securityContext:
-        fsGroup: 472
+        fsGroup: 65532
       containers:
         - name: grafana-renderer
           image: grafana/grafana-image-renderer:0.0.0
@@ -37,8 +37,8 @@ spec:
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
-            runAsUser: 472
-            runAsGroup: 472
+            runAsUser: 65532
+            runAsGroup: 65532
             capabilities:
               drop:
                 - ALL
@@ -48,10 +48,10 @@ spec:
           resources:
             requests:
               cpu: 0.1
-              memory: 64Mi
+              memory: 128Mi
             limits:
               cpu: 1
-              memory: 256Mi
+              memory: 512Mi
           env:
             - name: AUTH_TOKEN
               valueFrom:

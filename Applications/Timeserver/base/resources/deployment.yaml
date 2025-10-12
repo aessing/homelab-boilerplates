@@ -30,7 +30,7 @@ spec:
         app.kubernetes.io/component: 'application' # The component within the architecture
     spec:
       restartPolicy: Always
-      terminationGracePeriodSeconds: 180
+      terminationGracePeriodSeconds: 30
       initContainers:
         - name: fix-perms
           image: busybox:0.0.0
@@ -52,7 +52,7 @@ spec:
           resources:
             requests:
               memory: 8Mi
-              cpu: 0.02
+              cpu: 0.03
             limits:
               memory: 32Mi
               cpu: 0.1

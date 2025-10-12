@@ -33,7 +33,7 @@ spec:
         app.kubernetes.io/component: 'editor'
     spec:
       restartPolicy: Always
-      terminationGracePeriodSeconds: 180
+      terminationGracePeriodSeconds: 30
       containers:
         - name: editor
           image: lscr.io/linuxserver/code-server:0.0.0
@@ -56,11 +56,11 @@ spec:
             readOnlyRootFilesystem: false
           resources:
             requests:
-              cpu: 0.1
-              memory: 256Mi
+              cpu: 1
+              memory: 1Gi
             limits:
-              cpu: 0.5
-              memory: 512Mi
+              cpu: 2
+              memory: 2Gi
           env:
             - name: DEFAULT_WORKSPACE
               value: /config/workspace

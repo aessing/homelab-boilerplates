@@ -5,4 +5,4 @@ metadata:
   name: fortnitestats-imagetransformer
 imageTag:
   name: ghcr.io/aessing/fortnitestats-2-influxdb
-  newTag: 0.3.0
+  newTag: 0.3.3

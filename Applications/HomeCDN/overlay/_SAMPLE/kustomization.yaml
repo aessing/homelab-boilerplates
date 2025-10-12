@@ -1,0 +1,45 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: homecdn
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  #- transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: 1.29.2 # The current version of the application
+
+resources:
+  - ../../base
+
+patches:
+  - path: ./patches/certificate.json
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+  - path: ./patches/ingressroute.json
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+  - path: ./patches/pvc.json
+    target:
+      version: v1
+      kind: PersistentVolumeClaim
+      name: homecdn-data
+  - path: ./patches/resource-quota.json
+    target:
+      version: v1
+      kind: ResourceQuota
+
+transformers:
+  # https://hub.docker.com/_/nginx
+  # https://hub.docker.com/r/nginxinc/nginx-unprivileged
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml

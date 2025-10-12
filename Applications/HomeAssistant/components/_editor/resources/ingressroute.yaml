@@ -19,5 +19,11 @@ spec:
       services:
         - name: editor
           port: 8443
+          passHostHeader: true
+          # sticky:
+          #   cookie:
+          #     httpOnly: true
+          #     secure: true
+          #     sameSite: none
   tls:
     secretName: editor-certificate

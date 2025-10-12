@@ -4,4 +4,4 @@ kind: Namespace
 metadata:
   name: authentik
   labels:
-    reloader.stakater.com/reload: 'false' # Enables reloader for this namespace
+    reloader.stakater.com/reload: 'true' # Enables reloader for this namespace

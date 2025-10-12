@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: homepage-public
+  name: homecdn-data
   labels:
     app.kubernetes.io/component: 'application'
 spec:

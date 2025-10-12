@@ -17,6 +17,8 @@
 # WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 # =============================================================================
 
+# https://update.k3s.io/v1-release/channels
+
 set -u -o pipefail
 
 LOG_FILE="11-install-k3s.log"
@@ -422,8 +424,10 @@ if exists_in_list "$K3S_NODES_SERVERS" " " $SERVERIP; then
 
   # Database options
   echo "etcd-expose-metrics: false" >> "$K3S_CONF"
-  echo "etcd-snapshot-retention: 14" >> "$K3S_CONF"
-  echo "etcd-snapshot-schedule-cron: \"0 */12 * * *\"" >> "$K3S_CONF"
+  echo "etcd-snapshot-retention: $K3S_ETCD_SNAPSHOT_RETENTION" >> "$K3S_CONF"
+  echo "etcd-snapshot-schedule-cron: \"$K3S_ETCD_SNAPSHOT_SCHEDULE_CRON\"" >> "$K3S_CONF"
+  echo "etcd-s3: $K3S_ETCD_SNAPSHOT_S3_ENABLED" >> "$K3S_CONF"
+  echo "etcd-s3-config-secret: $K3S_ETCD_SNAPSHOT_S3_SECRET_NAME" >> "$K3S_CONF"
 
   # Admin Kubeconfig Options
   echo "write-kubeconfig-mode: $K3S_KUBECONFIG_MODE" >> "$K3S_CONF"

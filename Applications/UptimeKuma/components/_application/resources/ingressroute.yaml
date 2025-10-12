@@ -19,5 +19,11 @@ spec:
       services:
         - name: uptimekuma
           port: 3001
+          passHostHeader: true
+          # sticky:
+          #   cookie:
+          #     httpOnly: true
+          #     secure: true
+          #     sameSite: none
   tls:
     secretName: uptimekuma-certificate

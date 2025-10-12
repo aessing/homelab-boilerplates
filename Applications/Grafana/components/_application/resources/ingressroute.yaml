@@ -19,5 +19,11 @@ spec:
       services:
         - name: grafana
           port: 3000
+          passHostHeader: true
+          # sticky:
+          #   cookie:
+          #     httpOnly: true
+          #     secure: true
+          #     sameSite: none
   tls:
     secretName: grafana-certificate

@@ -1,0 +1,8 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: homecdn-imagetransformer
+imageTag:
+  name: nginxinc/nginx-unprivileged
+  newTag: 1.29.2

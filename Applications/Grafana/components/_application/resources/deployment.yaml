@@ -27,7 +27,7 @@ spec:
         app.kubernetes.io/component: 'application' # The component within the architecture
     spec:
       restartPolicy: Always
-      terminationGracePeriodSeconds: 60
+      terminationGracePeriodSeconds: 30
       securityContext:
         fsGroup: 472
         supplementalGroups:
@@ -50,7 +50,7 @@ spec:
           resources:
             requests:
               cpu: 0.2
-              memory: 128Mi
+              memory: 256Mi
             limits:
               cpu: 1
               memory: 512Mi
@@ -130,7 +130,11 @@ spec:
             - name: GF_SECURITY_CONTENT_SECURITY_POLICY
               value: 'true'
 
+            - name: GF_SNAPSHOTS_ENABLED
+              value: 'false'
             - name: GF_SNAPSHOTS_EXTERNAL_ENABLED
+              value: 'false'
+            - name: GF_SNAPSHOTS_PUBLIC_MODE
               value: 'false'
 
             - name: GF_USERS_VERIFY_EMAIL_ENABLED

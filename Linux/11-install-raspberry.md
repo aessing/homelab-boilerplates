@@ -18,7 +18,7 @@ To write the Ubuntu image to your SD card or SSD, you’ll need the Raspberry Pi
 
    ![alt text](../docs/Linux/11-install-raspberry-01.png)
 
-2. Choose the **Raspberry Pi Device** Model. Select the Raspberry Pi device you’re installing Ubuntu on – e.g., _Raspberry Pi 4_.
+2. Choose the **Raspberry Pi Device** Model. Select the Raspberry Pi device you’re installing Ubuntu on – e.g., _Raspberry Pi 4_ or _Raspberry Pi 5_ .
 
    ![alt text](../docs/Linux/11-install-raspberry-02.png)
 
@@ -125,6 +125,9 @@ enable_uart=1
 #dtoverlay=vc4-kms-v3d
 #disable_fw_kms_setup=1
 
+# Enables maximum USB current (1.2A instead of 600mA) on Raspberry Pi for
+# powering high-draw USB devices
+
 [pi4]
 # Enable CPU Boost
 arm_boost=1
@@ -139,6 +142,11 @@ usb_boot_timeout=1
 # Enable the USB2 outputs on the IO board (assuming your CM4 is plugged into
 # such a board)
 dtoverlay=dwc2,dr_mode=host
+
+[pi5]
+# On Pi 5, forces USB ports to allow ~1.6 A total (instead of default 600 mA);
+# required if using <5 A supply or USB-booting via PoE/other PSUs
+usb_max_current_enable=1
 EOF
 ```
 
@@ -226,12 +234,6 @@ sudo partprobe
 ```
 
 After resizing the partition, you can then resize the filesystem:
-
-```bash
-sudo resize2fs /dev/sda2
-```
-
-Afterwards, you can resize the filesystem to use the newly extended partition:
 
 ```bash
 sudo resize2fs /dev/sda2
