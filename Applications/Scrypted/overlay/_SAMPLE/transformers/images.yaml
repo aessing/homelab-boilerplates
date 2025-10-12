@@ -5,7 +5,7 @@ metadata:
   name: scrypted-imagetransformer
 imageTag:
   name: ghcr.io/koush/scrypted
-  newTag: v0.142.7-noble-full
+  newTag: v0.142.8-noble-full
 ---
 apiVersion: builtin
 kind: ImageTagTransformer
