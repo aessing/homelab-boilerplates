@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+sortOptions:
+  # If not specified, HelmChart will be deployed before HelmChartConfig - This can lead to unconfigured HelmChart deployments
+  order: fifo
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  # - transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/component: operator
+      app.kubernetes.io/instance: cnpg
+      app.kubernetes.io/name: cnpg
+      app.kubernetes.io/part-of: operators
+
+resources:
+  - ../../base
+
+patches:
+  # https://github.com/cloudnative-pg/cloudnative-pg
+  # https://github.com/cloudnative-pg/charts
+  - path: ./patches/version.json
+    target:
+      group: helm.cattle.io
+      version: v1
+      kind: HelmChart
+  - path: ./patches/helmchartconfig.yaml
+    target:
+      group: helm.cattle.io
+      version: v1
+      kind: HelmChartConfig
