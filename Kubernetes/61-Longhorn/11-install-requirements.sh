@@ -145,6 +145,103 @@ blacklist {
 }" >> /etc/multipath.conf
 systemctl restart multipathd.service
 
+echo ""
+echo " - Creating local-path-storageclass patch"
+tee /var/lib/rancher/k3s/server/manifests/local-storage-nondefault.yaml > /dev/null <<'EOF'
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: local-path-sc-patch-svc
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: local-storage-nondefault
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: local-path-sc-patch-role
+  labels:
+    app.kubernetes.io/name: local-storage-nondefault
+rules:
+# Least privilege: nur StorageClass local-path, nur get+patch
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  resourceNames: ["local-path"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: local-path-sc-patch-binding
+  labels:
+    app.kubernetes.io/name: local-storage-nondefault
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: local-path-sc-patch-role
+subjects:
+- kind: ServiceAccount
+  name: local-path-sc-patch-svc
+  namespace: kube-system
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: local-path-sc-patch-fix-
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: local-storage-nondefault
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 300
+  ttlSecondsAfterFinished: 60
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: local-storage-nondefault
+    spec:
+      serviceAccountName: local-path-sc-patch-svc
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: patch
+        image: curlimages/curl:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: { drop: ["ALL"] }
+        resources:
+          requests: { cpu: "10m", memory: "16Mi" }
+          limits:   { cpu: "100m", memory: "64Mi" }
+        env:
+        - name: API
+          value: "https://kubernetes.default.svc"
+        - name: START_DELAY
+          value: "30"                 
+        command: ["/bin/sh","-c"]
+        args:
+          - |
+            set -eu
+            TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+            PATCH='{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
+            echo "Startdelay ${START_DELAY:-15}s..."
+            sleep "${START_DELAY:-15}"
+
+            echo " - Patching StorageClass local-path to non-default..."
+            curl -fsS --retry 10 --retry-delay 3 \
+              --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/merge-patch+json" \
+              -X PATCH -d "$PATCH" \
+              "$API/apis/storage.k8s.io/v1/storageclasses/local-path"
+EOF
+
 #echo ""
 #echo " - Do an environment check"
 #curl -sSfL https://raw.githubusercontent.com/longhorn/longhorn/v1.4.2/scripts/environment_check.sh | bash
