@@ -1,9 +1,0 @@
----
-apiVersion: helm.cattle.io/v1
-kind: HelmChartConfig
-metadata:
-  name: longhorn
-spec:
-  valuesContent: |-
-    replicaCount: 1
-    fullnameOverride: "cnpg-controller-manager"
