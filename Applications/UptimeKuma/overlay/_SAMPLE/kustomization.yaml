@@ -11,7 +11,7 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 2.0.0-beta-rootless.4 # The current version of the application
+      app.kubernetes.io/version: 2.0.2-rootless # The current version of the application
 
 resources:
   - ../../base
