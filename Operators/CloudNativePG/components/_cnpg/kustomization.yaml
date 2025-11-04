@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  # https://github.com/cloudnative-pg/cloudnative-pg
+  - https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.27/releases/cnpg-1.27.1.yaml
+  - ./resources/cnpg-controller-manager-config.yaml
+  - https://raw.githubusercontent.com/cloudnative-pg/artifacts/refs/heads/main/image-catalogs/catalog-minimal-trixie.yaml
+  - https://raw.githubusercontent.com/cloudnative-pg/artifacts/refs/heads/main/image-catalogs/catalog-standard-trixie.yaml
+  - https://raw.githubusercontent.com/cloudnative-pg/postgis-containers/refs/heads/main/image-catalogs/postgis-standard-trixie.yaml

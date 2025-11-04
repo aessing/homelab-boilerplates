@@ -1,0 +1,8 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: barman-objectstore-default
+spec:
+  configuration:
+    destinationPath: s3://###BUCKET###/###FOLDER(CLUSTERNAME)###/
+    endpointURL: https://###ENDPOINT_URL###

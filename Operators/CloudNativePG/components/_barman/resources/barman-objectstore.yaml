@@ -1,0 +1,20 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: barman-objectstore-default
+spec:
+  configuration:
+    destinationPath: s3://###BUCKET###/###FOLDER(CLUSTERNAME)###/
+    endpointURL: https://###ENDPOINT_URL###
+    s3Credentials:
+      accessKeyId:
+        name: barman-default-objectstore-credentials
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: barman-default-objectstore-credentials
+        key: ACCESS_SECRET_KEY
+    data:
+      compression: gzip
+    wal:
+      compression: zstd
+  retentionPolicy: '30d'

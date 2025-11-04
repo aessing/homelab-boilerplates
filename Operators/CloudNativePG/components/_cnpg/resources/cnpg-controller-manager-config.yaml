@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cnpg-controller-manager-config
+type: Opaque
+stringData:
+  CERTIFICATE_DURATION: '90'
+  CLUSTERS_ROLLOUT_DELAY: '0'
+  CREATE_ANY_SERVICE: 'false'
+  ENABLE_INSTANCE_MANAGER_INPLACE_UPDATES: 'false'
+  EXPIRING_CHECK_THRESHOLD: '7'
+  INSTANCES_ROLLOUT_DELAY: '0'
+  KUBERNETES_CLUSTER_DOMAIN: 'cluster.local'
+  STANDBY_TCP_USER_TIMEOUT: '0'

@@ -1,0 +1,35 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: cnpg-system
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  # - transformerAnnotations
+  
+components:
+  - ../../components/_cnpg
+  - ../../components/_barman
+
+generators:
+  - ./generators/barman-objectstore-default-credentials.yaml
+
+patches:
+  - path: ./patches/cnpg-controller-manager.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: cnpg-controller-manager
+  - path: ./patches/cnpg-controller-manager-config.yaml
+    target:
+      version: v1
+      kind: Secret
+      name: cnpg-controller-manager-config
+  - path: ./patches/barman-objectstore.yaml
+    target:
+      group: barmancloud.cnpg.io
+      version: v1
+      kind: ObjectStore
+      name: barman-objectstore-default
