@@ -2,14 +2,6 @@
 apiVersion: builtin
 kind: ImageTagTransformer
 metadata:
-  name: grafana-database-imagetransformer
-imageTag:
-  name: mysql
-  newTag: 9.5.0
----
-apiVersion: builtin
-kind: ImageTagTransformer
-metadata:
   name: grafana-haengine-imagetransformer
 imageTag:
   name: redis

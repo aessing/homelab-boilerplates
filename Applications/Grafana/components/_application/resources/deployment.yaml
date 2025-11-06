@@ -71,19 +71,13 @@ spec:
               value: '%(protocol)s://%(domain)s/'
 
             - name: GF_DATABASE_TYPE
-              value: 'mysql'
+              value: 'postgres'
             - name: GF_DATABASE_HOST
-              value: 'grafana-database'
+              value: 'grafana-database-rw'
             - name: GF_DATABASE_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: grafana-database-user
-                  key: database
+              value: 'grafana'
             - name: GF_DATABASE_USER
-              valueFrom:
-                secretKeyRef:
-                  name: grafana-database-user
-                  key: username
+              value: 'grafana'
             - name: GF_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:

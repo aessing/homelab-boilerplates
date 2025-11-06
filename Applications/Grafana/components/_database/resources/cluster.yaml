@@ -1,0 +1,55 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: grafana-database
+  labels:
+    app.kubernetes.io/component: 'database'
+  annotations:
+    #reloader.stakater.com/auto: 'true' # Reloads workload when any referenced ConfigMap or Secret changes
+    reloader.stakater.com/search: 'false' # Enables search mode (only reloads if matching secrets/configMaps are found)
+    #configmap.reloader.stakater.com/auto: 'true' # Reloads only when referenced ConfigMap(s) change
+    #configmap.reloader.stakater.com/reload: '' # Reloads when specific ConfigMap(s) change, regardless of how they're used
+    #secret.reloader.stakater.com/auto: 'true' # Reloads only when referenced Secret(s) change
+    #secret.reloader.stakater.com/reload: '' # Reloads when specific Secret(s) change, regardless of how they're used
+    #reloader.stakater.com/rollout-strategy: 'rollout' # Specifies the rollout strategy for the workload (rollout (default) / restart)
+spec:
+  instances: 0
+  bootstrap:
+    initdb:
+      database: grafana
+      owner: grafana
+      secret:
+        name: grafana-database-user
+      dataChecksums: true               # When dataChecksums is set to true, CloudNativePG invokes the -k option in initdb to enable checksums on data pages and help detect corruption by the I/O system - that would otherwise be silent (default: false).
+      encoding: UTF8                    # When encoding set to a value, CloudNativePG passes it to the --encoding option in initdb, which selects the encoding of the template database (default: UTF8).
+      locale: "C.UTF-8"                 # When locale is set to a value, CloudNativePG passes it to the --locale option in initdb. This option controls the locale, as defined in "Locale Support" from the PostgreSQL documentation. By default, the locale parameter is empty. In this case, environment variables such as LANG are used to determine the locale. Be aware that these variables can vary between container images, potentially leading to inconsistent behavior.
+      localeCollate: C                  # When localeCollate is set to a value, CloudNativePG passes it to the --lc-collate option in initdb. This option controls the collation order (LC_COLLATE subcategory), as defined in "Locale Support" from the PostgreSQL documentation (default: C).
+      localeCType: C                    # When localeCType is set to a value, CloudNativePG passes it to the --lc-ctype option in initdb. This option controls the collation order (LC_CTYPE subcategory), as defined in "Locale Support" from the PostgreSQL documentation (default: C).
+      localeProvider: libc              # When localeProvider is set to a value, CloudNativePG passes it to the --locale-provider option in initdb. This option controls the locale provider, as defined in "Locale Support" from the PostgreSQL documentation (default: empty, which means libc for PostgreSQL). Available from PostgreSQL 15.
+  imageCatalogRef:
+    apiGroup: postgresql.cnpg.io
+    kind: ClusterImageCatalog
+    name: postgresql-minimal-trixie
+    major: 0
+  storage:
+    size: 0Gi
+    storageClass: local-path
+  postgresql:
+    parameters:
+      shared_buffers: "128MB"            # Sets the amount of memory the database server uses for shared memory buffers. 25% of system memory is a good starting value.
+    synchronous:
+      method: any
+      number: 1
+      dataDurability: required
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "0.1"
+    limits:
+      memory: "512Mi"
+      cpu: "1.0"
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: grafana-database-objectstore

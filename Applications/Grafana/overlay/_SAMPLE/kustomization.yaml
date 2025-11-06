@@ -18,8 +18,8 @@ resources:
 
 generators:
   - ./generators/secret-grafana-admin.yaml
-  - ./generators/secret-grafana-database-root.yaml
   - ./generators/secret-grafana-database-user.yaml
+  - ./generators/secret-grafana-database-objectstore.yaml
   - ./generators/secret-grafana-haengine-auth.yaml
   - ./generators/secret-grafana-metrics.yaml
   - ./generators/secret-grafana-renderer-auth.yaml
@@ -43,19 +43,36 @@ patches:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
-  - path: ./patches/pvc-grafana-database.json
+  - path: ./patches/grafana-database.json
     target:
-      group: apps
+      group: postgresql.cnpg.io
       version: v1
-      kind: StatefulSet
+      kind: Cluster
       name: grafana-database
+  - path: ./patches/grafana-database-objectstore.yaml
+    target:
+      group: barmancloud.cnpg.io
+      version: v1
+      kind: ObjectStore
+      name: grafana-database-objectstore
+  - path: ./patches/grafana-database-schedule.yaml
+    target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: ScheduledBackup
+      name: grafana-database-scheduledbackup
+  - path: ./patches/network-policy.json
+    target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: kubeproxy-to-cluster
   - path: ./patches/resource-quota.json
     target:
       version: v1
       kind: ResourceQuota
 
 transformers:
-  # https://hub.docker.com/_/mysql
   # https://hub.docker.com/_/redis/
   # https://hub.docker.com/r/grafana/grafana-image-renderer
   # https://hub.docker.com/r/grafana/grafana-oss/tags

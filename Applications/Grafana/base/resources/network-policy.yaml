@@ -52,7 +52,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/component: database
+      cnpg.io/cluster: grafana-database
   policyTypes:
     - Ingress
   ingress:
@@ -63,7 +63,70 @@ spec:
               app.kubernetes.io/name: grafana
       ports:
         - protocol: TCP
-          port: 3306
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnpg-to-cluster
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: grafana-database
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cnpg-system
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: cloudnative-pg
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubeproxy-to-cluster
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: grafana-database
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: ###CLUSTER_CIDR###
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: instance-to-instance
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: grafana-database
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: grafana-database
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 8000
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
