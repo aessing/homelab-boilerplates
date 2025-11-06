@@ -10,4 +10,4 @@ components:
   - ../components/_editor
   - ../components/_homeassistant
   - ../components/_mqtt
-  - ../components/_recorder
+  - ../components/_database

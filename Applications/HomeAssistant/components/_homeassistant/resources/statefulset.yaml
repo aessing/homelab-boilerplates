@@ -37,9 +37,9 @@ spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 180
       initContainers:
-        - name: mariadb-wait
+        - name: database-wait
           image: busybox:0.0.0
-          command: ['/bin/sh', '-c', 'until nc -zw10 recorder 3306 >/dev/null 2>&1; do echo waiting for recorder database; sleep 5; done']
+          command: ['/bin/sh', '-c', 'until nc -zw10 homeassistant-db-rw 5432 >/dev/null 2>&1; do echo waiting for homeassistant database; sleep 5; done']
       containers:
         - name: homeassistant
           image: ghcr.io/home-assistant/home-assistant:0.0.0

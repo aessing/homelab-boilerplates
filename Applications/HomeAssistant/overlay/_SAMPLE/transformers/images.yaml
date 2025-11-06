@@ -30,11 +30,3 @@ metadata:
 imageTag:
   name: eclipse-mosquitto
   newTag: 2.0.22
----
-apiVersion: builtin
-kind: ImageTagTransformer
-metadata:
-  name: recorder-imagetransformer
-imageTag:
-  name: mariadb
-  newTag: 12.0.2
