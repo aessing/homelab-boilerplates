@@ -1,0 +1,9 @@
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: authentik-database-objectstore
+spec:
+  configuration:
+    destinationPath: s3://###BUCKET###/###FOLDER(CLUSTERNAME)###/
+    endpointURL: https://###ENDPOINT_URL###

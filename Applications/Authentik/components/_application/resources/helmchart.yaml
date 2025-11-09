@@ -3,6 +3,8 @@ apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
   name: authentik
+  labels:
+    app.kubernetes.io/component: 'application'
 spec:
   repo: https://charts.goauthentik.io
   chart: authentik

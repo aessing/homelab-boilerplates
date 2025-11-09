@@ -3,8 +3,11 @@ apiVersion: helm.cattle.io/v1
 kind: HelmChartConfig
 metadata:
   name: authentik
+  labels:
+    app.kubernetes.io/component: 'application'
 spec:
   valuesContent: |-
+    ---
     # -- Provide a name in place of `authentik`. Prefer using global.nameOverride if possible
     nameOverride: ""
     # -- String to fully override `"authentik.fullname"`. Prefer using global.fullnameOverride if possible
@@ -15,6 +18,11 @@ spec:
 
     ## Globally shared configuration for authentik components.
     global:
+
+      # To override bitnami images
+      security:
+        allowInsecureImages: true
+
       # -- Provide a name in place of `authentik`
       nameOverride: ""
       # -- String to fully override `"authentik.fullname"`
@@ -424,7 +432,7 @@ spec:
         # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
         successThreshold: 1
         # -- Number of seconds after which the [probe] times out
-        timeoutSeconds: 1
+        timeoutSeconds: 3
         ## Probe configuration
         httpGet:
           path: "{{ .Values.authentik.web.path }}-/health/live/"
@@ -440,7 +448,7 @@ spec:
         # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
         successThreshold: 1
         # -- Number of seconds after which the [probe] times out
-        timeoutSeconds: 1
+        timeoutSeconds: 3
         ## Probe configuration
         httpGet:
           path: "{{ .Values.authentik.web.path }}-/health/ready/"
@@ -456,7 +464,7 @@ spec:
         # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
         successThreshold: 1
         # -- Number of seconds after which the [probe] times out
-        timeoutSeconds: 1
+        timeoutSeconds: 3
         ## Probe configuration
         httpGet:
           path: "{{ .Values.authentik.web.path }}-/health/live/"
@@ -803,6 +811,13 @@ spec:
         # limits:
         #   memory: 512Mi
 
+      # authentik worker container ports
+      containerPorts:
+        # -- http container port
+        http: 9000
+        # -- metrics container port
+        metrics: 9300
+
       # -- Host Network for authentik worker pods
       hostNetwork: false
 
@@ -813,6 +828,8 @@ spec:
 
       # -- serviceAccount to use for authentik worker pods. If set, overrides the value used when serviceAccount.create is true
       serviceAccountName: ~
+      # -- (bool) automount behavior for service account token in worker pods. Only applies if worker.serviceAccountName is set.
+      automountServiceAccountToken: ~
 
       # -- authentik worker pod-level security context
       # @default -- `{}` (See [values.yaml])
@@ -844,7 +861,7 @@ spec:
         # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
         successThreshold: 1
         # -- Number of seconds after which the [probe] times out
-        timeoutSeconds: 1
+        timeoutSeconds: 3
         ## Probe configuration
         exec:
           command:
@@ -861,7 +878,7 @@ spec:
         # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
         successThreshold: 1
         # -- Number of seconds after which the [probe] times out
-        timeoutSeconds: 1
+        timeoutSeconds: 3
         ## Probe configuration
         exec:
           command:
@@ -878,7 +895,7 @@ spec:
         # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
         successThreshold: 1
         # -- Number of seconds after which the [probe] times out
-        timeoutSeconds: 1
+        timeoutSeconds: 3
         ## Probe configuration
         exec:
           command:
@@ -921,6 +938,49 @@ spec:
         #   maxSurge: 25%
         #   maxUnavailable: 25%
 
+      ## authentik worker metrics service configuration
+      metrics:
+        # -- deploy metrics service
+        enabled: false
+        service:
+          # -- metrics service type
+          type: ClusterIP
+          # -- metrics service clusterIP. `None` makes a "headless service" (no virtual IP)
+          clusterIP: ""
+          # -- metrics service annotations
+          annotations: {}
+          # -- metrics service labels
+          labels: {}
+          # -- metrics service port
+          servicePort: 9300
+          # -- metrics service port name
+          portName: metrics
+        serviceMonitor:
+          # -- enable a prometheus ServiceMonitor
+          enabled: false
+          # -- Prometheus ServiceMonitor interval
+          interval: 30s
+          # -- Prometheus ServiceMonitor scrape timeout
+          scrapeTimeout: 3s
+          # -- Prometheus [RelabelConfigs] to apply to samples before scraping
+          relabelings: []
+          # -- Prometheus [MetricsRelabelConfigs] to apply to samples before ingestion
+          metricRelabelings: []
+          # -- Prometheus ServiceMonitor selector
+          selector: {}
+            # prometheus: kube-prometheus
+
+          # -- Prometheus ServiceMonitor scheme
+          scheme: ""
+          # -- Prometheus ServiceMonitor tlsConfig
+          tlsConfig: {}
+          # -- Prometheus ServiceMonitor namespace
+          namespace: ""
+          # -- Prometheus ServiceMonitor labels
+          labels: {}
+          # -- Prometheus ServiceMonitor annotations
+          annotations: {}
+
 
     serviceAccount:
       # -- Create service account. Needed for managed outposts
@@ -959,7 +1019,7 @@ spec:
         # -- If defined, a repository for GeoIP images
         repository: ghcr.io/maxmind/geoipupdate
         # -- If defined, a tag for GeoIP images
-        tag: v7.1.0
+        tag: v7.1.1
         # -- If defined, an image digest for GeoIP images
         digest: ""
         # -- If defined, an imagePullPolicy for GeoIP images
@@ -1029,24 +1089,57 @@ spec:
         labels: {}
         # -- PrometheusRule annotations
         annotations: {}
+        # -- PrometheusRuleGroup additional annotations
+        additionalRuleGroupAnnotations: {}
 
 
     postgresql:
       # -- enable the Bitnami PostgreSQL chart. Refer to https://github.com/bitnami/charts/blob/main/bitnami/postgresql/ for possible values.
       enabled: false
+      image:
+        registry: docker.io
+        repository: library/postgres
+        tag: "17.6-bookworm"
       auth:
         username: authentik
         database: authentik
         # password: ""
       primary:
+        args:
+          - -c
+          - config_file=/bitnami/postgresql/conf/postgresql.conf
+          - -c
+          - hba_file=/bitnami/postgresql/conf/pg_hba.conf
+        configuration: |
+          listen_addresses = '*'
+          port = '5432'
+          wal_level = 'replica'
+          fsync = 'on'
+          hot_standby = 'on'
+          log_connections = 'false'
+          log_disconnections = 'false'
+          log_hostname = 'false'
+          client_min_messages = 'error'
+          include_dir = 'conf.d'
+        pgHbaConfiguration: |
+          host     all             all             0.0.0.0/0               scram-sha-256
+          host     all             all             ::/0                    scram-sha-256
+          local    all             all                                     scram-sha-256
+          host     all             all        127.0.0.1/32                 scram-sha-256
+          host     all             all        ::1/128                      scram-sha-256
         extendedConfiguration: |
           max_connections = 500
+        extraEnvVars:
+          - name: POSTGRES_DB
+            value: '{{ (include "postgresql.v1.database" .) }}'
         resourcesPreset: "none"
         # persistence:
         #   enabled: true
         #   storageClass:
         #   accessModes:
         #     - ReadWriteOnce
+        containerSecurityContext:
+          readOnlyRootFilesystem: false
       readReplicas:
         resourcesPreset: "none"
       backup:
@@ -1062,6 +1155,10 @@ spec:
     redis:
       # -- enable the Bitnami Redis chart. Refer to https://github.com/bitnami/charts/blob/main/bitnami/redis/ for possible values.
       enabled: false
+      image:
+        registry: docker.io
+        repository: library/redis
+        tag: "8.2.1"
       architecture: standalone
       auth:
         enabled: false
@@ -1081,3 +1178,4 @@ spec:
 
     # -- additional resources to deploy. Those objects are templated.
     additionalObjects: []
+

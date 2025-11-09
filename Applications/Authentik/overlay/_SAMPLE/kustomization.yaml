@@ -2,7 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 sortOptions:
-  # If not specified, HelmChart will be deployed before HelmChartConfig - This can lead to unconfigured HelmChart deployments
   order: fifo
 
 buildMetadata:
@@ -13,28 +12,56 @@ buildMetadata:
 resources:
   - ../../base
 
+components:
+  - ../../components/_database
+  - ../../components/_application
+
+generators:
+  - ./generators/secret-authentik-config.yaml
+  - ./generators/secret-authentik-database-objectstore.yaml
+  - ./generators/secret-authentik-database-user.yaml
+
 patches:
   # https://github.com/goauthentik/authentik
-  - path: ./patches/version.json
+  - path: ./patches/authentik-database-objectstore.yaml
     target:
-      group: helm.cattle.io
+      group: barmancloud.cnpg.io
       version: v1
-      kind: HelmChart
+      kind: ObjectStore
+      name: authentik-database-objectstore
+  - path: ./patches/authentik-database-schedule.yaml
+    target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: ScheduledBackup
+      name: authentik-database-scheduledbackup
+  - path: ./patches/authentik-database.json
+    target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: Cluster
+      name: authentik-database
   - path: ./patches/certificate.json
     target:
       group: cert-manager.io
       version: v1
       kind: Certificate
-  - path: ./patches/helmchartconfig.yaml
-    target:
-      group: helm.cattle.io
-      version: v1
-      kind: HelmChartConfig
+      name: authentik
   - path: ./patches/ingressroute.json
     target:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
+  - path: ./patches/version.json
+    target:
+      group: helm.cattle.io
+      version: v1
+      kind: HelmChart
+  - path: ./patches/helmchartconfig.yaml
+    target:
+      group: helm.cattle.io
+      version: v1
+      kind: HelmChartConfig
 
 transformers:
   - ./transformers/labels.yaml
