@@ -1,0 +1,6 @@
+---
+# PostgreSQL locale configuration
+# Sets the database locale for collation and character handling
+- op: replace
+  path: /spec/bootstrap/initdb/icuLocale
+  value: und-x-icu                    # Locale using ICU - Change to your desired locale

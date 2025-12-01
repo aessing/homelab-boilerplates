@@ -1,0 +1,9 @@
+---
+# Scheduled backup configuration for PostgreSQL
+# Defines when automated backups should run
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgres-database-scheduledbackup
+spec:
+  schedule: 0 0 0 * * *                 # Cron: Daily at 3:30 AM (seconds minutes hours day month weekday)

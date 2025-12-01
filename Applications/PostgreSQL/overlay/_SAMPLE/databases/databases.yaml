@@ -1,0 +1,54 @@
+# Managed PostgreSQL databases for the CNPG Cluster
+#
+# What this file does:
+# - Declares application databases to be created and managed by CNPG
+# - Each Database resource specifies the database name, owner role, and reclaim policy
+# - The owner role must exist (defined in roles.yaml or via other means)
+#
+# After applying this configuration, please ensure your run the following SQL commands (CNPG does not allow to run scripts automatically after database creation):
+#   REVOKE CONNECT ON DATABASE [DATABASE_NAME] FROM PUBLIC;
+#   GRANT CONNECT ON DATABASE [DATABASE_NAME] TO [DATABASE_ROLE];
+#
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: postgres-database-app01
+  namespace: postgres
+spec:
+  name: app01
+  owner: app01
+  ensure: present
+  databaseReclaimPolicy: retain
+  cluster:
+    name: postgres-database
+  extensions:
+  - name: bloom
+    ensure: present
+  schemas:
+  - name: test
+    owner: app01
+    ensure: present
+  - name: export
+    owner: app01
+    ensure: present
+  - name: staging
+    owner: app01
+    ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: postgres-database-app02
+  namespace: postgres
+spec:
+  name: app02
+  owner: app02
+  ensure: present
+  databaseReclaimPolicy: retain
+  cluster:
+    name: postgres-database
+  schemas:
+  - name: test
+    owner: app02
+    ensure: present

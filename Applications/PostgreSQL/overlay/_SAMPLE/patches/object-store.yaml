@@ -1,0 +1,11 @@
+---
+# Object store configuration for PostgreSQL backups
+# Configures S3-compatible storage for database backup retention
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: postgres-database-objectstore
+spec:
+  configuration:
+    destinationPath: s3://###BUCKET###/###FOLDER(CLUSTERNAME)###/               # S3 bucket path for backups
+    endpointURL: https://###ENDPOINT_URL###                                     # Backblaze B2 S3 endpoint

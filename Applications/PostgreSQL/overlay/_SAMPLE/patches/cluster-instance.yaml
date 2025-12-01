@@ -1,0 +1,12 @@
+---
+# PostgreSQL cluster instance configuration
+# Controls the number of database instances and PostgreSQL version
+- op: replace
+  path: /spec/instances
+  value: ###INSTANCE_COUNT(3)###        # Number of PostgreSQL instances for high availability (recommended is 3 instances for HA)
+- op: replace
+  path: /spec/postgresql/synchronous/number
+  value: ###SYNCHRONOUS_REPLICAS(1)###  # Number of synchronous replicas (The primary waits for 1 replica to confirm write) for data durability. 1 means data is confirmed by primary and 1 replica before commit.
+- op: replace
+  path: /spec/imageCatalogRef/major
+  value: ###PGSQL_VERSION###            # PostgreSQL major version (18, 17, 16, etc.)

@@ -1,0 +1,16 @@
+---
+# Network policy for client access to PostgreSQL database
+# Allows connections from defined sources
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: clients-to-database
+spec:
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: ###CIDR_BLOCK###
+        - ipBlock:
+            cidr: ###CIDR_BLOCK###
+        - ipBlock:
+            cidr: ###CIDR_BLOCK###

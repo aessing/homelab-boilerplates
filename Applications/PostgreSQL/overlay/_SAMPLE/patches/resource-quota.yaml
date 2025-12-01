@@ -1,0 +1,9 @@
+---
+# Resource quota configuration
+# Limits the maximum number of resources in the namespace
+- op: replace
+  path: /spec/hard/pods
+  value: ###POD_COUNT(4)###                              # Maximum number of pods allowed in namespace (PostgreSQL cluster with 3 instances + 1 for auxiliary tasks)
+- op: replace
+  path: /spec/hard/persistentvolumeclaims
+  value: ###PVC_COUNT(4)###                              # Maximum number of PVCs allowed in namespace (PostgreSQL cluster with 3 instances + 1 for auxiliary tasks)
