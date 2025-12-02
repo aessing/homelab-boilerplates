@@ -58,6 +58,7 @@ spec:
       postInitApplicationSQL:
       - "REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;"
       - "GRANT CONNECT ON DATABASE postgres TO postgres;"
+      - "GRANT CONNECT ON DATABASE postgres TO streaming_replica;"
       - "REVOKE CONNECT ON DATABASE initdb FROM PUBLIC;"
       - "GRANT CONNECT ON DATABASE initdb TO initdb;"
   managed:
