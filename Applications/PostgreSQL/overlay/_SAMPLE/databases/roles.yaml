@@ -20,7 +20,7 @@ spec:
       connectionLimit: -1                                       # Concurrent connections (-1 means unlimited)
       inRoles: []                                               # Additional roles to grant to this role
       passwordSecret:
-        name: postgres-database-user-app01                      # K3s Secret containing the password
+        name: postgres-database-user-app01                      # Kubernetes Secret containing the password
     - name: app02
       ensure: present                                           # Keep role present (use "absent" to remove)
       comment: Application 02 Read Write User
@@ -34,4 +34,4 @@ spec:
       connectionLimit: -1                                       # Concurrent connections (-1 means unlimited)
       inRoles: []                                               # Additional roles to grant to this role
       passwordSecret:
-        name: postgres-database-user-app02                      # K3s Secret containing the password
+        name: postgres-database-user-app02                      # Kubernetes Secret containing the password

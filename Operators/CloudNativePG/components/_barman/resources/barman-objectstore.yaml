@@ -8,10 +8,10 @@ spec:
     endpointURL: https://###ENDPOINT_URL###
     s3Credentials:
       accessKeyId:
-        name: barman-default-objectstore-credentials
+        name: barman-objectstore-default-credentials
         key: ACCESS_KEY_ID
       secretAccessKey:
-        name: barman-default-objectstore-credentials
+        name: barman-objectstore-default-credentials
         key: ACCESS_SECRET_KEY
     data:
       compression: gzip
