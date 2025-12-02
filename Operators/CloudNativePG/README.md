@@ -197,6 +197,7 @@ kubectl get objectstore -n cnpg-system
 ```bash
 kubectl get clusterimagecatalog
 ```
+
 ## Updating the Operator
 
 To update CNPG to a new version:

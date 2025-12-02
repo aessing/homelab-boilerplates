@@ -42,7 +42,7 @@ To write the Ubuntu image to your SD card or SSD, you’ll need the Raspberry Pi
 
 8. **Enable SSH** acess. Activate SSH using _password authentication_ (recommended during setup). This will be disabled later via the hardening script. ⚠️ Do not expose the server to the internet before hardening it. ⚠️
 
-![alt text](../docs/Linux/11-install-raspberry-11.png)
+   ![alt text](../docs/Linux/11-install-raspberry-11.png)
 
 9. Enable **Eject Media When Finished**. This option will automatically eject the SD card or SSD after writing completes.
 
