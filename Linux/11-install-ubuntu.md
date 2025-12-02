@@ -1,8 +1,6 @@
 # Ubuntu Server 24.04 LTS Installation Steps
 
-> THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
-> EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
-> WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+> THE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### 1. SELECT LANGUAGE
 
@@ -39,8 +37,8 @@
 ### 8. GUIDED STORAGE CONFIGURATION
 
 - Custom storage layout.
-  Recommended Partitioning Scheme for Ubuntu Server.
-  Minimum 32GB Disk Space.
+  Recommended partitioning scheme for Ubuntu Server.
+  Minimum 32GB disk space.
 
 | MOUNTPOINT     | TYPE   | FS   | SIZE   | LABEL  | NAME          | VOLGROUP |
 | -------------- | ------ | ---- | ------ | ------ | ------------- | -------- |
@@ -57,9 +55,9 @@
 | /var/tmp       | LVM-LV | EXT4 | 1024MB | vartmp | lvVarTmp      | vgSystem |
 | swap           | LVM-LV | SWAP | 4096MB |        | lvSwap        | vgSystem |
 
-- Additional Storage for Rancher and Longhorn.
-  Recommend to use a separate disk for Rancher and Longhorn.
-  Also use separate physical disks for Rancher and Longhorn if available.
+- Additional storage for Rancher and Longhorn.
+  It is recommended to use a separate disk for Rancher and Longhorn.
+  Also, use separate physical disks for Rancher and Longhorn if available.
 
 | MOUNTPOINT        | TYPE   | FS   | SIZE                     | LABEL    | NAME       | VOLGROUP                                                    |
 | ----------------- | ------ | ---- | ------------------------ | -------- | ---------- | ----------------------------------------------------------- |
@@ -84,13 +82,13 @@
 ### 11. SSH SETUP
 
 - Install OpenSSH server: Yes
-- Import SSH identity: No - We will do later via script
+- Import SSH identity: No – We will do this later via script
 - Ensure password authentication is enabled; it will be disabled later via the hardening script
 - ⚠️ Do not expose this server to the internet before hardening it ⚠️
 
-### 12. FEATURE SERVER SNAPS
+### 12. FEATURED SERVER SNAPS
 
-- Skip installation of optional server snaps at this stage; you can install them later as needed
+- Skip the installation of optional server snaps at this stage. You can install them later as needed.
 
 ### Wait until the installation and update process has finished
 
