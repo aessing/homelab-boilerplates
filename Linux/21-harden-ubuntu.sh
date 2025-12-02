@@ -14,9 +14,13 @@
 #                   https://github.com/konstruktoid/hardening
 #                   https://github.com/Neo23x0/auditd
 # -----------------------------------------------------------------------------
-# THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
-# EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+# THE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 # =============================================================================
 
 set -u -o pipefail
@@ -110,7 +114,7 @@ fi
 ENV_FILE="./environments/$1.env"
 
 echo ""
-echo " - Does the .env file exists?"
+echo " - Does the .env file exist?"
 if [ ! -f "$ENV_FILE" ]; then
   echo ""
   echo " - Script needs environment file with variables."
@@ -134,7 +138,7 @@ if ! source "$ENV_FILE"; then
   echo " - ERROR: Could not load environment file '$ENV_FILE'"
   exit 1
 fi
-set +o allexportreboot
+set +o allexport
 
 echo ""
 echo " - Validating required environment variables"
@@ -338,7 +342,7 @@ fi
 
 if ! grep -iq "Raspberry" /sys/firmware/devicetree/base/model 2>/dev/null; then
   echo ""
-  echo " - Remount /tmp before APT operations, so that it is noexec doesn't affect updates"
+  echo " - Remount /tmp before APT operations, so that noexec does not affect updates"
   echo 'DPkg::Pre-Invoke {"mount -o remount,nodev,exec,nosuid,noatime /tmp";};' >> /etc/apt/apt.conf.d/90hardening-noexec-tmp
   echo 'DPkg::Post-Invoke {"mount -o remount,nodev,noexec,nosuid,noatime /tmp";};' >> /etc/apt/apt.conf.d/90hardening-noexec-tmp
 fi
@@ -372,7 +376,7 @@ echo "# UPGRADING PACKAGES (`date '+%F %T.%N'`)"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
-echo " - Upgrading Installing packages to latest version"
+echo " - Upgrading packages to latest version"
 $APT -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade
 
 # -------------------------------------------------------------------------------------
@@ -510,11 +514,11 @@ if ! cat /sys/firmware/devicetree/base/model 2>/dev/null | grep -iq "Raspberry";
   TMPFSTAB=$(mktemp --tmpdir fstab.XXXXX)
 
   echo ""
-  echo " - Write partions wihout changes to temporary FSTAB"
+  echo " - Write partitions without changes to temporary FSTAB"
   grep -v -E '[[:space:]]/boot[[:space:]]|[[:space:]]/home[[:space:]]|[[:space:]]/tmp[[:space:]]|[[:space:]]/var[[:space:]]|[[:space:]]/var/crash[[:space:]]|[[:space:]]/var/log[[:space:]]|[[:space:]]/var/log/audit[[:space:]]|[[:space:]]/var/tmp[[:space:]]' "$FSTAB_CONF"  > "$TMPFSTAB"
 
   echo ""
-  echo " - Write partions with enhanced security to temporary FSTAB"
+  echo " - Write partitions with enhanced security to temporary FSTAB"
   if grep -q '[[:space:]]/boot[[:space:]].*' "$FSTAB_CONF"; then
     grep '[[:space:]]/boot[[:space:]].*' "$FSTAB_CONF" | sed 's/defaults/defaults,nodev,nosuid/g' >> "$TMPFSTAB"
   fi
@@ -801,7 +805,7 @@ echo "
 # 0=disable, 1=enable all, >1 bitmask of sysrq functions
 # See https://www.kernel.org/doc/html/latest/admin-guide/sysrq.html
 # for what other values do
-# Disable System Request debugging functionalityv
+# Disable System Request debugging functionality
 kernel.sysrq = 0
 " > "$SYSCTLD/99-hardening-magicsysreqkey.conf"
 
@@ -2020,7 +2024,7 @@ echo "# COMPILER (`date '+%F %T.%N'`)"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
-echo " - Restrict execution of Installing compilers"
+echo " - Restrict execution of compilers"
 while read -r x; do
   if [ -f "$x" ] && [ -x "$x" ]; then
     if ! test -L "$x"; then

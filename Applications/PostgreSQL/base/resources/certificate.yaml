@@ -1,0 +1,40 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: postgres-database
+  labels:
+    app.kubernetes.io/component: 'database'
+    cnpg.io/reload: 'true'
+  annotations:
+    reloader.stakater.com/match: 'false'
+spec:
+  secretName: postgres-database-certificate
+  secretTemplate:
+    labels:
+      app.kubernetes.io/component: 'database'
+      cnpg.io/reload: 'true'
+    annotations:
+      reloader.stakater.com/match: 'false'
+  duration: 2160h
+  renewBefore: 360h
+  subject:
+    organizations:
+      - CHANGE_ME
+  isCA: false
+  privateKey:
+    algorithm: ECDSA
+    size: 384
+    rotationPolicy: Always
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  dnsNames:
+      - CHANGE_ME-rw
+      - CHANGE_ME-ro
+      - CHANGE_ME-r
+  issuerRef:
+    name: letsencrypt-production-default
+    kind: ClusterIssuer
+    group: cert-manager.io

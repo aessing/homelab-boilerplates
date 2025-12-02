@@ -6,7 +6,7 @@ Below is the guidance for how to report issues, propose new features, and submit
 
 Please follow this simple rule to help me stop any unnecessary effort and frustration, so we all can ensure an efficient and effective use of everyone's time - yours, mine, and the time of other community members. Always keep in mind, someone else may have already done the work.
 
-> If you have a question, or do you think you have discovered an issue, or would you like to propose a new feature? T2hen find/file an [issue](../../../issues) before starting work. This will help me to provide feedback, avoid unnecessary work, and help you to get started.
+> If you have a question, or do you think you have discovered an issue, or would you like to propose a new feature? Then find/file an [issue](../../../issues) before starting work. This will help me to provide feedback, avoid unnecessary work, and help you to get started.
 >
 > :exclamation: **For security issues please have a look at the [Security Policy](SECURITY.md)** :exclamation:
 

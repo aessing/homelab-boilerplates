@@ -1,0 +1,16 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: trust-manager
+spec:
+  valuesContent: |-
+    replicaCount: 1          # 2 for HA
+    revisionHistoryLimit: 3  # Number of old ReplicaSets to retain - 10 is default
+    secretTargets:
+      enabled: true
+      authorizedSecrets:
+        - trust-manager-ca
+    app:
+      trust:
+        namespace: certmgr-trust

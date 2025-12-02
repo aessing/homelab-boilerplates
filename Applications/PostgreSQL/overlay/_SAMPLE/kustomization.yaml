@@ -1,0 +1,91 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: postgres
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  #- transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: "18"     # The configured version of the PostgreSQL cluster
+
+resources:
+  - ../../base
+  - ./databases/databases.yaml
+
+generators:
+  - ./generators/secret-initdb.yaml
+  - ./generators/secret-objectstore.yaml
+  - ./generators/secret-superuser.yaml
+  - ./databases/secrets.yaml
+
+patches:
+  - path: ./patches/certificate.yaml
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+      name: postgres-database
+  - path: ./patches/cluster-instance.yaml
+    target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: Cluster
+      name: postgres-database
+  - path: ./patches/cluster-loadbalancer.yaml
+    target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: Cluster
+      name: postgres-database
+  - path: ./patches/cluster-locale.yaml
+    target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: Cluster
+      name: postgres-database
+  - path: ./patches/cluster-resources.yaml
+    target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: Cluster
+      name: postgres-database
+  - path: ./patches/network-policy-clients.yaml
+    target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: clients-to-database
+  - path: ./patches/network-policy-kubeproxy.yaml
+    target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: kubeproxy-to-cluster
+  - path: ./patches/object-store.yaml
+    target:
+      group: barmancloud.cnpg.io
+      version: v1
+      kind: ObjectStore
+      name: postgres-database-objectstore
+  - path: ./patches/resource-quota.yaml
+    target:
+      version: v1
+      kind: ResourceQuota
+      name: postgres
+  - path: ./patches/scheduled-backup.yaml
+    target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: ScheduledBackup
+      name: postgres-database-scheduledbackup
+  - path: ./databases/roles.yaml
+    target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: Cluster
+      name: postgres-database

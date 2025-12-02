@@ -1,0 +1,105 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-database
+  labels:
+    app.kubernetes.io/component: 'database'
+spec:
+  instances: 0
+  imageCatalogRef:
+    apiGroup: postgresql.cnpg.io
+    kind: ClusterImageCatalog
+    name: postgresql-minimal-trixie
+    major: 0
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: postgres-database-superuser  
+  certificates:
+    serverTLSSecret: postgres-database-certificate
+    serverCASecret: trust-manager-ca
+  resources:
+    requests:
+      memory: 0Mi
+      cpu: '0'
+    limits:
+      memory: 0Mi
+      cpu: '0'
+  storage:
+    size: 0Gi
+    storageClass: local-path
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: postgres-database-objectstore
+  postgresql:
+    parameters:
+      shared_buffers: 0MB
+      password_encryption: scram-sha-256
+    pg_hba:
+      - "hostnossl all all all reject"
+      - "hostssl all all all scram-sha-256"
+    synchronous:
+      method: any
+      number: 0
+      dataDurability: required
+  bootstrap:
+    initdb:
+      database: initdb
+      owner: initdb
+      secret:
+        name: postgres-database-user-initdb
+      dataChecksums: true
+      encoding: 'UTF8'
+      locale: 'C.UTF-8'
+      localeProvider: 'icu'
+      icuLocale: 'de-DE-x-icu'
+      postInitApplicationSQL:
+      - "REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;"
+      - "GRANT CONNECT ON DATABASE postgres TO postgres;"
+      - "GRANT CONNECT ON DATABASE postgres TO streaming_replica;"
+      - "REVOKE CONNECT ON DATABASE initdb FROM PUBLIC;"
+      - "GRANT CONNECT ON DATABASE initdb TO initdb;"
+  managed:
+    services:
+      additional:
+        - selectorType: rw
+          serviceTemplate:
+            metadata:
+              name: postgres-database-rw-external
+              annotations:
+                metallb.universe.tf/address-pool: default-pool
+            spec:
+              type: LoadBalancer
+              loadBalancerIP: ###READ WRITE REPLICA LOAD BALANCER IP###
+              ports:
+                - name: postgres
+                  port: 5432
+                  targetPort: 5432
+        - selectorType: ro
+          serviceTemplate:
+            metadata:
+              name: postgres-database-ro-external
+              annotations:
+                metallb.universe.tf/address-pool: default-pool
+            spec:
+              type: LoadBalancer
+              loadBalancerIP: ###READ ONLY REPLICA LOAD BALANCER IP###
+              ports:
+                - name: postgres
+                  port: 5432
+                  targetPort: 5432
+        - selectorType: r
+          serviceTemplate:
+            metadata:
+              name: postgres-database-r-external
+              annotations:
+                metallb.universe.tf/address-pool: default-pool
+            spec:
+              type: LoadBalancer
+              loadBalancerIP: ###REPLICA LOAD BALANCER IP###
+              ports:
+                - name: postgres
+                  port: 5432
+                  targetPort: 5432

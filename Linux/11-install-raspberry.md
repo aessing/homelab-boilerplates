@@ -1,8 +1,6 @@
 # Ubuntu Server 24.04 LTS on Raspberry Pi – Installation Steps
 
-> THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
-> EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
-> WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+> THE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Write Ubuntu Image to SD Card / SSD
 
@@ -18,7 +16,7 @@ To write the Ubuntu image to your SD card or SSD, you’ll need the Raspberry Pi
 
    ![alt text](../docs/Linux/11-install-raspberry-01.png)
 
-2. Choose the **Raspberry Pi Device** Model. Select the Raspberry Pi device you’re installing Ubuntu on – e.g., _Raspberry Pi 4_ or _Raspberry Pi 5_ .
+2. Choose the **Raspberry Pi Device** Model. Select the Raspberry Pi device you're installing Ubuntu on – e.g., _Raspberry Pi 4_ or _Raspberry Pi 5_.
 
    ![alt text](../docs/Linux/11-install-raspberry-02.png)
 
@@ -44,7 +42,7 @@ To write the Ubuntu image to your SD card or SSD, you’ll need the Raspberry Pi
 
 8. **Enable SSH** acess. Activate SSH using _password authentication_ (recommended during setup). This will be disabled later via the hardening script. ⚠️ Do not expose the server to the internet before hardening it. ⚠️
 
-![alt text](../docs/Linux/11-install-raspberry-11.png)
+   ![alt text](../docs/Linux/11-install-raspberry-11.png)
 
 9. Enable **Eject Media When Finished**. This option will automatically eject the SD card or SSD after writing completes.
 
@@ -66,9 +64,9 @@ After writing the image to the SD card or SSD, you can insert it into the Raspbe
 
 ### 1. Configure Firmware
 
-To ensure that the Raspberry Pi 4 boots correctly, you need to configure its firmware. This is done by creating a configuration file in the `/boot/firmware` directory.
+To ensure that your Raspberry Pi boots correctly, you need to configure its firmware. This is done by editing the configuration file in the `/boot/firmware` directory.
 
-The following configuration is optimized for the Raspberry Pi 4 and Compute Module 4 (CM4) running in headless server mode (i.e., without a connected display). This setup reduces memory usage, improves performance, and lowers power consumption — ideal for server deployments.
+The following configuration is optimized for the Raspberry Pi 4, Raspberry Pi 5, and Compute Module 4 (CM4) running in headless server mode (i.e., without a connected display). This setup reduces memory usage, improves performance, and lowers power consumption — ideal for server deployments.
 
 ```bash
 sudo tee /boot/firmware/config.txt > /dev/null << 'EOF'
@@ -150,14 +148,13 @@ usb_max_current_enable=1
 EOF
 ```
 
-### Configure Networking
+### 2. Configure Networking
 
 For server deployments, it’s recommended to configure a static IP address instead of using DHCP, to ensure consistent network access.
 
 This is done by editing the Netplan configuration, which defines the network settings for Ubuntu.
 
-Below is an example configuration file.
-Please adjust the IP address, nameservers, search domain, and default gateway according to your environment:
+Below is an example configuration file. Please adjust the IP address, nameservers, search domain, and default gateway according to your environment:
 
 ```bash
 sudo tee /etc/netplan/99_config.yaml > /dev/null << 'EOF'
@@ -187,19 +184,19 @@ sudo rm -f /etc/netplan/50-cloud-init.yaml
 sudo netplan try
 ```
 
-### Reboot
+### 3. Reboot
 
-After completing all configurations—firmware, networking, and disabling cloud-init—you should reboot the Raspberry Pi to apply all changes and ensure the system starts correctly with the new settings.
+After completing all configurations—firmware, networking, and disabling cloud-init—reboot the Raspberry Pi to apply all changes and ensure the system starts correctly with the new settings.
 
 ```bash
 sudo reboot
 ```
 
-## Root Partition not extended
+## Root Partition Not Extended
 
-### For Disk <= 2TB
+### For Disks <= 2TB
 
-In rare cases the root partition may not be automatically extended to use the full disk space available on the SD card or SSD. If this happens, you can manually extend the root partition using the `growpart` command.
+In rare cases, the root partition may not be automatically extended to use the full disk space available on the SD card or SSD. If this happens, you can manually extend the root partition using the `growpart` command.
 
 ```bash
 sudo growpart /dev/sda 2
@@ -211,7 +208,7 @@ Afterwards, you can resize the filesystem to use the newly extended partition:
 sudo resize2fs /dev/sda2
 ```
 
-### For Disk > 2TB
+### For Disks > 2TB
 
 The `growpart` command may not work for disks larger than 2TB. In this case, you can use the `parted` command to resize the partition.
 
