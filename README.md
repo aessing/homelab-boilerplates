@@ -1,8 +1,6 @@
-![Nerdy person in a hoodie standing in a crowded server room holding a steaming coffee mug, hoodie shows sudo logo; surrounded by server racks, tangled network cables and monitors displaying graphs and code; large overlaid text reads ANDRE'S LAB OF CONTROLLED CHAOS and subtitle Break things fast, fix them faster](.github/media/banner.jpg)
-
-> THE CONTENT OF THIS REPOSITORY IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE CONTENT OF THIS REPOSITORY OR THE USE OR OTHER DEALINGS IN THE REPOSITORY.
-
 # Andre's Lab of Controlled Chaos
+
+![Nerdy person in a hoodie standing in a crowded server room holding a steaming coffee mug, hoodie shows sudo logo; surrounded by server racks, tangled network cables and monitors displaying graphs and code; large overlaid text reads ANDRE'S LAB OF CONTROLLED CHAOS and subtitle Break things fast, fix them faster](.github/media/banner.jpg)
 
 Welcome to my personal collection of boilerplates and configuration templates from my Homelab! This repository serves as a starting point for a variety of tools, technologies, and projects I frequently work with.
 
@@ -35,3 +33,7 @@ cd boilerplates
 ## Support
 
 For further information about this project, how to [contribute](docs/CONTRIBUTING.md), or how to get in touch, please have a look at the [support document](docs/SUPPORT.md). The repository also contains information about [security related topics](docs/SECURITY.md) and [licensing](LICENSE).
+
+## Disclaimer
+
+THE CONTENT OF THIS REPOSITORY IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE CONTENT OF THIS REPOSITORY OR THE USE OR OTHER DEALINGS IN THE REPOSITORY.
