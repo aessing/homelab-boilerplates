@@ -56,6 +56,8 @@ spec:
       localeProvider: 'icu'
       icuLocale: 'de-DE-x-icu'
       postInitApplicationSQL:
+      - "REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;"
+      - "GRANT CONNECT ON DATABASE postgres TO postgres;"
       - "REVOKE CONNECT ON DATABASE initdb FROM PUBLIC;"
       - "GRANT CONNECT ON DATABASE initdb TO initdb;"
   managed:
