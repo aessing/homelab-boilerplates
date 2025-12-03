@@ -12,9 +12,13 @@
 #                                (https://twitter.com/aessing)
 #                                (https://www.linkedin.com/in/aessing/)
 # -----------------------------------------------------------------------------
-# THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
-# EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+# THE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 # =============================================================================
 
 #############################
@@ -139,10 +143,12 @@ rm /etc/modprobe.d/hardening-nfsv4.conf
 echo ""
 echo " - Disable multipathing for local disks"
 echo "   https://longhorn.io/kb/troubleshooting-volume-with-multipath/"
-echo "
+cat >> /etc/multipath.conf <<'EOF'
+
 blacklist {
     devnode "^sd[a-z0-9]+"
-}" >> /etc/multipath.conf
+}
+EOF
 systemctl restart multipathd.service
 
 echo ""

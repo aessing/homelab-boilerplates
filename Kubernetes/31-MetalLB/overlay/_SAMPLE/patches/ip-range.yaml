@@ -1,0 +1,5 @@
+---
+- op: replace
+  path: /spec/addresses
+  value:
+    - "###IPRANGE_FOR_METALLB###"

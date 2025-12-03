@@ -23,7 +23,7 @@ resources:
 
 patches:
   # https://github.com/cert-manager/trust-manager/
-  - path: ./patches/version.json
+  - path: ./patches/version.yaml
     target:
       group: helm.cattle.io
       version: v1

@@ -28,12 +28,12 @@ generators:
 
 patches:
   # https://github.com/longhorn/longhorn
-  - path: ./patches/version.json
+  - path: ./patches/version.yaml
     target:
       group: helm.cattle.io
       version: v1
       kind: HelmChart
-  - path: ./patches/certificate-dashboard.json
+  - path: ./patches/certificate-dashboard.yaml
     target:
       group: cert-manager.io
       version: v1
@@ -43,54 +43,54 @@ patches:
       group: helm.cattle.io
       version: v1
       kind: HelmChartConfig
-  - path: ./patches/ingressroute-dashboard.json
+  - path: ./patches/ingressroute-dashboard.yaml
     target:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
-  - path: ./patches/jobs-longhorn-job-backup.json
+  - path: ./patches/jobs-longhorn-job-backup.yaml
     target:
       group: longhorn.io
       version: v1beta2
       kind: RecurringJob
       name: longhorn-job-backup
-  - path: ./patches/jobs-longhorn-job-system-backup.json
+  - path: ./patches/jobs-longhorn-job-system-backup.yaml
     target:
       group: longhorn.io
       version: v1beta2
       kind: RecurringJob
       name: longhorn-job-system-backup
-  - path: ./patches/jobs-longhorn-job-snapshot.json
+  - path: ./patches/jobs-longhorn-job-snapshot.yaml
     target:
       group: longhorn.io
       version: v1beta2
       kind: RecurringJob
       name: longhorn-job-snapshot
-  - path: ./patches/jobs-longhorn-job-snapshot-cleanup.json
+  - path: ./patches/jobs-longhorn-job-snapshot-cleanup.yaml
     target:
       group: longhorn.io
       version: v1beta2
       kind: RecurringJob
       name: longhorn-job-snapshot-cleanup
-  - path: ./patches/jobs-longhorn-job-trim-daily.json
+  - path: ./patches/jobs-longhorn-job-trim-daily.yaml
     target:
       group: longhorn.io
       version: v1beta2
       kind: RecurringJob
       name: longhorn-job-trim-daily
-  - path: ./patches/jobs-longhorn-job-trim-weekly.json
+  - path: ./patches/jobs-longhorn-job-trim-weekly.yaml
     target:
       group: longhorn.io
       version: v1beta2
       kind: RecurringJob
       name: longhorn-job-trim-weekly
-  - path: ./patches/namespace.json
+  - path: ./patches/namespace.yaml
     target:
       name: longhorn-dashboard-basicauth
-  - path: ./patches/namespace.json
+  - path: ./patches/namespace.yaml
     target:
       name: longhorn-backup-secret-azure
-  - path: ./patches/storageclass.json
+  - path: ./patches/storageclass.yaml
     target:
       group: storage.k8s.io
       version: v1

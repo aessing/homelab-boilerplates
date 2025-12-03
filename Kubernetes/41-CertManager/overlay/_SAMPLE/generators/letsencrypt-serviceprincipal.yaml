@@ -8,4 +8,4 @@ behavior: create
 options:
   disableNameSuffixHash: true
 files:
-  - client-secret=./secrets/letsencrypt-serviceprincipal.txt
+  - client-secret=./secrets/letsencrypt-serviceprincipal.env

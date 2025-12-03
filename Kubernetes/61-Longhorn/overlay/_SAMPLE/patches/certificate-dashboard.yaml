@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomize-patches-6902.json
+# RFC 6902 JSON Patch for setting certificate dashboard configuration
+- op: replace
+  path: /spec/subject/organizations
+  value:
+    - "###NAME_OF_ORGANISATION###"
+- op: replace
+  path: /spec/dnsNames
+  value:
+    - "###FQDN_OF_LONGHORN_DASHBOARD###"

@@ -24,7 +24,7 @@ resources:
 patches:
   # https://github.com/k8snetworkplumbingwg/multus-cni
   # https://artifacthub.io/packages/helm/rke2-charts/rke2-multus/
-  - path: ./patches/version.json
+  - path: ./patches/version.yaml
     target:
       group: helm.cattle.io
       version: v1

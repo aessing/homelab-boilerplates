@@ -111,8 +111,6 @@ if [ "$#" -ne 1 ]; then
   echo "   Usage: $0 <k8s-environment-name> || <env-file-name-without-extension>"
   echo "   Exiting."
   exit 1
-
-  exit 1
 fi
 
 ENV_FILE="./../environments/$1.env"

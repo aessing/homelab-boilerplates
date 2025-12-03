@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomize-patches-6902.json
+# RFC 6902 JSON Patch for setting IngressRoute dashboard configuration
+- op: replace
+  path: /spec/routes/0/match
+  value: "Host(`###FQDN_FOR_LONGHORN_DASHBOARD###`)"
