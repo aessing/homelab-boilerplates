@@ -1,3 +1,4 @@
+---
 - op: replace
   path: /spec/targetNamespace
   value: traefik-system

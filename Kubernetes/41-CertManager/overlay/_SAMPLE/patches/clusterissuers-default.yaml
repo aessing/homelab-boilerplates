@@ -1,3 +1,4 @@
+---
 - op: replace
   path: /spec/acme/email
   value: "###ADMIN_EMAIL_ADDRESS###"

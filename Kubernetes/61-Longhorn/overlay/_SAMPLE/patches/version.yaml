@@ -1,5 +1,4 @@
-# yaml-language-server: $schema=https://json.schemastore.org/kustomize-patches-6902.json
-# RFC 6902 JSON Patch for setting Longhorn version
+---
 - op: replace
   path: /spec/version
   value: v1.10.1
