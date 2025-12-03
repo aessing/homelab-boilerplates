@@ -140,7 +140,7 @@ journalctl -u k3s -f
 
 # Agent nodes
 journalctl -u k3s-agent -f
-```w
+```
 
 ## Related Resources
 
