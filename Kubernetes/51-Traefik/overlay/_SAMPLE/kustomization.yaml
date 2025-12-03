@@ -28,12 +28,12 @@ generators:
 patches:
   # https://github.com/traefik/traefik
   # https://github.com/traefik/traefik-helm-chart
-  - path: ./patches/version.json
+  - path: ./patches/version.yaml
     target:
       group: helm.cattle.io
       version: v1
       kind: HelmChart
-  - path: ./patches/certificate-dashboard.json
+  - path: ./patches/certificate-dashboard.yaml
     target:
       group: cert-manager.io
       version: v1
@@ -43,11 +43,11 @@ patches:
       group: helm.cattle.io
       version: v1
       kind: HelmChartConfig
-  - path: ./patches/ingressroute-dashboard.json
+  - path: ./patches/ingressroute-dashboard.yaml
     target:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
-  - path: ./patches/namespace.json
+  - path: ./patches/namespace.yaml
     target:
       name: traefik-dashboard-basicauth

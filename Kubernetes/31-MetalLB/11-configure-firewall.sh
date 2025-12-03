@@ -10,9 +10,13 @@
 # Developer.......: Andre Essing (https://github.com/aessing)
 #                                (https://www.linkedin.com/in/aessing/)
 # -----------------------------------------------------------------------------
-# THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
-# EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+# THE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 # =============================================================================
 
 set -u -o pipefail
@@ -98,8 +102,6 @@ if [ "$#" -ne 1 ]; then
   echo "   Usage: $0 <k8s-environment-name> || <env-file-name-without-extension>"
   echo "   Exiting."
   exit 1
-
-  exit 1
 fi
 
 ENV_FILE="./../environments/$1.env"
@@ -158,7 +160,7 @@ if [ -n "${K3S_NODES_AGENTS:-}" ]; then
 fi
 
 for ip in $K3S_NODES_ALL; do
-  ufw allow from "$ip" to any port 7946 proto tcp comment 'MetalLB UDP - All Nodes'
+  ufw allow from "$ip" to any port 7946 proto tcp comment 'MetalLB TCP - All Nodes'
   ufw allow from "$ip" to any port 7946 proto udp comment 'MetalLB UDP - All Nodes'
 done
 

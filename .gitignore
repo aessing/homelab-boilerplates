@@ -1,20 +1,28 @@
 # ----------------------- Boilerplate files ----------------------- #
-# Ignore _ToDo files
-_ToDo/
+# Ignore all Environment files (.env files) except files starting with underscore (_)
+**/*.env
+!**/_*.env
 
-# Ignore all Environment files (.env files) except _SAMPLE.env
-**/environments/*.env
-!**/environments/_SAMPLE.env
-
-# Ignore all kustomize overlays except _SAMPLE
+# Ignore all kustomize overlays except folders starting with underscore (_)
 **/overlay/*
-!**/overlay/_SAMPLE/
-!**/overlay/_SAMPLE/**
+!**/overlay/_*/
+!**/overlay/_*/**
 
-# Ignore all kustomize components except _SAMPLE
+# Ignore all kustomize components folders starting with underscore (_)
 **/components/*
 !**/components/_*/
 !**/components/_*/**
+
+# ------------------------------ IDE ------------------------------ #
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
 
 # ----------------------------- macOS ----------------------------- #
 # General

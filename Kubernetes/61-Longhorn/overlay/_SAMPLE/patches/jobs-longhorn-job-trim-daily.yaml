@@ -1,0 +1,4 @@
+---
+- op: replace
+  path: /spec/cron
+  value: "###CRON_STYLE_SCHEDULE###"

@@ -13,8 +13,7 @@ transformers:
   - ./transformers/helmchart.yaml
 
 patches:
-  # If you change target-namespace, you must change the namespace above
-  - path: ./patches/target-namespace.json
+  - path: ./patches/target-namespace.yaml
     target:
       group: helm.cattle.io
       version: v1

@@ -12,9 +12,13 @@
 # Inspired by.....: https://downloads.cisecurity.org/
 #                   https://docs.k3s.io
 # -----------------------------------------------------------------------------
-# THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
-# EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+# THE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 # =============================================================================
 
 set -u -o pipefail
@@ -75,8 +79,6 @@ if [ "$#" -ne 1 ]; then
   echo "   Usage: $0 <k8s-environment-name> || <env-file-name-without-extension>"
   echo "   Exiting."
   exit 1
-
-  exit 1
 fi
 
 ENV_FILE="./../environments/$1.env"
@@ -110,7 +112,7 @@ set +o allexport
 
 echo ""
 echo " - Validating required environment variables"
-REQUIRED_VARS=(K3S_ETCD_SNAPSHOT_S3_SECRET_NAME K3S_ETCD_SNAPSHOT_S3_ENDPOINT K3S_ETCD_SNAPSHPT_S3_ACCESS_KEY K3S_ETCD_SNAPSHPT_S3_SECRET_KEY K3S_ETCD_SNAPSHOT_S3_BUCKET K3S_ETCD_SNAPSHOT_S3_REGION K3S_ETCD_SNAPSHOT_S3_FOLDER K3S_ETCD_SNAPSHOT_S3_RETENTION)
+REQUIRED_VARS=(K3S_ETCD_SNAPSHOT_S3_SECRET_NAME K3S_ETCD_SNAPSHOT_S3_ENDPOINT K3S_ETCD_SNAPSHOT_S3_ACCESS_KEY K3S_ETCD_SNAPSHOT_S3_SECRET_KEY K3S_ETCD_SNAPSHOT_S3_BUCKET K3S_ETCD_SNAPSHOT_S3_REGION K3S_ETCD_SNAPSHOT_S3_FOLDER K3S_ETCD_SNAPSHOT_S3_RETENTION)
 for var in "${REQUIRED_VARS[@]}"; do
   if [ -z "${!var:-}" ]; then
     echo " - ERROR: Required variable '$var' not set in environment file"
@@ -119,7 +121,7 @@ for var in "${REQUIRED_VARS[@]}"; do
 done
 
 # -------------------------------------------------------------------------------------
-| kubectl apply -f -
+
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
@@ -128,7 +130,7 @@ echo "# ------------------------------------------------------------------------
 
 echo ""
 echo " - Creating secret for etcd snapshot S3 configuration in kube-system namespace"
-cat <<EOF 
+cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret
 metadata:
@@ -138,8 +140,8 @@ type: etcd.k3s.cattle.io/s3-config-secret
 stringData:
   etcd-s3-endpoint: "$K3S_ETCD_SNAPSHOT_S3_ENDPOINT"
   etcd-s3-skip-ssl-verify: "false"
-  etcd-s3-access-key: "$K3S_ETCD_SNAPSHPT_S3_ACCESS_KEY"
-  etcd-s3-secret-key: "$K3S_ETCD_SNAPSHPT_S3_SECRET_KEY"
+  etcd-s3-access-key: "$K3S_ETCD_SNAPSHOT_S3_ACCESS_KEY"
+  etcd-s3-secret-key: "$K3S_ETCD_SNAPSHOT_S3_SECRET_KEY"
   etcd-s3-bucket: "$K3S_ETCD_SNAPSHOT_S3_BUCKET"
   etcd-s3-region: "$K3S_ETCD_SNAPSHOT_S3_REGION"
   etcd-s3-folder: "$K3S_ETCD_SNAPSHOT_S3_FOLDER/$(hostname -s)"

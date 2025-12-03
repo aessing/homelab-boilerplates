@@ -16,6 +16,8 @@ generators:
   - ./generators/barman-objectstore-default-credentials.yaml
 
 patches:
+  # https://github.com/cloudnative-pg/cloudnative-pg
+  # https://github.com/cloudnative-pg/plugin-barman-cloud
   - path: ./patches/cnpg-controller-manager.yaml
     target:
       group: apps

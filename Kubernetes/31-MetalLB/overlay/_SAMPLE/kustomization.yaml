@@ -23,12 +23,12 @@ resources:
 
 patches:
   # https://github.com/metallb/metallb
-  - path: ./patches/version.json
+  - path: ./patches/version.yaml
     target:
       group: helm.cattle.io
       version: v1
       kind: HelmChart
-  - path: ./patches/ip-range.json
+  - path: ./patches/ip-range.yaml
     target:
       group: metallb.io
       version: v1beta1
