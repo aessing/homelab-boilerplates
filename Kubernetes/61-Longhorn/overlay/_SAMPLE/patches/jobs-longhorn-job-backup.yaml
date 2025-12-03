@@ -1,5 +1,3 @@
-# yaml-language-server: $schema=https://json.schemastore.org/kustomize-patches-6902.json
-# RFC 6902 JSON Patch for setting backup job schedule
 - op: replace
   path: /spec/cron
   value: "###CRON_STYLE_SCHEDULE###"
