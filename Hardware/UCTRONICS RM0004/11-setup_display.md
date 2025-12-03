@@ -1,14 +1,7 @@
 # Install Display Tool/Driver for UCTRONICS RM0004 Rack Case
 
----
-
-## Links to the UCTRONICS RM0004 Repositries
-
-- <https://github.com/UCTRONICS/SKU_RM0004>
-- <https://github.com/UCTRONICS/UCTRONICS_RM0004_HA>
-- <https://github.com/UCTRONICS/HomeAssistant>
-
----
+> [!IMPORTANT]
+> THE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 If you’re using a UCTRONICS RM0004 Rack Case with a built-in display, you need to install and configure the UCTRONICS display tool on your Raspberry Pi 4.
 
@@ -75,3 +68,9 @@ dtoverlay=gpio-shutdown,gpio_pin=4,active_low=1,gpio_pull=up
 ```bash
 sudo reboot
 ```
+
+## Links to the UCTRONICS RM0004 Repositries
+
+- <https://github.com/UCTRONICS/SKU_RM0004>
+- <https://github.com/UCTRONICS/UCTRONICS_RM0004_HA>
+- <https://github.com/UCTRONICS/HomeAssistant>
