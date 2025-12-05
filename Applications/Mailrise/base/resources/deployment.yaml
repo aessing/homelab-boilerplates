@@ -33,7 +33,7 @@ spec:
       containers:
         - name: mailrise
           image: ghcr.io/yoryan/mailrise:0.0.0
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true

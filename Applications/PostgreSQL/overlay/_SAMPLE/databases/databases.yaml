@@ -35,6 +35,7 @@ spec:
   - name: staging
     owner: app01
     ensure: present
+
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: Database

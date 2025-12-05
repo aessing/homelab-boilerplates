@@ -5,4 +5,3 @@ metadata:
   name: nameserver
   labels:
     reloader.stakater.com/reload: 'enabled' # Enables reloader for this namespace
-

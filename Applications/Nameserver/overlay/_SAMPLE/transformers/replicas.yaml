@@ -5,7 +5,7 @@ metadata:
   name: nameserver-replicatransformer
 replica:
   name: nameserver
-  count: 3
+  count: 2
 fieldSpecs:
   - path: spec/replicas
     create: true

@@ -20,7 +20,7 @@ generators:
   - ./generators/configs.yaml
 
 patches:
-  - path: ./patches/resource-quota.json
+  - path: ./patches/resource-quota.yaml
     target:
       version: v1
       kind: ResourceQuota

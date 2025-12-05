@@ -5,9 +5,8 @@ metadata:
   name: timeserver
   labels:
     app.kubernetes.io/component: 'application' # The component within the architecture
-  annotations:
-    metallb.io/loadBalancerIPs: '0.0.0.0'
 spec:
+  loadBalancerIP: '0.0.0.0'
   selector:
     app.kubernetes.io/component: 'application' # The component within the architecture
   ports:

@@ -17,23 +17,23 @@ resources:
   - ../../base
 
 patches:
-  - path: ./patches/certificate.json
+  - path: ./patches/certificate.yaml
     target:
       group: cert-manager.io
       version: v1
       kind: Certificate
-  - path: ./patches/ingressroute.json
+  - path: ./patches/ingressroute.yaml
     target:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
-  - path: ./patches/pvc-application.json
+  - path: ./patches/pvc-application.yaml
     target:
       group: apps
       version: v1
       kind: StatefulSet
       name: influxdb
-  - path: ./patches/resource-quota.json
+  - path: ./patches/resource-quota.yaml
     target:
       version: v1
       kind: ResourceQuota

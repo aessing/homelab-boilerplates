@@ -11,7 +11,7 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 2025.11.0 # The current version of the application
+      app.kubernetes.io/version: 2025.11.1 # The current version of the application
 
 resources:
   - ../../base
@@ -21,7 +21,7 @@ generators:
   - ./generators/secret-pihole-passwords.yaml
 
 patches:
-  - path: ./patches/certificate.json
+  - path: ./patches/certificate.yaml
     target:
       group: cert-manager.io
       version: v1
@@ -32,7 +32,7 @@ patches:
       version: v1
       kind: StatefulSet
       name: pihole
-  - path: ./patches/ingressroute.json
+  - path: ./patches/ingressroute.yaml
     target:
       group: traefik.io
       version: v1alpha1
@@ -42,13 +42,13 @@ patches:
       group: k8s.cni.cncf.io
       version: v1
       kind: NetworkAttachmentDefinition
-  - path: ./patches/pvc.json
+  - path: ./patches/pvc.yaml
     target:
       group: apps
       version: v1
       kind: StatefulSet
       name: pihole
-  - path: ./patches/resource-quota.json
+  - path: ./patches/resource-quota.yaml
     target:
       version: v1
       kind: ResourceQuota

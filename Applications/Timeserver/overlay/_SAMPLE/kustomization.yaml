@@ -11,17 +11,17 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 1.4.3 # The current version of the application
+      app.kubernetes.io/version: 1.4.4 # The current version of the application
 
 resources:
   - ../../base
 
 patches:
-  - path: ./patches/resource-quota.json
+  - path: ./patches/resource-quota.yaml
     target:
       version: v1
       kind: ResourceQuota
-  - path: ./patches/service.json
+  - path: ./patches/service.yaml
     target:
       version: v1
       kind: Service

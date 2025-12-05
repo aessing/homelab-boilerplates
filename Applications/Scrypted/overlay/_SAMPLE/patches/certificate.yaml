@@ -1,0 +1,10 @@
+---
+- op: replace
+  path: /spec/subject/organizations
+  value:
+    - "###NAME_OF_ORGANISATION###"
+
+- op: replace
+  path: /spec/dnsNames
+  value:
+    - "###FQDN_OF_SCRYPTED###"

@@ -21,16 +21,16 @@ generators:
   - ./generators/secret-mailrise-users.yaml
 
 patches:
-  - path: ./patches/certificate.json
+  - path: ./patches/certificate.yaml
     target:
       group: cert-manager.io
       version: v1
       kind: Certificate
-  - path: ./patches/resource-quota.json
+  - path: ./patches/resource-quota.yaml
     target:
       version: v1
       kind: ResourceQuota
-  - path: ./patches/service.json
+  - path: ./patches/service.yaml
     target:
       version: v1
       kind: Service

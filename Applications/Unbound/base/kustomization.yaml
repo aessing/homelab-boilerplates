@@ -4,6 +4,6 @@ kind: Kustomization
 resources:
   - ./resources/deployment.yaml
   - ./resources/namespace.yaml
-  #  - ./resources/network-policy.yaml
+  - ./resources/network-policy.yaml
   - ./resources/resource-quota.yaml
   - ./resources/service.yaml
