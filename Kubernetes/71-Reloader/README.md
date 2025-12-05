@@ -79,7 +79,7 @@ Each overlay customizes:
 3. Deploy with Kustomize:
 
    ```bash
-   kubectl apply -k overlay/<cluster-name>
+   kustomize build overlay/<cluster-name> | kubectl apply --server-side -f -
    ```
 
 ## Enabling Reloading for a Namespace

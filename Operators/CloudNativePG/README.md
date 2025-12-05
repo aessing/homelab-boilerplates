@@ -208,7 +208,7 @@ To update CNPG to a new version:
 3. Rebuild and apply:
 
 ```bash
-kustomize build overlay/my-cluster | kubectl apply -f -
+kustomize build overlay/my-cluster | kubectl apply --server-side -f -
 ```
 
 ## Related Resources

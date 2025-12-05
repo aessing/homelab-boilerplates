@@ -86,7 +86,7 @@ Edit `overlay/my-environment/patches/version.yaml` to set the trust-manager vers
 kustomize build overlay/my-environment
 
 # Apply to the cluster
-kustomize build overlay/my-environment | kubectl apply -f -
+kustomize build overlay/my-environment | kubectl apply --server-side -f -
 ```
 
 ### 5. Verify Installation

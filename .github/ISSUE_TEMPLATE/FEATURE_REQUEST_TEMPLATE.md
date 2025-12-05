@@ -2,7 +2,7 @@
 name: Feature request
 about: Suggest an idea for this project
 title: ''
-labels: 'feature'
+labels: 'type - enhancement, status - needs triage'
 assignees: 'aessing'
 ---
 
@@ -12,7 +12,7 @@ assignees: 'aessing'
 
 <!-- Please include a detailed summary of the request or to the issue itself. -->
 
-## Context
+### Context
 
 <!-- How has this issue affected you? What were you trying to accomplish? -->
 

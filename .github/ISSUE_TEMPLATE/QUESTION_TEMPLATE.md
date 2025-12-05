@@ -2,7 +2,7 @@
 name: Question
 about: You have a question about the project?
 title: ''
-labels: 'question'
+labels: 'status - needs triage'
 assignees: 'aessing'
 ---
 

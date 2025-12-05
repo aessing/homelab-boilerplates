@@ -96,7 +96,7 @@ Each overlay customizes:
 3. Deploy with Kustomize:
 
    ```bash
-   kustomize build overlay/<cluster-name> | kubectl apply -f -
+   kustomize build overlay/<cluster-name> | kubectl apply --server-side -f -
    ```
 
 ## Creating NetworkAttachmentDefinitions

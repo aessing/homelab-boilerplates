@@ -10,7 +10,7 @@ updates:
     assignees:
       - 'aessing'
     commit-message:
-      prefix: 'Github Actions'
+      prefix: 'GitHub Actions'
       include: 'scope'
     labels:
       - 'dependencies'

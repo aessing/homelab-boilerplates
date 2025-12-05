@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a report to help to improve the project
 title: ''
-labels: 'bug'
+labels: 'type - bug, status - needs triage'
 assignees: 'aessing'
 ---
 

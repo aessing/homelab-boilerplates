@@ -2,7 +2,7 @@
 name: Critical bug report
 about: Create a report for a critical issue
 title: ''
-labels: 'bug, critical'
+labels: 'type - bug, priority - high, status - needs triage'
 assignees: 'aessing'
 ---
 

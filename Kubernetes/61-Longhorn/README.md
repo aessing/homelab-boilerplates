@@ -110,7 +110,7 @@ Each overlay customizes:
 4. Deploy with Kustomize:
 
    ```bash
-   kubectl apply -k overlay/<cluster-name>
+   kustomize build overlay/<cluster-name> | kubectl apply --server-side -f -
    ```
 
 ## RecurringJobs Overview

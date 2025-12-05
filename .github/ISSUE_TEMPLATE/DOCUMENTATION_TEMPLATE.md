@@ -2,7 +2,7 @@
 name: Documentation issue
 about: Report issues in the documentation or request an improvement
 title: ''
-labels: 'documentation'
+labels: 'type - documentation, status - needs triage'
 assignees: 'aessing'
 ---
 

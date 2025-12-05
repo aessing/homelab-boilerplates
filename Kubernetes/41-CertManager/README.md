@@ -149,7 +149,7 @@ Edit `overlay/my-environment/patches/version.yaml` to set the cert-manager versi
 kustomize build overlay/my-environment
 
 # Apply to the cluster
-kustomize build overlay/my-environment | kubectl apply -f -
+kustomize build overlay/my-environment | kubectl apply --server-side -f -
 ```
 
 ### 7. Verify Installation

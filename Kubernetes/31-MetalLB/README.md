@@ -110,7 +110,7 @@ Edit `overlay/my-environment/patches/version.yaml` to set the MetalLB version:
 kustomize build overlay/my-environment
 
 # Apply to the cluster
-kustomize build overlay/my-environment | kubectl apply -f -
+kustomize build overlay/my-environment | kubectl apply --server-side -f -
 ```
 
 ### 6. Verify Installation

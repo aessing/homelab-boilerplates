@@ -149,7 +149,7 @@ Edit `overlay/my-environment/patches/version.yaml`:
 kustomize build overlay/my-environment
 
 # Apply to the cluster
-kustomize build overlay/my-environment | kubectl apply -f -
+kustomize build overlay/my-environment | kubectl apply --server-side -f -
 ```
 
 ### 8. Verify Installation
