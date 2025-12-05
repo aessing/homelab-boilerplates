@@ -5,9 +5,8 @@ metadata:
   name: mqtt
   labels:
     app.kubernetes.io/component: 'mqtt'
-  annotations:
-    metallb.io/loadBalancerIPs: 0.0.0.0
 spec:
+  loadBalancerIP: '0.0.0.0'
   selector:
     app.kubernetes.io/component: 'mqtt'
   ports:

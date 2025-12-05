@@ -1,0 +1,20 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: application-to-haengine
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: haengine
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: application
+              app.kubernetes.io/name: grafana
+      ports:
+        - protocol: TCP
+          port: 6379

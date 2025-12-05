@@ -27,7 +27,7 @@ generators:
   - ./generators/secret-grafana-smtp.yaml
 
 patches:
-  - path: ./patches/certificate.json
+  - path: ./patches/certificate.yaml
     target:
       group: cert-manager.io
       version: v1
@@ -38,12 +38,12 @@ patches:
       version: v1
       kind: Deployment
       name: grafana
-  - path: ./patches/ingressroute.json
+  - path: ./patches/ingressroute.yaml
     target:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
-  - path: ./patches/grafana-database.json
+  - path: ./patches/grafana-database.yaml
     target:
       group: postgresql.cnpg.io
       version: v1
@@ -61,13 +61,13 @@ patches:
       version: v1
       kind: ScheduledBackup
       name: grafana-database-scheduledbackup
-  - path: ./patches/network-policy.json
+  - path: ./patches/network-policy.yaml
     target:
       group: networking.k8s.io
       version: v1
       kind: NetworkPolicy
       name: kubeproxy-to-cluster
-  - path: ./patches/resource-quota.json
+  - path: ./patches/resource-quota.yaml
     target:
       version: v1
       kind: ResourceQuota

@@ -1,0 +1,4 @@
+---
+- op: replace
+  path: /spec/ingress/0/from/0/ipBlock/cidr
+  value: "###CLUSTER_CIDR###"

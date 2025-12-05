@@ -13,7 +13,7 @@ metadata:
   name: grafana-renderer-imagetransformer
 imageTag:
   name: grafana/grafana-image-renderer
-  newTag: v5.0.9
+  newTag: v5.0.11
 ---
 apiVersion: builtin
 kind: ImageTagTransformer

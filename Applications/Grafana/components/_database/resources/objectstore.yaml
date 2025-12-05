@@ -3,6 +3,8 @@ apiVersion: barmancloud.cnpg.io/v1
 kind: ObjectStore
 metadata:
   name: grafana-database-objectstore
+  labels:
+    app.kubernetes.io/component: 'database'
 spec:
   configuration:
     destinationPath: s3://###BUCKET###/###FOLDER(CLUSTERNAME)###/

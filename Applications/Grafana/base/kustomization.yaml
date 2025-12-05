@@ -3,7 +3,15 @@ kind: Kustomization
 
 resources:
   - ./resources/namespace.yaml
-  - ./resources/network-policy.yaml
+  - ./resources/network-policy-traefik-to-application.yaml
+  - ./resources/network-policy-application-to-application.yaml
+  - ./resources/network-policy-application-to-database.yaml
+  - ./resources/network-policy-cnpg-to-cluster.yaml
+  - ./resources/network-policy-kubeproxy-to-cluster.yaml
+  - ./resources/network-policy-instance-to-instance.yaml
+  - ./resources/network-policy-application-to-haengine.yaml
+  - ./resources/network-policy-application-to-renderer.yaml
+  - ./resources/network-policy-renderer-to-application.yaml
   - ./resources/resource-quota.yaml
 
 components:

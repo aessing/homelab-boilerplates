@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/component: 'application'
   annotations:
-    reloader.stakater.com/match: 'true' # Marks the config/secret as eligible for reload in search mode
+    reloader.stakater.com/match: 'false' # Marks the config/secret as eligible for reload in search mode
 spec:
   secretName: homeassistant-certificate
   secretTemplate:

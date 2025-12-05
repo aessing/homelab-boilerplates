@@ -1,0 +1,4 @@
+---
+- op: replace
+  path: /spec/loadBalancerIP
+  value: "###IP_ADDRESS_FOR_MQTT_SERVICE_FROM_METALLB_RANGE###"

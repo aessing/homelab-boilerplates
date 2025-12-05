@@ -11,7 +11,7 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 2025.11.2 # The current version of the application
+      app.kubernetes.io/version: 2025.12.0 # The current version of the application
 
 resources:
   - ../../base
@@ -24,19 +24,19 @@ generators:
   - ./generators/secret-mqtt-user.yaml
 
 patches:
-  - path: ./patches/certificate-editor.json
+  - path: ./patches/certificate-editor.yaml
     target:
       group: cert-manager.io
       version: v1
       kind: Certificate
       name: editor
-  - path: ./patches/certificate-homeassistant.json
+  - path: ./patches/certificate-homeassistant.yaml
     target:
       group: cert-manager.io
       version: v1
       kind: Certificate
       name: homeassistant
-  - path: ./patches/certificate-mqtt.json
+  - path: ./patches/certificate-mqtt.yaml
     target:
       group: cert-manager.io
       version: v1
@@ -54,19 +54,19 @@ patches:
       version: v1
       kind: ScheduledBackup
       name: homeassistant-db-scheduledbackup
-  - path: ./patches/homeassistant-db.json
+  - path: ./patches/homeassistant-db.yaml
     target:
       group: postgresql.cnpg.io
       version: v1
       kind: Cluster
       name: homeassistant-db
-  - path: ./patches/ingressroute-editor.json
+  - path: ./patches/ingressroute-editor.yaml
     target:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
       name: editor
-  - path: ./patches/ingressroute-homeassistant.json
+  - path: ./patches/ingressroute-homeassistant.yaml
     target:
       group: traefik.io
       version: v1alpha1
@@ -78,29 +78,29 @@ patches:
       version: v1
       kind: NetworkAttachmentDefinition
       name: homeassistant
-  - path: ./patches/network-policy.json
+  - path: ./patches/network-policy.yaml
     target:
       group: networking.k8s.io
       version: v1
       kind: NetworkPolicy
       name: kubeproxy-to-cluster
-  - path: ./patches/pvc-editor.json
+  - path: ./patches/pvc-editor.yaml
     target:
       group: apps
       version: v1
       kind: StatefulSet
       name: editor
-  - path: ./patches/pvc-homeassistant.json
+  - path: ./patches/pvc-homeassistant.yaml
     target:
       group: apps
       version: v1
       kind: StatefulSet
       name: homeassistant
-  - path: ./patches/resource-quota.json
+  - path: ./patches/resource-quota.yaml
     target:
       version: v1
       kind: ResourceQuota
-  - path: ./patches/service-mqtt.json
+  - path: ./patches/service-mqtt.yaml
     target:
       version: v1
       kind: Service

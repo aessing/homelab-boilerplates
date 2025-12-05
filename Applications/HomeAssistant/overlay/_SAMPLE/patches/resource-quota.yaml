@@ -1,0 +1,8 @@
+---
+- op: replace
+  path: /spec/hard/pods
+  value: 6
+
+- op: replace
+  path: /spec/hard/persistentvolumeclaims
+  value: 6

@@ -1,0 +1,18 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubeproxy-to-cluster
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: grafana-database
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: ###CLUSTER_CIDR###
+      ports:
+        - protocol: TCP
+          port: 8000
