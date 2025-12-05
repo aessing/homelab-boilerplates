@@ -1,3 +1,4 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -35,24 +36,24 @@ patches:
       version: v1
       kind: ScheduledBackup
       name: authentik-database-scheduledbackup
-  - path: ./patches/authentik-database.json
+  - path: ./patches/authentik-database.yaml
     target:
       group: postgresql.cnpg.io
       version: v1
       kind: Cluster
       name: authentik-database
-  - path: ./patches/certificate.json
+  - path: ./patches/certificate.yaml
     target:
       group: cert-manager.io
       version: v1
       kind: Certificate
       name: authentik
-  - path: ./patches/ingressroute.json
+  - path: ./patches/ingressroute.yaml
     target:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
-  - path: ./patches/version.json
+  - path: ./patches/version.yaml
     target:
       group: helm.cattle.io
       version: v1

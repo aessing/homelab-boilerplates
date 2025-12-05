@@ -7,7 +7,7 @@ labels:
   app.kubernetes.io/name: authentik               # The name of the application
   app.kubernetes.io/instance: authentik    # A unique name identifying the instance of an application
   app.kubernetes.io/part-of: authentik            # The name of a higher level application this one is part of
-  app.kubernetes.io/version: 2025.10.1            # The current version of the application
+  app.kubernetes.io/version: 2025.10.2            # The current version of the application
 fieldSpecs:
   - path: metadata/labels
     create: true
