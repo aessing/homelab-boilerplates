@@ -15,47 +15,47 @@ To write the Ubuntu image to your SD card or SSD, you’ll need the Raspberry Pi
 
 1. Open Raspberry Pi Imager
 
-   ![alt text](../docs/Linux/11-install-raspberry-01.png)
+   ![alt text](../media/Linux/11-install-raspberry-01.png)
 
 2. Choose the **Raspberry Pi Device** Model. Select the Raspberry Pi device you're installing Ubuntu on – e.g., _Raspberry Pi 4_ or _Raspberry Pi 5_.
 
-   ![alt text](../docs/Linux/11-install-raspberry-02.png)
+   ![alt text](../media/Linux/11-install-raspberry-02.png)
 
 3. Select the **Operating System**. Choose Ubuntu Server 24.04.2 LTS (64-bit), located under: _Other general-purpose OS_ → _Ubuntu_
 
-   ![alt text](../docs/Linux/11-install-raspberry-03.png) ![alt text](../docs/Linux/11-install-raspberry-04.png)
+   ![alt text](../media/Linux/11-install-raspberry-03.png) ![alt text](../media/Linux/11-install-raspberry-04.png)
 
 4. Select the **Storage** Device. Choose the SD card or SSD for installation – e.g., _CTX2000BX_ SSD.
 
-   ![alt text](../docs/Linux/11-install-raspberry-05.png) ![alt text](../docs/Linux/11-install-raspberry-06.png)
+   ![alt text](../media/Linux/11-install-raspberry-05.png) ![alt text](../media/Linux/11-install-raspberry-06.png)
 
 5. After clicking **Next**, the Imager will prompt you to edit settings. Click **Edit Settings** to configure the installation.
 
-   ![alt text](../docs/Linux/11-install-raspberry-07.png) ![alt text](../docs/Linux/11-install-raspberry-08.png)
+   ![alt text](../media/Linux/11-install-raspberry-07.png) ![alt text](../media/Linux/11-install-raspberry-08.png)
 
 6. **Set Username and Password**. The default is ubuntu / ubuntu, but it is strongly recommended to define your own credentials.
 
-   ![alt text](../docs/Linux/11-install-raspberry-09.png)
+   ![alt text](../media/Linux/11-install-raspberry-09.png)
 
 7. **Set Locale Settings**. Configure **Time zone** and **Keyboard layout**. Example: _Europe/Berlin_ and _de_ for Germany.
 
-   ![alt text](../docs/Linux/11-install-raspberry-10.png)
+   ![alt text](../media/Linux/11-install-raspberry-10.png)
 
 8. **Enable SSH** acess. Activate SSH using _password authentication_ (recommended during setup). This will be disabled later via the hardening script. ⚠️ Do not expose the server to the internet before hardening it. ⚠️
 
-   ![alt text](../docs/Linux/11-install-raspberry-11.png)
+   ![alt text](../media/Linux/11-install-raspberry-11.png)
 
 9. Enable **Eject Media When Finished**. This option will automatically eject the SD card or SSD after writing completes.
 
-   ![alt text](../docs/Linux/11-install-raspberry-12.png)
+   ![alt text](../media/Linux/11-install-raspberry-12.png)
 
 10. Write the Image. Click **YES** to begin writing the image and applying your settings.
 
-    ![alt text](../docs/Linux/11-install-raspberry-13.png)
+    ![alt text](../media/Linux/11-install-raspberry-13.png)
 
     Your operating system may ask for confirmation to overwrite the selected device and require your system password.
 
-    ![alt text](../docs/Linux/11-install-raspberry-14.png) ![alt text](../docs/Linux/11-install-raspberry-15.png)
+    ![alt text](../media/Linux/11-install-raspberry-14.png) ![alt text](../media/Linux/11-install-raspberry-15.png)
 
 ### 3. Boot the Raspberry Pi
 

@@ -11,7 +11,7 @@ _Please put an `x` in the boxes that apply_
 
 - [ ] New feature (adds functionality)
 - [ ] Bugfix (fixes an issue)
-- [ ] Security (fixes a security issue) | Please have a look at our [Security Policy](../docs/SECURITY.md) first.
+- [ ] Security (fixes a security issue) | Please have a look at our [Security Policy](SECURITY.md) first.
 - [ ] Code style cleaning or Refactoring (formatting, renaming, restructuring, etc.)
 - [ ] Documentation Update
 - [ ] Other (please describe):
@@ -80,7 +80,7 @@ _Put an `x` in the boxes that apply_
 Thank you for your contribution. Please review the following checklist before submitting your Pull Request.</br>
 _Please put an `x` in the boxes that apply_
 
-- [ ] I reviewed the [guidelines for contributing](../docs/CONTRIBUTING.md) to this repository
+- [ ] I reviewed the [guidelines for contributing](CONTRIBUTING.md) to this repository
 - [ ] I created an issue, or used an existing issue which is related to this Pull Request
 - [ ] I have performed a self-review of my own code
 - [ ] My code builds clean without any errors or warnings

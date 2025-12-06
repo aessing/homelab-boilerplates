@@ -16,7 +16,9 @@ Welcome to my personal collection of boilerplates and configuration templates fr
 | [Linux](Linux/) | Ubuntu Server installation and hardening scripts |
 | [Operators](Operators/) | Kubernetes operator deployments (CloudNativePG, etc.) |
 | [Scripts](Scripts/) | Helper scripts for cluster management |
-| [docs](docs/) | Community documentation and contribution guidelines |
+| [docs](docs/) | GitHub Pages one-pager for this repo |
+| [media](media/) | Documentation images and media assets |
+| [.github](.github/) | Community documentation and contribution guidelines |
 
 ## How to Use
 
@@ -32,7 +34,9 @@ cd boilerplates
 
 ## Support
 
-For further information about this project, how to [contribute](docs/CONTRIBUTING.md), or how to get in touch, please have a look at the [support document](docs/SUPPORT.md). The repository also contains information about [security related topics](docs/SECURITY.md) and [licensing](LICENSE).
+For further information about this project, how to [contribute](.github/CONTRIBUTING.md), or how to get in touch, please have a look at the [support document](.github/SUPPORT.md). The repository also contains information about [security related topics](.github/SECURITY.md) and [licensing](LICENSE).
+
+You can view a quick project overview on [GitHub Pages](https://aessing.github.io/boilerplates/).
 
 ## Disclaimer
 
