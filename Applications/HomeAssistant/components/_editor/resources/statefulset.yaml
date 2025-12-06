@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/component: 'editor'
   annotations:
-    reloader.stakater.com/search: 'false' # Enables search mode (only reloads if matching secrets/configMaps are found)
+    reloader.stakater.com/search: 'false'  # Enables search mode (only reloads if matching secrets/configMaps are found)
 spec:
   revisionHistoryLimit: 3
   serviceName: editor

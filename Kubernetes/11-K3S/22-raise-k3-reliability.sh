@@ -44,7 +44,7 @@ echo "# ========================================================================
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# Raise replica count for some deployments (`date '+%F %T.%N'`)"
+echo "# Raise replica count for some deployments ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo " - Raise replica count for coredns deployment in kube-system namespace"
@@ -61,7 +61,7 @@ kubectl -n kube-system patch deployment metrics-server --type='merge' -p '{"spec
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# DONE! (`date '+%F %T.%N'`)"
+echo "# DONE! ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 echo ""
 

@@ -23,7 +23,6 @@ set -euo pipefail
 # Colors
 YELLOW='\033[1;33m'
 GREEN='\033[1;32m'
-RED='\033[1;31m'
 CYAN='\033[1;36m'
 NC='\033[0m' # No Color
 

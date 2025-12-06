@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: homepage
   labels:
-    app.kubernetes.io/component: 'application' # The component within the architecture
+    app.kubernetes.io/component: 'application'  # The component within the architecture
 spec:
   revisionHistoryLimit: 3
   replicas: 0
@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: 'application' # The component within the architecture
+        app.kubernetes.io/component: 'application'  # The component within the architecture
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
@@ -54,7 +54,7 @@ spec:
               memory: 256Mi
           env:
             - name: HOMEPAGE_ALLOWED_HOSTS
-              value: gethomepage.dev # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
+              value: gethomepage.dev  # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
             - name: PUID
               value: '1000'
             - name: PGID

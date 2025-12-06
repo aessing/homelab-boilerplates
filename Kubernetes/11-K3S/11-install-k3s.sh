@@ -45,7 +45,7 @@ echo "# ========================================================================
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# SETTING WORK ENVIRONMENT (`date '+%F %T.%N'`)"
+echo "# SETTING WORK ENVIRONMENT ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -61,7 +61,7 @@ cd "$SCRIPT_DIR" || {
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# PERFORMING SOME CHECKS (`date '+%F %T.%N'`)"
+echo "# PERFORMING SOME CHECKS ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -130,7 +130,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# VARIABLES (`date '+%F %T.%N'`)"
+echo "# VARIABLES ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -170,7 +170,7 @@ if [ -n "${K3S_NODES_AGENTS:-}" ]; then
 fi
 K3S_STREAMING_CONNECTION_IDLE_TIMEOUT="5m"
 K3S_TERMINATED_POD_GC_THRESHOLD="10"
-ETCD_VERSION=$(curl -sL https://api.github.com/repos/etcd-io/etcd/releases | jq -r ".[0].name")
+# ETCD_VERSION=$(curl -sL https://api.github.com/repos/etcd-io/etcd/releases | jq -r ".[0].name")
 
 echo ""
 echo " - Setting up some aliases"
@@ -185,18 +185,18 @@ else
 fi
 
 K3S_NODES_SERVERS_COUNT=0
-for server in $K3S_NODES_SERVERS; do
-    let "K3S_NODES_SERVERS_COUNT=$K3S_NODES_SERVERS_COUNT+1"
+for _ in $K3S_NODES_SERVERS; do
+  (( K3S_NODES_SERVERS_COUNT++ ))
 done
 
 K3S_NODES_AGENTS_COUNT=0
-for server in $K3S_NODES_AGENTS; do
-    let "K3S_NODES_AGENTS_COUNT=$K3S_NODES_AGENTS_COUNT+1"
+for _ in $K3S_NODES_AGENTS; do
+  (( K3S_NODES_AGENTS_COUNT++ ))
 done
 
 K3S_NODES_ALL_COUNT=0
-for server in $K3S_NODES_ALL; do
-    let "K3S_NODES_ALL_COUNT=$K3S_NODES_ALL_COUNT+1"
+for _ in $K3S_NODES_ALL; do
+  (( K3S_NODES_ALL_COUNT++ ))
 done
 
 export TERM="linux"
@@ -209,7 +209,7 @@ function exists_in_list() {
   LIST=$1
   DELIMITER=$2
   VALUE=$3
-  echo $LIST | tr "$DELIMITER" '\n' | grep -F -q -x "$VALUE"
+  echo "$LIST" | tr "$DELIMITER" '\n' | grep -F -q -x "$VALUE"
 }
 
 echo ""
@@ -222,7 +222,7 @@ if cat /sys/firmware/devicetree/base/model 2>/dev/null | grep -iq "Raspberry"; t
   echo ""
   echo ""
   echo "# -----------------------------------------------------------------------------"
-  echo "# KERNEL MODULES (`date '+%F %T.%N'`)"
+  echo "# KERNEL MODULES ($(date '+%F %T.%N'))"
   echo "# -----------------------------------------------------------------------------"
 
   echo ""
@@ -241,7 +241,7 @@ if [[ -f /boot/firmware/cmdline.txt ]]; then
   echo ""
   echo ""
   echo "# -----------------------------------------------------------------------------"
-  echo "# CGROUPS (`date '+%F %T.%N'`)"
+  echo "# CGROUPS ($(date '+%F %T.%N'))"
   echo "# -----------------------------------------------------------------------------"
 
   echo ""
@@ -254,7 +254,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# KERNEL PARAMETERS (`date '+%F %T.%N'`)"
+echo "# KERNEL PARAMETERS ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo " - Set some K3S CIS compliant kernel hardening"
@@ -275,7 +275,7 @@ systemctl restart systemd-sysctl.service
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# SWAP (`date '+%F %T.%N'`)"
+echo "# SWAP ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo " - Disable SWAP"
@@ -290,10 +290,10 @@ sed -i '/swap/d' $FSTAB_CONF
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# FIREWALL (`date '+%F %T.%N'`)"
+echo "# FIREWALL ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
-if exists_in_list "$K3S_NODES_SERVERS" " " $SERVERIP; then
+if exists_in_list "$K3S_NODES_SERVERS" " " "$SERVERIP"; then
   echo ""
   echo " - Allow admins to connect to Kubernetes API Server"
   for ip in $ADMIN_IPS; do
@@ -350,12 +350,12 @@ fi
 
 echo ""
 echo " - Allow pods and services network communication"
-ufw allow from $K3S_NETWORK_CLUSTER to any comment 'POD communication - ANY'
-ufw allow in on cni0 from $K3S_NETWORK_CLUSTER comment 'POD communication - CNI0'
-ufw allow in on kube-bridge from $K3S_NETWORK_CLUSTER comment 'POD communication - KUBE-BRIDGE'
-ufw allow from $K3S_NETWORK_SERVICES to any comment 'Service communication - ANY'
-ufw allow in on cni0 from $K3S_NETWORK_SERVICES comment 'Service communication - CNI0'
-ufw allow in on kube-bridge from $K3S_NETWORK_SERVICES comment 'CNI communication - KUBE-BRIDGE'
+ufw allow from "$K3S_NETWORK_CLUSTER" to any comment 'POD communication - ANY'
+ufw allow in on cni0 from "$K3S_NETWORK_CLUSTER" comment 'POD communication - CNI0'
+ufw allow in on kube-bridge from "$K3S_NETWORK_CLUSTER" comment 'POD communication - KUBE-BRIDGE'
+ufw allow from "$K3S_NETWORK_SERVICES" to any comment 'Service communication - ANY'
+ufw allow in on cni0 from "$K3S_NETWORK_SERVICES" comment 'Service communication - CNI0'
+ufw allow in on kube-bridge from "$K3S_NETWORK_SERVICES" comment 'CNI communication - KUBE-BRIDGE'
 ufw allow in on cni0 comment 'Network IN - CNI0'
 ufw allow out on cni0 comment 'Network OUT - CNI0'
 ufw allow in on flannel.1 comment 'Network IN - FLANNEL.1'
@@ -375,7 +375,7 @@ if [ "$PSAD_INSTALLED" = "true" ]; then
   echo ""
   echo ""
   echo "# -----------------------------------------------------------------------------"
-  echo "# PSAD (`date '+%F %T.%N'`)"
+  echo "# PSAD ($(date '+%F %T.%N'))"
   echo "# -----------------------------------------------------------------------------"
 
   echo ""
@@ -402,18 +402,18 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# K3S (`date '+%F %T.%N'`)"
+echo "# K3S ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
 echo " - Create K3s configuration file"
-mkdir --mode=750 -p /etc/rancher/k3s
-if exists_in_list "$K3S_NODES_SERVERS" " " $SERVERIP; then
+install -d -m 750 /etc/rancher/k3s
+if exists_in_list "$K3S_NODES_SERVERS" " " "$SERVERIP"; then
   # Cluster Options
   echo "token: $K3S_CLUSTER_TOKEN" > "$K3S_CONF"
   echo "agent-token: $K3S_AGENT_TOKEN" >> "$K3S_CONF"
   if [ $K3S_NODES_SERVERS_COUNT -ge 2 ]; then
-    if [[ $K3S_NODES_FIRST == $SERVERIP ]]; then
+    if [[ $K3S_NODES_FIRST == "$SERVERIP" ]]; then
       echo "cluster-init: true" >> "$K3S_CONF"
     else
       echo "server: https://$K3S_NODES_FIRST:6443" >> "$K3S_CONF"
@@ -421,18 +421,18 @@ if exists_in_list "$K3S_NODES_SERVERS" " " $SERVERIP; then
   fi
 
   # Database options
-  echo "etcd-expose-metrics: false" >> "$K3S_CONF"
-  echo "etcd-snapshot-retention: $K3S_ETCD_SNAPSHOT_RETENTION" >> "$K3S_CONF"
-  echo "etcd-snapshot-schedule-cron: \"$K3S_ETCD_SNAPSHOT_SCHEDULE_CRON\"" >> "$K3S_CONF"
-  echo "etcd-s3: $K3S_ETCD_SNAPSHOT_S3_ENABLED" >> "$K3S_CONF"
-  echo "etcd-s3-config-secret: $K3S_ETCD_SNAPSHOT_S3_SECRET_NAME" >> "$K3S_CONF"
-
-  # Admin Kubeconfig Options
-  echo "write-kubeconfig-mode: $K3S_KUBECONFIG_MODE" >> "$K3S_CONF"
-
-  # Listeners Options
-  echo "tls-san:" >> "$K3S_CONF"
-  echo "  - $K3S_CLUSTER_DOMAIN" >> "$K3S_CONF"
+  {
+    echo "etcd-expose-metrics: false"
+    echo "etcd-snapshot-retention: $K3S_ETCD_SNAPSHOT_RETENTION"
+    echo "etcd-snapshot-schedule-cron: \"$K3S_ETCD_SNAPSHOT_SCHEDULE_CRON\""
+    echo "etcd-s3: $K3S_ETCD_SNAPSHOT_S3_ENABLED"
+    echo "etcd-s3-config-secret: $K3S_ETCD_SNAPSHOT_S3_SECRET_NAME"
+    # Admin Kubeconfig Options
+    echo "write-kubeconfig-mode: $K3S_KUBECONFIG_MODE"
+    # Listeners Options
+    echo "tls-san:"
+    echo "  - $K3S_CLUSTER_DOMAIN"
+  } >> "$K3S_CONF"
   #for ip in $K3S_NODES_ALL; do
   #    echo "  - $ip" >> "$K3S_CONF"
   #done  
@@ -440,11 +440,11 @@ if exists_in_list "$K3S_NODES_SERVERS" " " $SERVERIP; then
       echo "  - $ip" >> "$K3S_CONF"
   done  
   
-  # Secrets Encryption
-  echo "secrets-encryption: true" >> "$K3S_CONF"
-
-  # Networking
-  echo "cluster-cidr:" >> "$K3S_CONF"
+  # Secrets Encryption and Networking
+  {
+    echo "secrets-encryption: true"
+    echo "cluster-cidr:"
+  } >> "$K3S_CONF"
   for cidr in $K3S_NETWORK_CLUSTER; do
       echo "  - $cidr" >> "$K3S_CONF"
   done
@@ -452,8 +452,10 @@ if exists_in_list "$K3S_NODES_SERVERS" " " $SERVERIP; then
   for cidr in $K3S_NETWORK_SERVICES; do
       echo "  - $cidr" >> "$K3S_CONF"
   done
-  echo "cluster-domain: $K3S_CLUSTER_DOMAIN" >> "$K3S_CONF"
-  echo "flannel-backend: $K3S_FLANNEL_BACKEND" >> "$K3S_CONF"
+  {
+    echo "cluster-domain: $K3S_CLUSTER_DOMAIN"
+    echo "flannel-backend: $K3S_FLANNEL_BACKEND"
+  } >> "$K3S_CONF"
 
   # Kubernetes Components
   if [ -n "$K3S_SERVICE_DISABLE" ]; then
@@ -462,49 +464,52 @@ if exists_in_list "$K3S_NODES_SERVERS" " " $SERVERIP; then
       echo "  - $service" >> "$K3S_CONF"
     done
   fi
-  echo "disable-scheduler: false" >> "$K3S_CONF"
-  echo "disable-cloud-controller: false" >> "$K3S_CONF"
-  echo "disable-kube-proxy: false" >> "$K3S_CONF"
-  echo "disable-network-policy: false" >> "$K3S_CONF"
-  echo "disable-helm-controller: false" >> "$K3S_CONF"
-  echo "disable-apiserver: false" >> "$K3S_CONF"
-  echo "disable-controller-manager: false" >> "$K3S_CONF"
-
-  # Kube API Server Options
-  echo "kube-apiserver-arg:" >> "$K3S_CONF"
-  echo "  - \"request-timeout=$K3S_API_SERVER_REQUEST_TIMEOUT\"" >> "$K3S_CONF"
+  {
+    echo "disable-scheduler: false"
+    echo "disable-cloud-controller: false"
+    echo "disable-kube-proxy: false"
+    echo "disable-network-policy: false"
+    echo "disable-helm-controller: false"
+    echo "disable-apiserver: false"
+    echo "disable-controller-manager: false"
+    # Kube API Server Options
+    echo "kube-apiserver-arg:"
+    echo "  - \"request-timeout=$K3S_API_SERVER_REQUEST_TIMEOUT\""
+  } >> "$K3S_CONF"
 
   # Kube Controller Manager Options
-  echo "kube-controller-manager-arg:" >> "$K3S_CONF"
-  echo "  - 'terminated-pod-gc-threshold=$K3S_TERMINATED_POD_GC_THRESHOLD'" >> "$K3S_CONF"
+  {
+    echo "kube-controller-manager-arg:"
+    echo "  - 'terminated-pod-gc-threshold=$K3S_TERMINATED_POD_GC_THRESHOLD'"
+  } >> "$K3S_CONF"
   if [ -n "$K3S_NODE_CIDR_SIZE_IPV4" ]; then
     echo "  - \"node-cidr-mask-size-ipv4=$K3S_NODE_CIDR_SIZE_IPV4\"" >> "$K3S_CONF"
   fi
 
   # Kubelet Options
-  echo "kubelet-arg:" >> "$K3S_CONF"
-  echo "  - \"max-pods=$K3S_MAX_PODS\"" >> "$K3S_CONF"
-  echo "  - 'streaming-connection-idle-timeout=$K3S_STREAMING_CONNECTION_IDLE_TIMEOUT'" >> "$K3S_CONF"
-  echo "  - \"tls-cipher-suites=$K3S_TLS_CIPHER_SUITES\"" >> "$K3S_CONF"
-
-  # Experimental Options
-  echo "embedded-registry: $K3S_EMBEDDED_REGISTRY" >> "$K3S_CONF"
-
-  # Other Options
-  echo "protect-kernel-defaults: true" >> "$K3S_CONF"
-elif exists_in_list "$K3S_NODES_AGENTS" " " $SERVERIP; then
+  {
+    echo "kubelet-arg:"
+    echo "  - \"max-pods=$K3S_MAX_PODS\""
+    echo "  - 'streaming-connection-idle-timeout=$K3S_STREAMING_CONNECTION_IDLE_TIMEOUT'"
+    echo "  - \"tls-cipher-suites=$K3S_TLS_CIPHER_SUITES\""
+    # Experimental Options
+    echo "embedded-registry: $K3S_EMBEDDED_REGISTRY"
+    # Other Options
+    echo "protect-kernel-defaults: true"
+  } >> "$K3S_CONF"
+elif exists_in_list "$K3S_NODES_AGENTS" " " "$SERVERIP"; then
   # Cluster Options
-  echo "token: $K3S_AGENT_TOKEN" > $K3S_CONF
-  echo "server: https://$K3S_NODES_FIRST:6443" >> "$K3S_CONF"
-
-  # Kubelet Options
-  echo "kubelet-arg:" >> "$K3S_CONF"
-  echo "  - \"max-pods=$K3S_MAX_PODS\"" >> "$K3S_CONF"
-  echo "  - 'streaming-connection-idle-timeout=$K3S_STREAMING_CONNECTION_IDLE_TIMEOUT'" >> "$K3S_CONF"
-  echo "  - \"tls-cipher-suites=$K3S_TLS_CIPHER_SUITES\"" >> "$K3S_CONF"
-
-  # Other Options
-  echo "protect-kernel-defaults: true" >> "$K3S_CONF"
+  echo "token: $K3S_AGENT_TOKEN" > "$K3S_CONF"
+  {
+    echo "server: https://$K3S_NODES_FIRST:6443"
+    # Kubelet Options
+    echo "kubelet-arg:"
+    echo "  - \"max-pods=$K3S_MAX_PODS\""
+    echo "  - 'streaming-connection-idle-timeout=$K3S_STREAMING_CONNECTION_IDLE_TIMEOUT'"
+    echo "  - \"tls-cipher-suites=$K3S_TLS_CIPHER_SUITES\""
+    # Other Options
+    echo "protect-kernel-defaults: true"
+  } >> "$K3S_CONF"
 else
   echo " - ERROR: This node is not in the list of K3S Servers or Agents"
   exit 1
@@ -537,9 +542,9 @@ fi
 # Install K3S
 echo ""
 echo " - Install K3S"
-if exists_in_list "$K3S_NODES_SERVERS" " " $SERVERIP; then
+if exists_in_list "$K3S_NODES_SERVERS" " " "$SERVERIP"; then
   curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=$K3S_CHANNEL INSTALL_K3S_SKIP_START=true INSTALL_K3S_EXEC="server" sh -s -
-elif exists_in_list "$K3S_NODES_AGENTS" " " $SERVERIP; then
+elif exists_in_list "$K3S_NODES_AGENTS" " " "$SERVERIP"; then
   curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=$K3S_CHANNEL INSTALL_K3S_SKIP_START=true INSTALL_K3S_EXEC="agent" sh -s -
 else
   echo " - ERROR: This node is not in the list of K3S Servers or Agents"
@@ -552,7 +557,7 @@ fi
 #   echo ""
 #   echo ""
 #   echo "# -----------------------------------------------------------------------------"
-#   echo "# ETCDCTL (`date '+%F %T.%N'`)"
+#   echo "# ETCDCTL ($(date '+%F %T.%N'))"
 #   echo "# -----------------------------------------------------------------------------"
 
 #   echo ""
@@ -578,7 +583,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# CLEANUP (`date '+%F %T.%N'`)"
+echo "# CLEANUP ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -595,7 +600,7 @@ systemctl start unattended-upgrades.service
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# LAST NOTES (`date '+%F %T.%N'`)"
+echo "# LAST NOTES ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -607,7 +612,7 @@ echo "   Please reboot your system to apply changes."
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# DONE! (`date '+%F %T.%N'`)"
+echo "# DONE! ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 echo ""
 

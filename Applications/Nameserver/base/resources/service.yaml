@@ -4,11 +4,11 @@ kind: Service
 metadata:
   name: nameserver
   labels:
-    app.kubernetes.io/component: 'application' # The component within the architecture
+    app.kubernetes.io/component: 'application'  # The component within the architecture
 spec:
   loadBalancerIP: '0.0.0.0'
   selector:
-    app.kubernetes.io/component: 'application' # The component within the architecture
+    app.kubernetes.io/component: 'application'  # The component within the architecture
   ports:
     - protocol: TCP
       port: 53

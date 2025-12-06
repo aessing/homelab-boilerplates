@@ -7,12 +7,12 @@ namespace: scrypted
 buildMetadata:
   - managedByLabel
   - originAnnotations
-  #- transformerAnnotations
+  # - transformerAnnotations
 
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: v0.143.0-noble-full # The current version of the application
+      app.kubernetes.io/version: v0.143.0-noble-full  # The current version of the application
 
 resources:
   - ../../base

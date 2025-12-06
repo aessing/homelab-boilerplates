@@ -4,14 +4,14 @@
 - op: replace
   path: /spec/subject/organizations
   value:
-    - ###NAME_OF_ORGANISATION###                                # Organization name for certificate subject
+    - ###NAME_OF_ORGANISATION###   # Organization name for certificate subject
 - op: replace
   path: /spec/dnsNames
   value:
-    - database.###FQDN###                                       # Main external domain
-    - database-rw.###FQDN###                                    # Read-write external endpoint
-    - postgres-database-rw.postgres.svc.###CLUSTER_FQDN###      # Internal RW service
-    - database-ro.###FQDN###                                    # Read-only external endpoint
-    - postgres-database-ro.postgres.svc.###CLUSTER_FQDN###      # Internal RO service
-    - database-r.###FQDN###                                     # Replica external endpoint
-    - postgres-database-r.postgres.svc.###CLUSTER_FQDN###       # Internal replica service
+    - database.###FQDN###   # Main external domain
+    - database-rw.###FQDN###   # Read-write external endpoint
+    - postgres-database-rw.postgres.svc.###CLUSTER_FQDN###   # Internal RW service
+    - database-ro.###FQDN###   # Read-only external endpoint
+    - postgres-database-ro.postgres.svc.###CLUSTER_FQDN###   # Internal RO service
+    - database-r.###FQDN###   # Replica external endpoint
+    - postgres-database-r.postgres.svc.###CLUSTER_FQDN###   # Internal replica service

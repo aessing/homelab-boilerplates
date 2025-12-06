@@ -7,8 +7,8 @@ spec:
   valuesContent: |-
     fullnameOverride: 'reloader'
     reloader:
-      ignoreNamespaces: 'certmgr-system,kube-node-lease,kube-public,kube-system,longhorn-system,metallb-system,multus-system,reloader-system,traefik-system' # Comma separated list of namespaces to ignore
-      namespaceSelector: 'reloader.stakater.com/reload=enabled' # Comma separated list of k8s label selectors for namespaces selection
+      ignoreNamespaces: 'certmgr-system,kube-node-lease,kube-public,kube-system,longhorn-system,metallb-system,multus-system,reloader-system,traefik-system'  # Comma separated list of namespaces to ignore
+      namespaceSelector: 'reloader.stakater.com/reload=enabled'  # Comma separated list of k8s label selectors for namespaces selection
       watchGlobally: true
       enableHA: true
       deployment:

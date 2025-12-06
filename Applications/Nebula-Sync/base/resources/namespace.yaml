@@ -4,4 +4,4 @@ kind: Namespace
 metadata:
   name: nebula-sync
   labels:
-    reloader.stakater.com/reload: 'false' # Enables reloader for this namespace
+    reloader.stakater.com/reload: 'false'  # Enables reloader for this namespace

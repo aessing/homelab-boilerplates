@@ -3,4 +3,4 @@
 # Restricts access to specific IP ranges for security
 - op: replace
   path: /spec/ingress/0/from/0/ipBlock/cidr
-  value:  ###CLUSTER_CIDR###            # Kubernetes pod network CIDR range (K3S_NETWORK_CLUSTER)
+  value:  ###CLUSTER_CIDR###   # Kubernetes pod network CIDR range (K3S_NETWORK_CLUSTER)

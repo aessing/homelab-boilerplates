@@ -4,12 +4,12 @@ kind: Certificate
 metadata:
   name: homecdn
   labels:
-    app.kubernetes.io/component: 'application' # The component within the architecture
+    app.kubernetes.io/component: 'application'  # The component within the architecture
 spec:
   secretName: homecdn-certificate
   secretTemplate:
     labels:
-      app.kubernetes.io/component: 'application' # The component within the architecture
+      app.kubernetes.io/component: 'application'  # The component within the architecture
   # 90d certificate lifetime
   duration: 2160h
   # 15d renew before cert gets expires
@@ -20,7 +20,7 @@ spec:
   isCA: false
   privateKey:
     algorithm: ECDSA
-    #encoding: PKCS1
+    # encoding: PKCS1
     size: 384
     # cert-manager regenerates a new private key on each issuance
     rotationPolicy: Always
@@ -32,9 +32,9 @@ spec:
   dnsNames:
     - CHANGE_ME
     - CHANGE_ME
-  #uris:
+  # uris:
   # - spiffe://cluster.local/ns/sandbox/sa/example
-  #ipAddresses:
+  # ipAddresses:
   # - 10.15.64.11
   issuerRef:
     name: letsencrypt-production-default

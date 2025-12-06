@@ -4,4 +4,4 @@ kind: Namespace
 metadata:
   name: unbound
   labels:
-    reloader.stakater.com/reload: 'false' # Enables reloader for this namespace
+    reloader.stakater.com/reload: 'false'  # Enables reloader for this namespace

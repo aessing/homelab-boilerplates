@@ -15,7 +15,7 @@ spec:
   isCA: false
   privateKey:
     algorithm: ECDSA
-    #encoding: PKCS1
+    # encoding: PKCS1
     size: 384
     # cert-manager regenerates a new private key on each issuance
     rotationPolicy: Always
@@ -27,9 +27,9 @@ spec:
   dnsNames:
     - CHANGE_ME
     - CHANGE_ME
-  #uris:
+  # uris:
   # - spiffe://cluster.local/ns/sandbox/sa/example
-  #ipAddresses:
+  # ipAddresses:
   # - 10.15.64.11
   issuerRef:
     name: letsencrypt-production-default

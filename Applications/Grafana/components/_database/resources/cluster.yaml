@@ -13,18 +13,18 @@ spec:
       owner: grafana
       secret:
         name: grafana-database-user
-      dataChecksums: true               # When dataChecksums is set to true, CloudNativePG invokes the -k option in initdb to enable checksums on data pages and help detect corruption by the I/O system - that would otherwise be silent (default: false).
-      encoding: UTF8                    # When encoding set to a value, CloudNativePG passes it to the --encoding option in initdb, which selects the encoding of the template database (default: UTF8).
-      locale: "C.UTF-8"                 # When locale is set to a value, CloudNativePG passes it to the --locale option in initdb. This option controls the locale, as defined in "Locale Support" from the PostgreSQL documentation. By default, the locale parameter is empty. In this case, environment variables such as LANG are used to determine the locale. Be aware that these variables can vary between container images, potentially leading to inconsistent behavior.
-      localeCollate: C                  # When localeCollate is set to a value, CloudNativePG passes it to the --lc-collate option in initdb. This option controls the collation order (LC_COLLATE subcategory), as defined in "Locale Support" from the PostgreSQL documentation (default: C).
-      localeCType: C                    # When localeCType is set to a value, CloudNativePG passes it to the --lc-ctype option in initdb. This option controls the collation order (LC_CTYPE subcategory), as defined in "Locale Support" from the PostgreSQL documentation (default: C).
-      localeProvider: libc              # When localeProvider is set to a value, CloudNativePG passes it to the --locale-provider option in initdb. This option controls the locale provider, as defined in "Locale Support" from the PostgreSQL documentation (default: empty, which means libc for PostgreSQL). Available from PostgreSQL 15.
+      dataChecksums: true  # When dataChecksums is set to true, CloudNativePG invokes the -k option in initdb to enable checksums on data pages and help detect corruption by the I/O system - that would otherwise be silent (default: false).
+      encoding: UTF8  # When encoding set to a value, CloudNativePG passes it to the --encoding option in initdb, which selects the encoding of the template database (default: UTF8).
+      locale: "C.UTF-8"  # When locale is set to a value, CloudNativePG passes it to the --locale option in initdb. This option controls the locale, as defined in "Locale Support" from the PostgreSQL documentation. By default, the locale parameter is empty. In this case, environment variables such as LANG are used to determine the locale. Be aware that these variables can vary between container images, potentially leading to inconsistent behavior.
+      localeCollate: C  # When localeCollate is set to a value, CloudNativePG passes it to the --lc-collate option in initdb. This option controls the collation order (LC_COLLATE subcategory), as defined in "Locale Support" from the PostgreSQL documentation (default: C).
+      localeCType: C  # When localeCType is set to a value, CloudNativePG passes it to the --lc-ctype option in initdb. This option controls the collation order (LC_CTYPE subcategory), as defined in "Locale Support" from the PostgreSQL documentation (default: C).
+      localeProvider: libc  # When localeProvider is set to a value, CloudNativePG passes it to the --locale-provider option in initdb. This option controls the locale provider, as defined in "Locale Support" from the PostgreSQL documentation (default: empty, which means libc for PostgreSQL). Available from PostgreSQL 15.
       postInitApplicationSQL:
-      - "REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;"
-      - "GRANT CONNECT ON DATABASE postgres TO postgres;"
-      - "GRANT CONNECT ON DATABASE postgres TO streaming_replica;"
-      - "REVOKE CONNECT ON DATABASE grafana FROM PUBLIC;"
-      - "GRANT CONNECT ON DATABASE grafana TO grafana;"
+        - "REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;"
+        - "GRANT CONNECT ON DATABASE postgres TO postgres;"
+        - "GRANT CONNECT ON DATABASE postgres TO streaming_replica;"
+        - "REVOKE CONNECT ON DATABASE grafana FROM PUBLIC;"
+        - "GRANT CONNECT ON DATABASE grafana TO grafana;"
   imageCatalogRef:
     apiGroup: postgresql.cnpg.io
     kind: ClusterImageCatalog
@@ -35,7 +35,7 @@ spec:
     storageClass: local-path
   postgresql:
     parameters:
-      shared_buffers: "128MB"            # Sets the amount of memory the database server uses for shared memory buffers. 25% of system memory is a good starting value.
+      shared_buffers: "128MB"  # Sets the amount of memory the database server uses for shared memory buffers. 25% of system memory is a good starting value.
       password_encryption: scram-sha-256
     synchronous:
       method: any

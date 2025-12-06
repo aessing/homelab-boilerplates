@@ -1,3 +1,4 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -6,12 +7,12 @@ namespace: homepage
 buildMetadata:
   - managedByLabel
   - originAnnotations
-  #- transformerAnnotations
+  # - transformerAnnotations
 
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: v1.7.0 # The current version of the application
+      app.kubernetes.io/version: v1.7.0  # The current version of the application
 
 resources:
   - ../../base
@@ -25,7 +26,7 @@ patches:
       group: cert-manager.io
       version: v1
       kind: Certificate
-  - path: ./patches/deployment-env.yaml # See gethomepage.dev/installation/#homepage_allowed_hosts
+  - path: ./patches/deployment-env.yaml  # See gethomepage.dev/installation/#homepage_allowed_hosts
     target:
       group: apps
       version: v1

@@ -62,7 +62,7 @@ Create or modify the chrony configuration component:
 
 **`components/config/configs/chrony.conf`** - Chrony configuration:
 
-```
+```conf
 # Upstream NTP servers
 server 0.pool.ntp.org iburst
 server 1.pool.ntp.org iburst
@@ -134,12 +134,14 @@ Configure reliable upstream NTP servers:
 Configure network devices to use your timeserver:
 
 **Linux (chrony/systemd-timesyncd):**
-```
+
+```conf
 NTP=192.168.1.123
 ```
 
 **Windows:**
-```
+
+```conf
 w32tm /config /manualpeerlist:"192.168.1.123" /syncfromflags:manual /reliable:yes /update
 ```
 

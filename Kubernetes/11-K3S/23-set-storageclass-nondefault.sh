@@ -44,7 +44,7 @@ echo "# ========================================================================
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# Set Storage class as non-default (`date '+%F %T.%N'`)"
+echo "# Set Storage class as non-default ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo " - Removing default annotation from local-path storage class"
@@ -55,7 +55,7 @@ kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storagec
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# DONE! (`date '+%F %T.%N'`)"
+echo "# DONE! ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 echo ""
 

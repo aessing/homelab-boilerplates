@@ -138,11 +138,13 @@ arp -a | grep <K3S_TLSSAN_VIP>
 ### Common issues
 
 **VIP not responding:**
+
 - Ensure the VIP is in the same subnet as the server nodes
 - Check that no firewall is blocking ARP traffic
 - Verify the network interface was detected correctly
 
 **Pods not starting:**
+
 - Check RBAC was applied: `kubectl get clusterrole kube-vip-role`
 - Verify nodes have the control plane taint
 

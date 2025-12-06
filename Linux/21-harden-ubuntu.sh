@@ -50,7 +50,7 @@ echo "# ========================================================================
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# SETTING WORK ENVIRONMENT (`date '+%F %T.%N'`)"
+echo "# SETTING WORK ENVIRONMENT ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -66,7 +66,7 @@ cd "$SCRIPT_DIR" || {
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# PERFORMING SOME CHECKS (`date '+%F %T.%N'`)"
+echo "# PERFORMING SOME CHECKS ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -128,12 +128,13 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# VARIABLES (`date '+%F %T.%N'`)"
+echo "# VARIABLES ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
 echo " - Loading environment variables from '$ENV_FILE'"
 set -o allexport
+# shellcheck disable=SC1090
 if ! source "$ENV_FILE"; then
   echo " - ERROR: Could not load environment file '$ENV_FILE'"
   exit 1
@@ -167,10 +168,8 @@ COMMONACCOUNT_CONF='/etc/pam.d/common-account'
 COMMONAUTH_CONF='/etc/pam.d/common-auth'
 COMMONPASSWD_CONF='/etc/pam.d/common-password'
 COREDUMP_CONF='/etc/systemd/coredump.conf'
-FAIL2BAN_CONF='/etc/fail2ban/jail.local'
 FAILLOCK_CONF='/etc/security/faillock.conf'
 FSTAB_CONF='/etc/fstab'
-GRUB_CONF_DEFAULT='/etc/default/grub'
 GRUB_DEFAULT='/etc/default/grub.d'
 HASHSIZE="/sys/module/nf_conntrack/parameters/hashsize"
 HOSTS_ALLOW='/etc/hosts.allow'
@@ -198,7 +197,6 @@ SSH_CONF='/etc/ssh/ssh_config'
 SSHD_CONF='/etc/ssh/sshd_config'
 SSHDD=/etc/ssh/sshd_config.d
 SUDOERSD='/etc/sudoers.d/'
-SYSCTL_CONF='/etc/sysctl.conf'
 SYSCTLD='/etc/sysctl.d'
 SYSSTAT_DEFAULT='/etc/default/sysstat'
 SYSTEM_CONF='/etc/systemd/system.conf'
@@ -245,7 +243,7 @@ systemctl stop unattended-upgrades.service
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# HOSTNAME (`date '+%F %T.%N'`)"
+echo "# HOSTNAME ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -269,7 +267,7 @@ hostnamectl set-location "$HOST_LOCATION"
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# CLOUDINIT (`date '+%F %T.%N'`)"
+echo "# CLOUDINIT ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -281,7 +279,7 @@ touch /etc/cloud/cloud-init.disabled
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# APT (`date '+%F %T.%N'`)"
+echo "# APT ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -356,7 +354,7 @@ $APT update
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# REMOVING PACKAGES (`date '+%F %T.%N'`)"
+echo "# REMOVING PACKAGES ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -372,7 +370,7 @@ done
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# UPGRADING PACKAGES (`date '+%F %T.%N'`)"
+echo "# UPGRADING PACKAGES ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -384,7 +382,7 @@ $APT -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" d
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# INSTALLING PACKAGES (`date '+%F %T.%N'`)"
+echo "# INSTALLING PACKAGES ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -415,7 +413,7 @@ done
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# UNATTENDED UPGRADES (`date '+%F %T.%N'`)"
+echo "# UNATTENDED UPGRADES ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -432,7 +430,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$APT_CONF_UNATTENDED"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
     cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -478,7 +476,7 @@ systemctl stop unattended-upgrades.service
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# PRELINK (`date '+%F %T.%N'`)"
+echo "# PRELINK ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -493,7 +491,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# FSTAB (`date '+%F %T.%N'`)"
+echo "# FSTAB ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -574,7 +572,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# SYSSTAT (`date '+%F %T.%N'`)"
+echo "# SYSSTAT ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -591,7 +589,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$SYSSTAT_DEFAULT"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -608,7 +606,7 @@ systemctl restart sysstat
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# PROCESS ACCOUNTING (`date '+%F %T.%N'`)"
+echo "# PROCESS ACCOUNTING ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -632,7 +630,7 @@ accton on
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# KERNEL PARAMETERS (`date '+%F %T.%N'`)"
+echo "# KERNEL PARAMETERS ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -779,25 +777,27 @@ net.netfilter.nf_conntrack_tcp_loose = 0
 " > "$SYSCTLD/99-hardening-network.conf"
 
 for n in $(find /sys/class/net -mindepth 1 -maxdepth 1 -printf '%f\n' | sort | uniq | sort | uniq); do
-  echo "net.ipv6.conf.$n.forwarding = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv4.conf.$n.accept_redirects = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv6.conf.$n.accept_redirects = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv4.conf.$n.send_redirects = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv4.conf.$n.secure_redirects = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv4.conf.$n.accept_source_route = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv4.conf.$n.rp_filter = 1" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv4.conf.$n.log_martians = 1" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv4.conf.$n.shared_media = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv6.conf.$n.disable_ipv6 = 1" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv6.conf.$n.router_solicitations = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv6.conf.$n.accept_ra = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv6.conf.$n.accept_ra_rtr_pref = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv6.conf.$n.accept_ra_pinfo = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv6.conf.$n.accept_ra_defrtr = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv6.conf.$n.autoconf = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv6.conf.$n.dad_transmits = 0" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv6.conf.$n.max_addresses = 1" >> "$SYSCTLD/99-hardening-network.conf"
-  echo "net.ipv6.conf.$n.use_tempaddr = 2" >> "$SYSCTLD/99-hardening-network.conf"
+  {
+    echo "net.ipv6.conf.$n.forwarding = 0"
+    echo "net.ipv4.conf.$n.accept_redirects = 0"
+    echo "net.ipv6.conf.$n.accept_redirects = 0"
+    echo "net.ipv4.conf.$n.send_redirects = 0"
+    echo "net.ipv4.conf.$n.secure_redirects = 0"
+    echo "net.ipv4.conf.$n.accept_source_route = 0"
+    echo "net.ipv4.conf.$n.rp_filter = 1"
+    echo "net.ipv4.conf.$n.log_martians = 1"
+    echo "net.ipv4.conf.$n.shared_media = 0"
+    echo "net.ipv6.conf.$n.disable_ipv6 = 1"
+    echo "net.ipv6.conf.$n.router_solicitations = 0"
+    echo "net.ipv6.conf.$n.accept_ra = 0"
+    echo "net.ipv6.conf.$n.accept_ra_rtr_pref = 0"
+    echo "net.ipv6.conf.$n.accept_ra_pinfo = 0"
+    echo "net.ipv6.conf.$n.accept_ra_defrtr = 0"
+    echo "net.ipv6.conf.$n.autoconf = 0"
+    echo "net.ipv6.conf.$n.dad_transmits = 0"
+    echo "net.ipv6.conf.$n.max_addresses = 1"
+    echo "net.ipv6.conf.$n.use_tempaddr = 2"
+  } >> "$SYSCTLD/99-hardening-network.conf"
 done
 
 echo "
@@ -888,7 +888,7 @@ systemctl restart systemd-sysctl.service
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# COREDUMP (`date '+%F %T.%N'`)"
+echo "# COREDUMP ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -905,7 +905,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$COREDUMP_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -923,7 +923,7 @@ sed -i 's/^#\?ProcessSizeMax=.*/ProcessSizeMax=0/' "$COREDUMP_CONF"
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# MODULES (`date '+%F %T.%N'`)"
+echo "# MODULES ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 MODULES_DISABLE="$MODULES_DISABLE_CMN $MODULES_DISABLE_FS $MODULES_DISABLE_NET"
@@ -955,7 +955,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# WIRELESS (`date '+%F %T.%N'`)"
+echo "# WIRELESS ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -986,7 +986,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# CONFIGS AND LIMITS (`date '+%F %T.%N'`)"
+echo "# CONFIGS AND LIMITS ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -994,7 +994,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$LIMITS_CONF $SYSTEM_CONF $USER_CONF $LOGINDEFS_CONF /etc/init.d/rc /etc/profile /etc/bash.bashrc /etc/environment $LOGIND_CONF $LOGINDEFS_CONF $ADDUSER_CONF $USERADD_CONF $COMMONPASSWD_CONF $COMMONAUTH_CONF $FAILLOCK_CONF $COMMONACCOUNT_CONF $PAM_CONF_LOGIN $SYSTEM_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1050,6 +1050,7 @@ echo ""
 echo " - Setting PATH variable for users"
 sed -i 's/PATH=.*/PATH=\"\/usr\/local\/bin:\/usr\/sbin:\/usr\/bin:\/bin:\/snap\/bin"/' /etc/environment
 sed -i 's|^PATH=.*|PATH=/usr/local/bin:/usr/sbin:/usr/bin:/bin:/snap/bin|' /etc/environment
+# shellcheck disable=SC2016
 echo '
 #!/bin/bash
 
@@ -1180,7 +1181,7 @@ systemctl daemon-reload
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# SUDO (`date '+%F %T.%N'`)"
+echo "# SUDO ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1197,7 +1198,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$PAM_CONF_SU"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1247,7 +1248,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# SSH (`date '+%F %T.%N'`)"
+echo "# SSH ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1264,7 +1265,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$SSH_CONF /etc/ssh/moduli $SSHD_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1367,7 +1368,7 @@ systemctl restart ssh.service
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# IPV6 (`date '+%F %T.%N'`)"
+echo "# IPV6 ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1386,7 +1387,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# FIREWALL (`date '+%F %T.%N'`)"
+echo "# FIREWALL ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1403,7 +1404,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$UFW_DEFAULT $UFW_CONF_BEFORE $UFW_CONF_BEFORE6 $UFW_CONF_AFTER $UFW_CONF_AFTER6"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1448,7 +1449,7 @@ ufw allow out on lo
 echo ""
 echo " - Allow admins to connect to SSH"
 for admin_ip in $ADMIN_IPS; do
-  ufw allow from $admin_ip to any port $SSH_PORT proto tcp comment 'SSH TCP - Admins'
+  ufw allow from "$admin_ip" to any port "$SSH_PORT" proto tcp comment 'SSH TCP - Admins'
 done
 
 echo ""
@@ -1465,7 +1466,7 @@ ufw default deny incoming
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# HOSTS (`date '+%F %T.%N'`)"
+echo "# HOSTS ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1484,7 +1485,7 @@ chmod 644 $HOSTS_DENY
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# TIMESYNCD (`date '+%F %T.%N'`)"
+echo "# TIMESYNCD ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1492,7 +1493,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$TIMESYNCD_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1518,7 +1519,7 @@ systemctl restart systemd-timesyncd
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# RESOLVED (`date '+%F %T.%N'`)"
+echo "# RESOLVED ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1526,7 +1527,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$RESOLVED_CONF $RESOLVED_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1553,7 +1554,7 @@ systemctl daemon-reload
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# SYSLOG (`date '+%F %T.%N'`)"
+echo "# SYSLOG ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1570,7 +1571,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$RSYSLOG_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1603,7 +1604,7 @@ systemctl restart rsyslog
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# JOURNALD (`date '+%F %T.%N'`)"
+echo "# JOURNALD ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1611,7 +1612,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$JOURNALD_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1634,7 +1635,7 @@ systemctl restart systemd-journald.service
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# LOGROTATE (`date '+%F %T.%N'`)"
+echo "# LOGROTATE ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1651,7 +1652,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$LOGROTATE_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1695,7 +1696,7 @@ include /etc/logrotate.d
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# MOTD (`date '+%F %T.%N'`)"
+echo "# MOTD ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1703,7 +1704,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$ISSUE_CONF $ISSUENET_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1749,7 +1750,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# SCHEDULERS (`date '+%F %T.%N'`)"
+echo "# SCHEDULERS ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1766,7 +1767,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="/etc/rsyslog.d/50-default.conf"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1844,7 +1845,7 @@ systemctl restart rsyslog
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# ROOT (`date '+%F %T.%N'`)"
+echo "# ROOT ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1852,7 +1853,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$SECURITYACCESS_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1890,7 +1891,7 @@ systemctl daemon-reload
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# RKHUNTER (`date '+%F %T.%N'`)"
+echo "# RKHUNTER ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1907,7 +1908,7 @@ echo " - Backing up original config files"
 CONFIG_FILES="$RKHUNTER_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
-  if [ -f $CONFIG_FILE ]; then
+  if [ -f "$CONFIG_FILE" ]; then
       cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
   fi
 done
@@ -1926,7 +1927,7 @@ rkhunter --propupd
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# USBGUARD (`date '+%F %T.%N'`)"
+echo "# USBGUARD ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1956,7 +1957,7 @@ systemctl restart usbguard.service
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# CALL HOME (`date '+%F %T.%N'`)"
+echo "# CALL HOME ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -1993,7 +1994,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# ACCOUNTS (`date '+%F %T.%N'`)"
+echo "# ACCOUNTS ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -2005,7 +2006,7 @@ fi
 echo ""
 echo " - Remove users hosts.equiv, .rhosts, and .netrc files"
 while read -r hostpasswd; do
-  find "$hostpasswd" \( -name "hosts.equiv" -o -name ".rhosts" -o -name ".netrc"\) -exec rm -f {} \; 2> /dev/null
+  find "$hostpasswd" \( -name "hosts.equiv" -o -name ".rhosts" -o -name ".netrc" \) -exec rm -f {} \; 2> /dev/null
 done <<< "$(awk -F ":" '{print $6}' /etc/passwd)"
 
 echo ""
@@ -2020,7 +2021,7 @@ done
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# COMPILER (`date '+%F %T.%N'`)"
+echo "# COMPILER ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -2032,14 +2033,14 @@ while read -r x; do
       chmod 0750 "$x"
     fi
   fi
-done <<< "$(dpkg-query -L $(dpkg -l | grep compil | awk '{print $2}'))"
+done <<< "$(dpkg-query -L "$(dpkg -l | grep compil | awk '{print $2}')")"
 
 echo ""
 echo " - Restrict execution of portable assembler compilers"
 ASCOMP="$(command -v as)"
 if [ -f "$ASCOMP" ] && [ -x "$ASCOMP" ]; then
   echo "   - Restricting $ASCOMP"
-  chmod 0750 "$(readlink -e $(command -v as))"
+  chmod 0750 "$(readlink -e "$(command -v as)")"
 fi
 
 # -------------------------------------------------------------------------------------
@@ -2048,7 +2049,7 @@ if [ "$PSAD_ENABLE" = "true" ]; then
   echo ""
   echo ""
   echo "# -----------------------------------------------------------------------------"
-  echo "# POSTFIX (`date '+%F %T.%N'`)"
+  echo "# POSTFIX ($(date '+%F %T.%N'))"
   echo "# -----------------------------------------------------------------------------"
 
   echo ""
@@ -2082,7 +2083,7 @@ if [ "$PSAD_ENABLE" = "true" ]; then
   echo ""
   echo ""
   echo "# -----------------------------------------------------------------------------"
-  echo "# PSAD (`date '+%F %T.%N'`)"
+  echo "# PSAD ($(date '+%F %T.%N'))"
   echo "# -----------------------------------------------------------------------------"
 
   echo ""
@@ -2099,7 +2100,7 @@ if [ "$PSAD_ENABLE" = "true" ]; then
   CONFIG_FILES="$PSAD_DL $PSAD_CONF"
   for CONFIG_FILE in $CONFIG_FILES
   do
-    if [ -f $CONFIG_FILE ]; then
+    if [ -f "$CONFIG_FILE" ]; then
         cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
     fi
   done
@@ -2150,7 +2151,7 @@ if [ "$AUDIT_ENABLE" = "true" ]; then
   echo ""
   echo ""
   echo "# -----------------------------------------------------------------------------"
-  echo "# AUDITD (`date '+%F %T.%N'`) // https://github.com/Neo23x0/auditd"
+  echo "# AUDITD ($(date '+%F %T.%N')) // https://github.com/Neo23x0/auditd"
   echo "# -----------------------------------------------------------------------------"
 
   echo ""
@@ -2167,7 +2168,7 @@ if [ "$AUDIT_ENABLE" = "true" ]; then
   CONFIG_FILES="$AUDITD_CONF"
   for CONFIG_FILE in $CONFIG_FILES
   do
-    if [ -f $CONFIG_FILE ]; then
+    if [ -f "$CONFIG_FILE" ]; then
         cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
     fi
   done
@@ -2422,8 +2423,8 @@ if [ "$AUDIT_ENABLE" = "true" ]; then
 -a always,exit -F arch=b64 -S sethostname -S setdomainname -k network_modifications
 
 ### Detect Remote Shell Use
--a always,exit -F arch=b64 -F exe=/bin/bash -F success=1 -S connect -k "remote_shell"
--a always,exit -F arch=b64 -F exe=/usr/bin/bash -F success=1 -S connect -k "remote_shell"
+-a always,exit -F arch=b64 -F exe=/bin/bash -F success=1 -S connect -k \"remote_shell\"
+-a always,exit -F arch=b64 -F exe=/usr/bin/bash -F success=1 -S connect -k \"remote_shell\"
 
 ### Successful IPv4 Connections
 -a always,exit -F arch=b64 -S connect -F a2=16 -F success=1 -F key=network_connect_4
@@ -2702,7 +2703,7 @@ if [ "$AUDIT_ENABLE" = "true" ]; then
 -w /usr/bin/yash -p x -k susp_shell
 
 # Web Server Activity
-## Change the number "33" to the ID of your WebServer user. Default: www-data:x:33:33
+## Change the number 33 to the ID of your WebServer user. Default: www-data:x:33:33
 -a always,exit -F arch=b64 -S execve -F euid=33 -k detect_execve_www
 
 ### https://clustershell.readthedocs.io/
@@ -2739,8 +2740,8 @@ if [ "$AUDIT_ENABLE" = "true" ]; then
 
 ## Anonymous File Creation
 ### These rules watch the use of memfd_create
-### "memfd_create" creates anonymous file and returns a file descriptor to access it
-### When combined with "fexecve" can be used to stealthily run binaries in memory without touching disk
+### memfd_create creates anonymous file and returns a file descriptor to access it
+### When combined with fexecve can be used to stealthily run binaries in memory without touching disk
 -a always,exit -F arch=b64 -S memfd_create -F key=anon_file_create
 
 ## Privilege Abuse
@@ -3025,7 +3026,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# APPARMOR (`date '+%F %T.%N'`)"
+echo "# APPARMOR ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -3072,7 +3073,7 @@ if [ "$AIDE_ENABLE" = "true" ]; then
   echo ""
   echo ""
   echo "# -----------------------------------------------------------------------------"
-  echo "# AIDE (`date '+%F %T.%N'`)"
+  echo "# AIDE ($(date '+%F %T.%N'))"
   echo "# -----------------------------------------------------------------------------"
 
   echo ""
@@ -3088,12 +3089,14 @@ if [ "$AIDE_ENABLE" = "true" ]; then
   echo " - Exclude some paths from AIDE scanning"
   echo '!/var/lib/lxcfs/cgroup' > "$AIDED/90_hardening_lxcfs"
   echo '!/var/lib/docker/.*' > "$AIDED/90_hardening_docker"
-  echo '!/var/lib/rancher/.*' > "$AIDED/90_hardening_k3s"
-  echo '!/var/lib/kubelet/pods/.*' >> "$AIDED/90_hardening_k3s"
-  echo '!/var/lib/kubelet/plugins/.*' >> "$AIDED/90_hardening_k3s"
-  echo '!/run/k3s/containerd/.*' >> "$AIDED/90_hardening_k3s"
-  echo '!/var/lib/longhorn/.*' >> "$AIDED/90_hardening_k3s"
-  echo '!/var/log/pods/.*' >> "$AIDED/90_hardening_k3s"
+  {
+    echo '!/var/lib/rancher/.*'
+    echo '!/var/lib/kubelet/pods/.*'
+    echo '!/var/lib/kubelet/plugins/.*'
+    echo '!/run/k3s/containerd/.*'
+    echo '!/var/lib/longhorn/.*'
+    echo '!/var/log/pods/.*'
+  } > "$AIDED/90_hardening_k3s"
   echo '!/var/log/audit/.*' > "$AIDED/90_hardening_audit"
   echo '!/var/log/account/.*' > "$AIDED/90_hardening_pacct"
   echo '!/var/log/psad/.*' > "$AIDED/90_hardening_psad"
@@ -3112,7 +3115,7 @@ Description=Aide Check
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/aide --check --config "$AIDE_CONF"
+ExecStart=/usr/bin/aide --check --config $AIDE_CONF
 
 [Install]
 WantedBy=multi-user.target
@@ -3146,7 +3149,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# CLEANUP (`date '+%F %T.%N'`)"
+echo "# CLEANUP ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -3185,7 +3188,7 @@ systemctl start unattended-upgrades.service
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# LAST NOTES (`date '+%F %T.%N'`)"
+echo "# LAST NOTES ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -3221,7 +3224,7 @@ echo "   find /etc -name \"*.hardening-backup\" -type f -exec rm -f \"{}\" \;"
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# DONE! (`date '+%F %T.%N'`)"
+echo "# DONE! ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 echo ""
 

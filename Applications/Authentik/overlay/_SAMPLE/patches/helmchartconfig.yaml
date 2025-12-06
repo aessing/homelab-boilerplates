@@ -8,8 +8,8 @@ spec:
     ---
     global:
       deploymentAnnotations:
-        reloader.stakater.com/search: 'true'                # Enables search mode (only reloads if matching secrets/configMaps are found)
-        reloader.stakater.com/rollout-strategy: 'rollout'   # Specifies the rollout strategy for the workload (rollout (default) / restart)
+        reloader.stakater.com/search: 'true'  # Enables search mode (only reloads if matching secrets/configMaps are found)
+        reloader.stakater.com/rollout-strategy: 'rollout'  # Specifies the rollout strategy for the workload (rollout (default) / restart)
       secretAnnotations:
         reloader.stakater.com/match: 'true'
         reloader.stakater.com/ignore: 'false'

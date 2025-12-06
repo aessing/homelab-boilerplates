@@ -5,4 +5,4 @@ metadata:
   name: fortnitestats
   labels:
     # Not needed for a cronjob
-    reloader.stakater.com/reload: 'disabled' # Enables reloader for this namespace
+    reloader.stakater.com/reload: 'disabled'  # Enables reloader for this namespace

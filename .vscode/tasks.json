@@ -1,0 +1,58 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "YAML: Lint workspace",
+      "type": "shell",
+      "command": "yamllint",
+      "args": [
+        "-c",
+        "${workspaceFolder}/.yamllint",
+        "${workspaceFolder}"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": {
+        "owner": "yamllint",
+        "fileLocation": "autoDetect",
+        "pattern": {
+          "regexp": "^(.+?):(\\d+):(\\d+): \\[(.*?)\\] (.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      },
+      "group": "test"
+    },
+    {
+      "label": "Shell: Lint workspace scripts",
+      "type": "shell",
+      "command": "shellcheck",
+      "args": [
+        "--format=gcc",
+        "${workspaceFolder}/**/*.sh"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": {
+        "owner": "shellcheck",
+        "fileLocation": "autoDetect",
+        "pattern": {
+          "regexp": "^(.*?):(\\d+):(\\d+): (.*) \\[(SC\\d+)\\]$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4,
+          "code": 5
+        }
+      },
+      "group": "test"
+    }
+  ]
+}

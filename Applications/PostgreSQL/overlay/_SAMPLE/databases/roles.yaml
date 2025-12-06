@@ -3,35 +3,35 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: postgres-database                 
+  name: postgres-database
 spec:
   managed:
     roles:
-    - name: app01
-      ensure: present                                           # Keep role present (use "absent" to remove)
-      comment: Application 01 Read Write User
-      login: true                                               # Can log in
-      superuser: false                                          # Superuser privileges
-      createdb: false                                           # Can create databases
-      createrole: false                                         # Can create other roles
-      inherit: true                                             # Inherit privileges from granted roles
-      replication: false                                        # Is a replication role
-      bypassrls: false                                          # Bypass RLS
-      connectionLimit: -1                                       # Concurrent connections (-1 means unlimited)
-      inRoles: []                                               # Additional roles to grant to this role
-      passwordSecret:
-        name: postgres-database-user-app01                      # Kubernetes Secret containing the password
-    - name: app02
-      ensure: present                                           # Keep role present (use "absent" to remove)
-      comment: Application 02 Read Write User
-      login: true                                               # Can log in
-      superuser: false                                          # Superuser privileges
-      createdb: false                                           # Can create databases
-      createrole: false                                         # Can create other roles
-      inherit: true                                             # Inherit privileges from granted roles
-      replication: false                                        # Is a replication role
-      bypassrls: false                                          # Bypass RLS
-      connectionLimit: -1                                       # Concurrent connections (-1 means unlimited)
-      inRoles: []                                               # Additional roles to grant to this role
-      passwordSecret:
-        name: postgres-database-user-app02                      # Kubernetes Secret containing the password
+      - name: app01
+        ensure: present  # Keep role present (use "absent" to remove)
+        comment: Application 01 Read Write User
+        login: true  # Can log in
+        superuser: false  # Superuser privileges
+        createdb: false  # Can create databases
+        createrole: false  # Can create other roles
+        inherit: true  # Inherit privileges from granted roles
+        replication: false  # Is a replication role
+        bypassrls: false  # Bypass RLS
+        connectionLimit: -1  # Concurrent connections (-1 means unlimited)
+        inRoles: []  # Additional roles to grant to this role
+        passwordSecret:
+          name: postgres-database-user-app01  # Kubernetes Secret containing the password
+      - name: app02
+        ensure: present  # Keep role present (use "absent" to remove)
+        comment: Application 02 Read Write User
+        login: true  # Can log in
+        superuser: false  # Superuser privileges
+        createdb: false  # Can create databases
+        createrole: false  # Can create other roles
+        inherit: true  # Inherit privileges from granted roles
+        replication: false  # Is a replication role
+        bypassrls: false  # Bypass RLS
+        connectionLimit: -1  # Concurrent connections (-1 means unlimited)
+        inRoles: []  # Additional roles to grant to this role
+        passwordSecret:
+          name: postgres-database-user-app02  # Kubernetes Secret containing the password

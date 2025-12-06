@@ -66,7 +66,7 @@ Create or modify components for your DNS zones. Each component should include:
 
 **`config/named.conf`** - BIND configuration:
 
-```
+```conf
 options {
     directory "/var/cache/bind";
     listen-on { any; };
@@ -83,7 +83,7 @@ zone "example.com" {
 
 **`zones/example.com.zone`** - Zone file:
 
-```
+```conf
 $TTL 86400
 @   IN  SOA ns1.example.com. admin.example.com. (
         2024010101  ; Serial
@@ -148,7 +148,7 @@ Edit the zone files and named.conf for your domains.
 
 To enable DNSSEC, add to named.conf:
 
-```
+```conf
 dnssec-validation auto;
 ```
 

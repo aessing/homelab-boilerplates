@@ -5,7 +5,7 @@ metadata:
   name: trust-manager-ca
 spec:
   sources:
-  - useDefaultCAs: true
+    - useDefaultCAs: true
   target:
     secret:
       key: "ca.crt"

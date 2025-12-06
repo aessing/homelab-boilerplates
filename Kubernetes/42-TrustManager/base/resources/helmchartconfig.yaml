@@ -5,7 +5,7 @@ metadata:
   name: trust-manager
 spec:
   valuesContent: |-
-    replicaCount: 1          # 2 for HA
+    replicaCount: 1  # 2 for HA
     revisionHistoryLimit: 3  # Number of old ReplicaSets to retain - 10 is default
     secretTargets:
       enabled: true

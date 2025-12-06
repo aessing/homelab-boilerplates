@@ -6,7 +6,7 @@ metadata:
 behavior: create
 options:
   labels:
-    app.kubernetes.io/component: 'haengine' # The component within the architecture
+    app.kubernetes.io/component: 'haengine'  # The component within the architecture
 files:
   - ./configs/redis.conf
   - ./configs/redis-full.conf

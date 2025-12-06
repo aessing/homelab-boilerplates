@@ -8,7 +8,7 @@ metadata:
 spec:
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
-  schedule: '*/5 * * * *' # every five minutes
+  schedule: '*/5 * * * *'  # every five minutes
   jobTemplate:
     spec:
       template:

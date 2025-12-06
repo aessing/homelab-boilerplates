@@ -31,9 +31,9 @@ spec:
     - key encipherment
     - server auth
   dnsNames:
-      - CHANGE_ME-rw
-      - CHANGE_ME-ro
-      - CHANGE_ME-r
+    - CHANGE_ME-rw
+    - CHANGE_ME-ro
+    - CHANGE_ME-r
   issuerRef:
     name: letsencrypt-production-default
     kind: ClusterIssuer

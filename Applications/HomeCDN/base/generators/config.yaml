@@ -6,7 +6,7 @@ metadata:
 behavior: create
 options:
   labels:
-    app.kubernetes.io/component: 'application' # The component within the architecture
+    app.kubernetes.io/component: 'application'  # The component within the architecture
 files:
   - ./configs/nginx.conf
   - ./configs/default.conf

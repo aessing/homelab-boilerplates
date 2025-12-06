@@ -4,4 +4,4 @@ kind: Namespace
 metadata:
   name: scrypted
   labels:
-    reloader.stakater.com/reload: 'enabled' # Enables reloader for this namespace
+    reloader.stakater.com/reload: 'enabled'  # Enables reloader for this namespace

@@ -46,7 +46,7 @@ echo "# ========================================================================
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# SETTING WORK ENVIRONMENT (`date '+%F %T.%N'`)"
+echo "# SETTING WORK ENVIRONMENT ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -62,7 +62,7 @@ cd "$SCRIPT_DIR" || {
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# PERFORMING SOME CHECKS (`date '+%F %T.%N'`)"
+echo "# PERFORMING SOME CHECKS ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -136,7 +136,7 @@ fi
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# VARIABLES (`date '+%F %T.%N'`)"
+echo "# VARIABLES ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -175,7 +175,7 @@ KVVERSION=$(curl -sL https://api.github.com/repos/kube-vip/kube-vip/releases | j
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# INSTALLING KUBE-VIP (`date '+%F %T.%N'`)"
+echo "# INSTALLING KUBE-VIP ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
@@ -184,13 +184,13 @@ kubectl apply -f https://kube-vip.io/manifests/rbac.yaml
 
 echo ""
 echo " - Download kube-vip image"
-k3s ctr image pull ghcr.io/kube-vip/kube-vip:$KVVERSION
+k3s ctr image pull ghcr.io/kube-vip/kube-vip:"$KVVERSION"
 
 echo ""
 echo " - Deploy kube-vip as a daemonset"
-k3s ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:$KVVERSION vip /kube-vip manifest daemonset \
-  --interface $INTERFACE \
-  --address $K3S_TLSSAN_VIP \
+k3s ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:"$KVVERSION" vip /kube-vip manifest daemonset \
+  --interface "$INTERFACE" \
+  --address "$K3S_TLSSAN_VIP" \
   --port 6443 \
   --inCluster \
   --taint \
@@ -200,14 +200,14 @@ k3s ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:$KVVERSION vip /kube-vip m
 
 echo ""
 echo " - Deleting kube-vip image"
-k3s ctr image delete ghcr.io/kube-vip/kube-vip:$KVVERSION
+k3s ctr image delete ghcr.io/kube-vip/kube-vip:"$KVVERSION"
 
 # -------------------------------------------------------------------------------------
 
 echo ""
 echo ""
 echo "# -----------------------------------------------------------------------------"
-echo "# DONE! (`date '+%F %T.%N'`)"
+echo "# DONE! ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 echo ""
 

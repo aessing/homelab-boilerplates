@@ -23,18 +23,18 @@ spec:
   cluster:
     name: postgres-database
   extensions:
-  - name: bloom
-    ensure: present
+    - name: bloom
+      ensure: present
   schemas:
-  - name: test
-    owner: app01
-    ensure: present
-  - name: export
-    owner: app01
-    ensure: present
-  - name: staging
-    owner: app01
-    ensure: present
+    - name: test
+      owner: app01
+      ensure: present
+    - name: export
+      owner: app01
+      ensure: present
+    - name: staging
+      owner: app01
+      ensure: present
 
 ---
 apiVersion: postgresql.cnpg.io/v1
@@ -50,6 +50,6 @@ spec:
   cluster:
     name: postgres-database
   schemas:
-  - name: test
-    owner: app02
-    ensure: present
+    - name: test
+      owner: app02
+      ensure: present

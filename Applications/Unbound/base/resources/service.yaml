@@ -4,10 +4,10 @@ kind: Service
 metadata:
   name: unbound
   labels:
-    app.kubernetes.io/component: 'application' # The component within the architecture
+    app.kubernetes.io/component: 'application'  # The component within the architecture
 spec:
   selector:
-    app.kubernetes.io/component: 'application' # The component within the architecture
+    app.kubernetes.io/component: 'application'  # The component within the architecture
   ports:
     - protocol: TCP
       port: 53

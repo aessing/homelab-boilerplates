@@ -15,9 +15,11 @@
 echo "Converting TLS certificates to JSON format for Scrypted App..."
 echo " - Current date and time: $(date)"
 
-echo "{" > /server/volume/cert.json
-awk 'BEGIN { printf "    \"key\": \""}; NF {sub(/\r\n/, ""); printf "%s\\r\\n",$0;}; END { printf "\",\n"};' /tls.key >> /server/volume/cert.json
-awk 'BEGIN { printf "    \"cert\": \""}; NF {sub(/\r\n/, ""); printf "%s\\r\\n",$0;}; END { printf "\"\n"};' /tls.crt >> /server/volume/cert.json
-echo "}" >> /server/volume/cert.json
+{
+  echo "{"
+  awk 'BEGIN { printf "    \"key\": \""}; NF {sub(/\r\n/, ""); printf "%s\\r\\n",$0;}; END { printf "\",\n"};' /tls.key
+  awk 'BEGIN { printf "    \"cert\": \""}; NF {sub(/\r\n/, ""); printf "%s\\r\\n",$0;}; END { printf "\"\n"};' /tls.crt
+  echo "}"
+} > /server/volume/cert.json
 
 echo " - TLS JSON file created at /server/volume/cert.json"

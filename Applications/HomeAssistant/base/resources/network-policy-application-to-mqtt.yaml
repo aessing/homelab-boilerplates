@@ -6,7 +6,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/component: mqtt # The component within the architecture
+      app.kubernetes.io/component: mqtt  # The component within the architecture
   policyTypes:
     - Ingress
   ingress:

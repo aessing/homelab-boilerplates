@@ -1,4 +1,5 @@
-piVersion: kustomize.config.k8s.io/v1alpha1
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 
 configMapGenerator:
@@ -6,9 +7,9 @@ configMapGenerator:
     behavior: create
     options:
       labels:
-        app.kubernetes.io/component: 'application' # The component within the architecture
+        app.kubernetes.io/component: 'application'  # The component within the architecture
       annotations:
         # Reloads handled by kustomize with suffix
-        reloader.stakater.com/match: 'false' # Marks the config/secret as eligible for reload in search mode
+        reloader.stakater.com/match: 'false'  # Marks the config/secret as eligible for reload in search mode
     files:
       - named.conf

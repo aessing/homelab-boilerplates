@@ -89,6 +89,7 @@ Edit `overlay/my-environment/patches/ip-range.yaml` to define your LoadBalancer 
 ```
 
 You can specify:
+
 - A range: `192.168.1.200-192.168.1.250`
 - A CIDR: `192.168.1.0/24`
 - Individual IPs: `192.168.1.200/32`
@@ -149,6 +150,7 @@ spec:
 ```
 
 **Note:** The base configuration sets `autoAssign: false`, so you must either:
+
 - Specify `loadBalancerIP` in the service spec, or
 - Use the `metallb.universe.tf/loadBalancerIPs` annotation
 
@@ -190,11 +192,13 @@ kubectl describe svc <service-name> -n <namespace>
 ### Common issues
 
 **Service stuck in Pending:**
+
 - Verify IPAddressPool has available IPs
 - Check if `autoAssign` is enabled or IP is specified
 - Ensure MetalLB pods are running
 
 **IP not reachable:**
+
 - Verify firewall rules are configured on all nodes
 - Check that the IP range is in the same subnet
 - Ensure L2Advertisement is configured correctly

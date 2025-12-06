@@ -3,19 +3,19 @@
 # Defines CPU, memory, storage, and PostgreSQL-specific parameters
 - op: replace
   path: /spec/storage/size
-  value: ###PVC_SIZE###                 # Persistent volume size per instance (16Gi, 32Gi, etc.)
+  value: ###PVC_SIZE###   # Persistent volume size per instance (16Gi, 32Gi, etc.)
 - op: replace
   path: /spec/resources/requests/memory
-  value: ###MEMORY_REQUEST###           # Minimum memory guaranteed per pod (e.g., 1024Mi, 2048Mi)
+  value: ###MEMORY_REQUEST###   # Minimum memory guaranteed per pod (e.g., 1024Mi, 2048Mi)
 - op: replace
   path: /spec/resources/requests/cpu
-  value: "###CPU_REQUEST###"            # Minimum CPU cores guaranteed per pod (e.g., "0.5", "1")
+  value: "###CPU_REQUEST###"  # Minimum CPU cores guaranteed per pod (e.g., "0.5", "1")
 - op: replace
   path: /spec/resources/limits/memory
-  value: ###MEMORY_LIMIT###             # Maximum memory per pod (e.g., 1024Mi, 2048Mi)
+  value: ###MEMORY_LIMIT###   # Maximum memory per pod (e.g., 1024Mi, 2048Mi)
 - op: replace
   path: /spec/resources/limits/cpu
-  value: "###CPU_LIMIT###"              # Maximum CPU cores per pod (e.g., "0.5", "1")
+  value: "###CPU_LIMIT###"  # Maximum CPU cores per pod (e.g., "0.5", "1")
 - op: replace
   path: /spec/postgresql/parameters/shared_buffers
-  value: ###SHARED_BUFFERS###           # PostgreSQL shared memory buffer size (~25% of RAM) (e.g., 256MB, 512MB)
+  value: ###SHARED_BUFFERS###   # PostgreSQL shared memory buffer size (~25% of RAM) (e.g., 256MB, 512MB)

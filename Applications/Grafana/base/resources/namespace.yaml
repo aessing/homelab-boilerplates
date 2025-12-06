@@ -4,4 +4,4 @@ kind: Namespace
 metadata:
   name: grafana
   labels:
-    reloader.stakater.com/reload: 'false' # Enables reloader for this namespace
+    reloader.stakater.com/reload: 'false'  # Enables reloader for this namespace

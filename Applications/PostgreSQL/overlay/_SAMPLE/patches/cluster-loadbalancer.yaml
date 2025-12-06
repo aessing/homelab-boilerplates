@@ -3,10 +3,10 @@
 # Assigns static IPs to the three additional services (read-write, read-only, replica)
 - op: replace
   path: /spec/managed/services/additional/0/serviceTemplate/spec/loadBalancerIP
-  value: "###LOAD_BALANCER_IP_RW###"    # LoadBalancer IP for external access - rw
+  value: "###LOAD_BALANCER_IP_RW###"  # LoadBalancer IP for external access - rw
 - op: replace
   path: /spec/managed/services/additional/1/serviceTemplate/spec/loadBalancerIP
-  value: "###LOAD_BALANCER_IP_RO###"    # LoadBalancer IP for external access - ro
+  value: "###LOAD_BALANCER_IP_RO###"  # LoadBalancer IP for external access - ro
 - op: replace
   path: /spec/managed/services/additional/2/serviceTemplate/spec/loadBalancerIP
-  value: "###LOAD_BALANCER_IP_R###"     # LoadBalancer IP for external access - r
+  value: "###LOAD_BALANCER_IP_R###"  # LoadBalancer IP for external access - r

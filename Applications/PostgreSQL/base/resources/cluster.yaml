@@ -14,7 +14,7 @@ spec:
     major: 0
   enableSuperuserAccess: true
   superuserSecret:
-    name: postgres-database-superuser  
+    name: postgres-database-superuser
   certificates:
     serverTLSSecret: postgres-database-certificate
     serverCASecret: trust-manager-ca
@@ -56,11 +56,11 @@ spec:
       localeProvider: 'icu'
       icuLocale: 'de-DE-x-icu'
       postInitApplicationSQL:
-      - "REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;"
-      - "GRANT CONNECT ON DATABASE postgres TO postgres;"
-      - "GRANT CONNECT ON DATABASE postgres TO streaming_replica;"
-      - "REVOKE CONNECT ON DATABASE initdb FROM PUBLIC;"
-      - "GRANT CONNECT ON DATABASE initdb TO initdb;"
+        - "REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;"
+        - "GRANT CONNECT ON DATABASE postgres TO postgres;"
+        - "GRANT CONNECT ON DATABASE postgres TO streaming_replica;"
+        - "REVOKE CONNECT ON DATABASE initdb FROM PUBLIC;"
+        - "GRANT CONNECT ON DATABASE initdb TO initdb;"
   managed:
     services:
       additional:

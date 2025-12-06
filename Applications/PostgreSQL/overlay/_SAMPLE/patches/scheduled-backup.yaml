@@ -6,4 +6,4 @@ kind: ScheduledBackup
 metadata:
   name: postgres-database-scheduledbackup
 spec:
-  schedule: 0 0 0 * * *                 # Cron: Daily at midnight (seconds minutes hours day month weekday)
+  schedule: 0 0 0 * * *  # Cron: Daily at midnight (seconds minutes hours day month weekday)

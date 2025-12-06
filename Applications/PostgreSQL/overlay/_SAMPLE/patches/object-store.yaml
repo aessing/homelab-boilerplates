@@ -7,5 +7,5 @@ metadata:
   name: postgres-database-objectstore
 spec:
   configuration:
-    destinationPath: s3://###BUCKET###/###FOLDER(CLUSTERNAME)###/               # S3 bucket path for backups
-    endpointURL: https://###ENDPOINT_URL###                                     # Backblaze B2 S3 endpoint
+    destinationPath: s3://###BUCKET###/###FOLDER(CLUSTERNAME)###/  # S3 bucket path for backups
+    endpointURL: https://###ENDPOINT_URL###   # Backblaze B2 S3 endpoint

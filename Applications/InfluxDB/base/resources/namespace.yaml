@@ -4,4 +4,4 @@ kind: Namespace
 metadata:
   name: influxdb
   labels:
-    reloader.stakater.com/reload: 'disabled' # Enables reloader for this namespace
+    reloader.stakater.com/reload: 'disabled'  # Enables reloader for this namespace

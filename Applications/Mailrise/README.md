@@ -151,7 +151,7 @@ See [Apprise Documentation](https://github.com/caronc/apprise/wiki) for all serv
 
 Configure applications to send email to Mailrise:
 
-```
+```conf
 SMTP Host: <mailrise-ip>
 SMTP Port: 8025 (or configured port)
 From: alerts@example.com

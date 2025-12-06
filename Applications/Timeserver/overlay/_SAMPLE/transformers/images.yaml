@@ -6,7 +6,7 @@ metadata:
 imageTag:
   name: ghcr.io/aessing/chronyd
   newTag: 1.4.4
-  
+
 ---
 apiVersion: builtin
 kind: ImageTagTransformer

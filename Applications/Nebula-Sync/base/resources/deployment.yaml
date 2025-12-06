@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: 'application' # The component within the architecture
+        app.kubernetes.io/component: 'application'  # The component within the architecture
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30

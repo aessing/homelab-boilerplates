@@ -19,7 +19,7 @@ fieldSpecs:
   - path: spec/replicas
     create: true
     kind: StatefulSet
-    
+
 ---
 apiVersion: builtin
 kind: ReplicaCountTransformer
