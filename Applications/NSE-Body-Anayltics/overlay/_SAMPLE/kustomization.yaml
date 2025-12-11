@@ -1,0 +1,45 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: nse-body-analytics
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  # - transformerAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: 0.1.4 # The current version of the application
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/config-nse-body-analytics-config.yaml
+  - ./generators/secret-nse-body-analytics-ghcr.yaml
+  - ./generators/secret-nse-body-analytics-secret.yaml
+
+patches:
+  - path: ./patches/certificate.yaml
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+  - path: ./patches/ingressroute.yaml
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+  - path: ./patches/resource-quota.yaml
+    target:
+      version: v1
+      kind: ResourceQuota
+
+transformers:
+  # https://github.com/aessing/nse-body-analytics (Private Repository)
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml

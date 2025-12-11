@@ -1,0 +1,33 @@
+---
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: nse-body-analytics-label-transformer
+labels:
+  app.kubernetes.io/name: nse-body-analytics  # The name of the application
+  app.kubernetes.io/instance: nse-body-analytics-internal  # A unique name identifying the instance of an application
+  app.kubernetes.io/part-of: applications  # The name of a higher level application this one is part of
+fieldSpecs:
+  # Labels in metadata
+  - path: metadata/labels
+    create: true
+  # Labels in Service selector
+  - path: spec/selector
+    create: true
+    kind: Service
+  # Labels in Deployment/StatefulSet selector
+  - path: spec/selector/matchLabels
+    create: true
+    kind: Deployment
+  - path: spec/selector/matchLabels
+    create: true
+    kind: StatefulSet
+  - path: spec/template/metadata/labels
+    create: true
+    kind: Deployment
+  - path: spec/template/metadata/labels
+    create: true
+    kind: StatefulSet
+  - path: spec/volumeClaimTemplates/metadata/labels
+    create: true
+    kind: StatefulSet

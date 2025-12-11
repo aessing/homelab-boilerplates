@@ -1,0 +1,11 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: nse-body-analytics-config
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: 'application'  # The component within the architecture
+envs:
+  - ./configs/nse-body-analytics-config.env
