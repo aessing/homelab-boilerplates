@@ -45,11 +45,11 @@ spec:
                 name: nse-body-analytics-secret
           resources:
             requests:
-              memory: 256Mi
-              cpu: 0.1
+              memory: 64Mi
+              cpu: 0.01
             limits:
-              memory: 512Mi
-              cpu: 0.5
+              memory: 128Mi
+              cpu: 0.25
           ports:
             - containerPort: 4173
               protocol: TCP
