@@ -5,4 +5,4 @@ metadata:
   name: nse-body-analytics-imagetransformer
 imageTag:
   name: ghcr.io/aessing/nse-body-analytics
-  newTag: 0.1.4
+  newTag: 0.1.5
