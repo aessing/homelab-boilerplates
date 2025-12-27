@@ -236,3 +236,32 @@ After resizing the partition, you can then resize the filesystem:
 ```bash
 sudo resize2fs /dev/sda2
 ```
+
+## Raspberry Pi 5 high power draw with PoE Hat
+
+If you are using a Raspberry Pi 5 with a PoE Hat, you may encounter power issues due to the high power draw of the device. To mitigate this, you can adjust the USB current settings in the firmware configuration. We already set `usb_max_current_enable=1` in the `/boot/firmware/config.txt` file, which allows the USB ports to draw more current.
+
+### Increase PSU_MAX_CURRENT in EEPROM
+
+For PoE on Pi 5, you often need to tell the firmware that a high‑current supply is attached; otherwise it restricts peripheral power.
+
+Run the following command to edit the EEPROM configuration:
+
+```bash
+sudo rpi-eeprom-config --edit
+```
+Add or modify the following line to set the maximum current to 4500mA:
+
+```text
+PSU_MAX_CURRENT=4500
+```
+
+For example, the Waveshare PoE HAT (G) is rated 5V / 5A max, but practical sustained is closer to 4.5A. Because of that, we set `PSU_MAX_CURRENT=4500`.
+
+After making the change, save the file and exit the editor. The EEPROM will be updated automatically.
+
+Finally, reboot the Raspberry Pi to apply the changes:
+
+```bash
+sudo reboot
+```
