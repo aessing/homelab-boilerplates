@@ -48,13 +48,13 @@ echo "# Raise replica count for some deployments ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo " - Raise replica count for coredns deployment in kube-system namespace"
-kubectl -n kube-system patch deployment coredns --type='merge' -p '{"spec":{"replicas":2}}'
+kubectl -n kube-system patch deployment coredns --type='merge' -p '{"spec":{"replicas":3}}'
 
 echo " - Raise replica count for local-path-provisioner deployment in kube-system namespace"
-kubectl -n kube-system patch deployment local-path-provisioner --type='merge' -p '{"spec":{"replicas":2}}'
+kubectl -n kube-system patch deployment local-path-provisioner --type='merge' -p '{"spec":{"replicas":1}}'
 
 echo " - Raise replica count for metrics-server deployment in kube-system namespace"
-kubectl -n kube-system patch deployment metrics-server --type='merge' -p '{"spec":{"replicas":2}}'
+kubectl -n kube-system patch deployment metrics-server --type='merge' -p '{"spec":{"replicas":1}}'
 
 # -------------------------------------------------------------------------------------
 

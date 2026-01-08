@@ -10,7 +10,6 @@ resources:
   - ./resources/helmchartconfig.yaml
   - ./resources/helmchart.yaml
   - ./resources/certificate-dashboard.yaml
-  - ./resources/middleware-dashboard.yaml
   - ./resources/ingressroute-dashboard.yaml
   - ./resources/storageclass.yaml
   - ./resources/jobs.yaml

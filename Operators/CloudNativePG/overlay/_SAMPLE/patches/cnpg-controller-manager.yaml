@@ -4,4 +4,4 @@ kind: Deployment
 metadata:
   name: cnpg-controller-manager
 spec:
-  replicas: 2
+  replicas: 1

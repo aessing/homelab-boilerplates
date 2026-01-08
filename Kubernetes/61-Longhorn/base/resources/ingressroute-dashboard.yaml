@@ -14,12 +14,16 @@ spec:
       middlewares:
         - name: chain-admin
           namespace: traefik-system
-        - name: longhorn-dashboard-headers
-          namespace: longhorn-system
         - name: longhorn-dashboard-basicauth
           namespace: longhorn-system
       services:
         - name: longhorn-frontend
           port: 80
+          passHostHeader: true
+          # sticky:
+          #   cookie:
+          #     httpOnly: true
+          #     secure: true
+          #     sameSite: none
   tls:
     secretName: longhorn-dashboard-certificate

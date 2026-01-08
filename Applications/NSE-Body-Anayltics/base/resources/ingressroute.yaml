@@ -20,10 +20,10 @@ spec:
         - name: nse-body-analytics
           port: 4173
           passHostHeader: true
-          # sticky:
-          #   cookie:
-          #     httpOnly: true
-          #     secure: true
-          #     sameSite: none
+          sticky:
+            cookie:
+              httpOnly: true
+              secure: true
+              sameSite: none
   tls:
     secretName: nse-body-analytics-certificate
