@@ -12,6 +12,7 @@ Linux/
 ├── 11-install-raspberry.md   # Installation guide for Raspberry Pi
 ├── 11-install-ubuntu.md      # Installation guide for standard servers
 ├── 21-harden-ubuntu.sh       # Comprehensive hardening script
+├── 31-install-nut-client.sh  # NUT (Network UPS Tools) client setup
 └── environments/
     └── _SAMPLE.env           # Template environment configuration
 ```
@@ -163,23 +164,45 @@ The `_SAMPLE.env` file contains all configurable parameters. Copy it and customi
 | `AUDIT_ENABLE` | Enable auditd system auditing | `false` |
 | `PSAD_ENABLE` | Enable PSAD intrusion detection | `false` |
 
-## What the Script Does
+### NUT (Network UPS Tools) Configuration
 
-### Package Management
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `UPS_NUT_HOST` | Hostname or IP of the NUT server | `ups-network.example.com` |
+| `UPS_NUT_NAME` | Name of the UPS on the server | `ups` |
+| `UPS_NUT_USER` | Username for NUT authentication | `nutuser` |
+| `UPS_NUT_PASSWORD` | Password for NUT authentication | `secure_password` |
+| `UPS_NUT_BATTERY_DELAY` | Shutdown delay (seconds) after UPS goes on battery | `10` |
+
+## Scripts
+
+### 21-harden-ubuntu.sh - System Hardening
+
+Comprehensive hardening script for Ubuntu Server 24.04 LTS based on CIS benchmarks and security best practices.
+
+**Usage:**
+
+```bash
+sudo ./21-harden-ubuntu.sh <server-name>
+```
+
+**Features:**
+
+#### Package Management
 
 - Configures APT security settings
 - Removes unnecessary/insecure packages
 - Installs security tools (debsums, haveged, rkhunter, etc.)
 - Enables unattended security updates
 
-### Kernel Hardening
+#### Kernel Hardening
 
 - Disables IPv6 (configurable)
 - Hardens network stack (sysctl parameters)
 - Disables unused kernel modules (filesystems, network protocols)
 - Configures kernel lockdown mode
 
-### Authentication & Authorization
+##### Authentication & Authorization
 
 - Configures PAM for strong passwords (pwquality)
 - Sets password aging policies
@@ -187,7 +210,7 @@ The `_SAMPLE.env` file contains all configurable parameters. Copy it and customi
 - Restricts su access to sudo group
 - Configures sudo logging and security
 
-### SSH Security
+#### SSH Security
 
 - Generates new strong host keys
 - Removes weak Diffie-Hellman moduli
@@ -195,14 +218,14 @@ The `_SAMPLE.env` file contains all configurable parameters. Copy it and customi
 - Disables password authentication
 - Restricts access to specified group and IPs
 
-### Firewall Configuration
+#### Firewall Configuration
 
 - Enables UFW with deny-all default
 - Configures logging for PSAD integration
 - Allows SSH from specified admin IPs only
 - Configures TCP wrapper (hosts.allow/deny)
 
-### System Security
+#### System Security
 
 - Hardens file permissions
 - Secures GRUB configuration
@@ -210,13 +233,65 @@ The `_SAMPLE.env` file contains all configurable parameters. Copy it and customi
 - Configures secure mount options
 - Restricts compiler access
 
-### Monitoring & Logging
+#### Monitoring & Logging
 
 - Configures journald for persistent logging
 - Sets up logrotate with compression
 - Optionally enables auditd with comprehensive rules
 - Optionally enables AIDE file integrity checking
 - Optionally enables PSAD port scan detection
+
+---
+
+### 31-install-nut-client.sh - NUT Client Setup
+
+Installs and configures Network UPS Tools (NUT) client for graceful shutdown during power outages.
+
+**Usage:**
+
+```bash
+sudo ./31-install-nut-client.sh <server-name>
+```
+
+**Features:**
+
+- Installs nut-client package
+- Configures netclient mode (client only, no UPS server)
+- Connects to remote NUT server with authentication
+- Implements delayed shutdown with auto-cancellation
+- Shuts down server after configurable delay when UPS goes on battery
+- Automatically cancels shutdown if power returns within delay period
+- Provides comprehensive logging and status monitoring
+
+**Configuration:**
+
+All settings are configured via environment variables in the server's `.env` file:
+
+- `UPS_NUT_HOST`: NUT server hostname/IP
+- `UPS_NUT_NAME`: UPS device name on the server
+- `UPS_NUT_USER`: Authentication username
+- `UPS_NUT_PASSWORD`: Authentication password
+- `UPS_NUT_BATTERY_DELAY`: Shutdown delay in seconds (default: 10)
+
+**Monitoring:**
+
+After installation, use these commands to monitor UPS status:
+
+```bash
+# Check UPS status
+upsc ups@ups-server.example.com
+
+# Monitor service status
+systemctl status nut-monitor
+
+# View real-time logs
+journalctl -u nut-monitor -f
+
+# View UPS events
+journalctl -t upssched-cmd -f
+```
+
+---
 
 ## Troubleshooting
 
