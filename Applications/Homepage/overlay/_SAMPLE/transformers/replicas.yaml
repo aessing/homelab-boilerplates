@@ -5,7 +5,7 @@ metadata:
   name: homepage-replicatransformer
 replica:
   name: homepage
-  count: 2
+  count: 1
 fieldSpecs:
   - path: spec/replicas
     create: true

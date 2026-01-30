@@ -5,7 +5,7 @@ metadata:
   name: homecdn-replicatransformer
 replica:
   name: homecdn
-  count: 2
+  count: 1
 fieldSpecs:
   - path: spec/replicas
     create: true
