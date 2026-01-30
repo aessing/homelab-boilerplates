@@ -4,5 +4,5 @@ kind: Component
 
 resources:
   # https://github.com/cloudnative-pg/plugin-barman-cloud
-  - https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.10.0/manifest.yaml
+  - https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.11.0/manifest.yaml
   - ./resources/barman-objectstore.yaml

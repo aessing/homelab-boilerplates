@@ -31,9 +31,9 @@ spec:
         addEntryPointsLabels: true
         addRoutersLabels: true
         addServicesLabels: true
-    globalArguments:
-      - '--global.checknewversion=true'
-      - '--global.sendanonymoususage=false'
+    global:
+      checkNewVersion: true
+      sendAnonymousUsage: false
     additionalArguments:
       - '--serversTransport.insecureSkipVerify=true'
       - '--providers.kubernetesingress.ingressclass=traefik-external'
@@ -50,11 +50,12 @@ spec:
           default: true
         exposedPort: 80
         protocol: TCP
-        redirections:
-          entryPoint:
-            to: websecure
-            scheme: https
-            permanent: true
+        http:
+          redirections:
+            entryPoint:
+              to: websecure
+              scheme: https
+              permanent: true
       websecure:
         port: 8443
         expose:
@@ -63,8 +64,9 @@ spec:
         protocol: TCP
         http3:
           enabled: false
-        tls:
-          enabled: true
+        http:
+          tls:
+            enabled: true
       metrics:
         port: 9100
         expose:
