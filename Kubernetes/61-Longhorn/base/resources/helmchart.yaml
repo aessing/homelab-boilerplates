@@ -7,4 +7,4 @@ spec:
   repo: https://charts.longhorn.io
   chart: longhorn
   helmVersion: v3
-  bootstrap: true
+  bootstrap: false

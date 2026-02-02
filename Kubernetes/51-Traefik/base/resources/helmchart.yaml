@@ -7,4 +7,4 @@ spec:
   repo: https://traefik.github.io/charts
   chart: traefik
   helmVersion: v3
-  bootstrap: true
+  bootstrap: false

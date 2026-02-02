@@ -7,4 +7,4 @@ spec:
   repo: https://charts.jetstack.io
   chart: cert-manager
   helmVersion: v3
-  bootstrap: true
+  bootstrap: false

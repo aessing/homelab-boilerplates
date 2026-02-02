@@ -7,4 +7,4 @@ spec:
   repo: https://metallb.github.io/metallb
   chart: metallb
   helmVersion: v3
-  bootstrap: true
+  bootstrap: false
