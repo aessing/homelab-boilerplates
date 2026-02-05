@@ -142,6 +142,58 @@ journalctl -u k3s -f
 journalctl -u k3s-agent -f
 ```
 
+## Updating K3s
+
+Kubernetes regularly releases updates with bug fixes and new features. Kubernetes has a [Version Skew Policy](https://kubernetes.io/releases/version-skew-policy/) that describes which versions are supported.
+
+> [!NOTE]
+> New Kubernetes versions typically receive 1 year of patch support. Within this timeframe, you should upgrade to the next stable Kubernetes version.
+
+### K3s Release Channels
+
+For a stable K3s installation, we use the `stable` release channel instead of `latest`.
+
+The `stable` channel may not always be the most current version (e.g., when `latest` is 1.30, `stable` is typically 1.29), but it is better tested and generally more reliable.
+
+You can view the version mapping in the [K3s Channel Service API](https://update.k3s.io/v1-release/channels).
+
+To retrieve the current `stable` version via command line:
+
+```bash
+curl -s https://update.k3s.io/v1-release/channels | jq -r '.data[] | select(.id=="stable") | .latest'
+```
+
+### Performing the Update
+
+Updating K3s is straightforward and typically results in minimal to no downtime. The simplicity comes from storing all important K3s parameters in `/etc/rancher/k3s/config.yaml` during the initial installation. This allows the setup to reuse these parameters automatically.
+
+> [!IMPORTANT]
+> The update must be executed as root user.
+
+#### Update a Server Node
+
+```bash
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable INSTALL_K3S_EXEC="server" sh -s -
+```
+
+#### Update an Agent Node
+
+```bash
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable INSTALL_K3S_EXEC="agent" sh -s -
+```
+
+### Update Order
+
+When updating a multi-node cluster, follow this sequence:
+
+1. **Update server nodes first** - Start with server nodes to ensure the control plane is updated
+2. **Update agent nodes** - After all servers are updated, proceed with agents
+3. **Verify cluster health** - Check that all nodes are `Ready` after updates
+
+```bash
+kubectl get nodes
+```
+
 ## Related Resources
 
 - [K3s Documentation](https://docs.k3s.io/)
