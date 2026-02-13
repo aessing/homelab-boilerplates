@@ -1,4 +1,4 @@
 ---
 - op: add
   path: /spec/version
-  value: "2025.12.2"
+  value: "2025.12.4"

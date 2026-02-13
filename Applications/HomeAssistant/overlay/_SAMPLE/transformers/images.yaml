@@ -13,7 +13,7 @@ metadata:
   name: editor-imagetransformer
 imageTag:
   name: lscr.io/linuxserver/code-server
-  newTag: 4.108.2-ls314
+  newTag: 4.109.2-ls316
 ---
 apiVersion: builtin
 kind: ImageTagTransformer
@@ -21,7 +21,7 @@ metadata:
   name: homeassistant-imagetransformer
 imageTag:
   name: ghcr.io/home-assistant/home-assistant
-  newTag: 2026.1.3
+  newTag: 2026.2.2
 ---
 apiVersion: builtin
 kind: ImageTagTransformer
@@ -29,4 +29,4 @@ metadata:
   name: mqtt-imagetransformer
 imageTag:
   name: eclipse-mosquitto
-  newTag: 2.1.0-alpine
+  newTag: 2.1.2-alpine
