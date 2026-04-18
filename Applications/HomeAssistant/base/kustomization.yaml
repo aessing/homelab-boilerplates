@@ -5,14 +5,9 @@ kind: Kustomization
 resources:
   - ./resources/namespace.yaml
   - ./resources/network-policy-application-to-mqtt.yaml
-  - ./resources/network-policy-application-to-database.yaml
   - ./resources/network-policy-clients-to-mqtt.yaml
-  - ./resources/network-policy-cnpg-to-cluster.yaml
   - ./resources/network-policy-editor-to-application.yaml
-  - ./resources/network-policy-editor-to-database.yaml
   - ./resources/network-policy-editor-to-mqtt.yaml
-  - ./resources/network-policy-instance-to-instance.yaml
-  - ./resources/network-policy-kubeproxy-to-cluster.yaml
   - ./resources/network-policy-traefik-to-application.yaml
   - ./resources/network-policy-traefik-to-editor.yaml
   - ./resources/resource-quota.yaml
@@ -21,4 +16,3 @@ components:
   - ../components/_editor
   - ../components/_homeassistant
   - ../components/_mqtt
-  - ../components/_database

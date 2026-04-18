@@ -5,4 +5,4 @@ metadata:
   name: homepage-imagetransformer
 imageTag:
   name: ghcr.io/gethomepage/homepage
-  newTag: v1.10.1
+  newTag: v1.12.3

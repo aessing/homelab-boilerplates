@@ -12,15 +12,13 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 2026.3.4 # The current version of the application
+      app.kubernetes.io/version: 2026.4.3 # The current version of the application
 
 resources:
   - ../../base
 
 generators:
   - ./generators/secret-editor-user.yaml
-  - ./generators/secret-homeassistant-db-objectstore.yaml
-  - ./generators/secret-homeassistant-db-user.yaml
   - ./generators/secret-mqtt-acl.yaml
   - ./generators/secret-mqtt-user.yaml
 
@@ -43,24 +41,6 @@ patches:
       version: v1
       kind: Certificate
       name: mqtt
-  - path: ./patches/homeassistant-db-objectstore.yaml
-    target:
-      group: barmancloud.cnpg.io
-      version: v1
-      kind: ObjectStore
-      name: homeassistant-db-objectstore
-  - path: ./patches/homeassistant-db-schedule.yaml
-    target:
-      group: postgresql.cnpg.io
-      version: v1
-      kind: ScheduledBackup
-      name: homeassistant-db-scheduledbackup
-  - path: ./patches/homeassistant-db.yaml
-    target:
-      group: postgresql.cnpg.io
-      version: v1
-      kind: Cluster
-      name: homeassistant-db
   - path: ./patches/ingressroute-editor.yaml
     target:
       group: traefik.io
@@ -79,12 +59,6 @@ patches:
       version: v1
       kind: NetworkAttachmentDefinition
       name: homeassistant
-  - path: ./patches/network-policy.yaml
-    target:
-      group: networking.k8s.io
-      version: v1
-      kind: NetworkPolicy
-      name: kubeproxy-to-cluster
   - path: ./patches/pvc-editor.yaml
     target:
       group: apps

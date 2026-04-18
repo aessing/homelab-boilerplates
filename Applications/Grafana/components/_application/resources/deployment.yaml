@@ -65,16 +65,27 @@ spec:
             - name: GF_DATABASE_TYPE
               value: 'postgres'
             - name: GF_DATABASE_HOST
-              value: 'grafana-database-rw'
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-database-user
+                  key: hostname
             - name: GF_DATABASE_NAME
-              value: 'grafana'
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-database-user
+                  key: databasename
             - name: GF_DATABASE_USER
-              value: 'grafana'
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-database-user
+                  key: username
             - name: GF_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: grafana-database-user
                   key: password
+            - name: GF_DATABASE_SSL_MODE
+              value: require
 
             - name: GF_ANALYTICS_REPORTING_ENABLED
               value: 'false'

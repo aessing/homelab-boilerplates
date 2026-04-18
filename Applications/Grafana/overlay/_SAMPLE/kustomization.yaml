@@ -12,7 +12,7 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 12.4.1  # The current version of the application
+      app.kubernetes.io/version: 13.0.1  # The current version of the application
 
 resources:
   - ../../base
@@ -20,7 +20,6 @@ resources:
 generators:
   - ./generators/secret-grafana-admin.yaml
   - ./generators/secret-grafana-database-user.yaml
-  - ./generators/secret-grafana-database-objectstore.yaml
   - ./generators/secret-grafana-haengine-auth.yaml
   - ./generators/secret-grafana-metrics.yaml
   - ./generators/secret-grafana-renderer-auth.yaml
@@ -44,30 +43,6 @@ patches:
       group: traefik.io
       version: v1alpha1
       kind: IngressRoute
-  - path: ./patches/grafana-database.yaml
-    target:
-      group: postgresql.cnpg.io
-      version: v1
-      kind: Cluster
-      name: grafana-database
-  - path: ./patches/grafana-database-objectstore.yaml
-    target:
-      group: barmancloud.cnpg.io
-      version: v1
-      kind: ObjectStore
-      name: grafana-database-objectstore
-  - path: ./patches/grafana-database-schedule.yaml
-    target:
-      group: postgresql.cnpg.io
-      version: v1
-      kind: ScheduledBackup
-      name: grafana-database-scheduledbackup
-  - path: ./patches/network-policy.yaml
-    target:
-      group: networking.k8s.io
-      version: v1
-      kind: NetworkPolicy
-      name: kubeproxy-to-cluster
   - path: ./patches/resource-quota.yaml
     target:
       version: v1

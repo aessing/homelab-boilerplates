@@ -12,36 +12,17 @@ buildMetadata:
 
 resources:
   - ../../base
+  - ./resources/certificate-ldap.yaml
 
 components:
-  - ../../components/_database
   - ../../components/_application
 
 generators:
   - ./generators/secret-authentik-config.yaml
-  - ./generators/secret-authentik-database-objectstore.yaml
   - ./generators/secret-authentik-database-user.yaml
 
 patches:
   # https://github.com/goauthentik/authentik
-  - path: ./patches/authentik-database-objectstore.yaml
-    target:
-      group: barmancloud.cnpg.io
-      version: v1
-      kind: ObjectStore
-      name: authentik-database-objectstore
-  - path: ./patches/authentik-database-schedule.yaml
-    target:
-      group: postgresql.cnpg.io
-      version: v1
-      kind: ScheduledBackup
-      name: authentik-database-scheduledbackup
-  - path: ./patches/authentik-database.yaml
-    target:
-      group: postgresql.cnpg.io
-      version: v1
-      kind: Cluster
-      name: authentik-database
   - path: ./patches/certificate.yaml
     target:
       group: cert-manager.io
