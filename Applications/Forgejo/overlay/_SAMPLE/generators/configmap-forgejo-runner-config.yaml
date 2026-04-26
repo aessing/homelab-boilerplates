@@ -1,0 +1,14 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: forgejo-runner-config
+behavior: create
+options:
+  disableNameSuffixHash: true
+  labels:
+    app.kubernetes.io/component: 'runner'
+  annotations:
+    reloader.stakater.com/match: 'true'
+files:
+  - config.yaml=./configs/forgejo-runner.yaml

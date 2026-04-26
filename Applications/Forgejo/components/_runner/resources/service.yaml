@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: forgejo-runner
+  labels:
+    app.kubernetes.io/component: 'runner'
+spec:
+  selector:
+    app.kubernetes.io/component: 'runner'
+  clusterIP: None
+  ports:
+    - protocol: TCP
+      port: 8088
+      targetPort: 8088
+      name: health
+  type: ClusterIP

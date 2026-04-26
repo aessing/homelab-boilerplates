@@ -1,0 +1,151 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: forgejo-runner
+  labels:
+    app.kubernetes.io/component: 'runner'
+  annotations:
+    reloader.stakater.com/search: 'false'  # Enables search mode (only reloads if matching secrets/configMaps are found)
+spec:
+  revisionHistoryLimit: 3
+  serviceName: forgejo-runner
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: 'runner'
+  replicas: 0
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Retain
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: 'runner'
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      initContainers:
+        - name: forgejo-wait
+          image: busybox:0.0.0
+          command: ['/bin/sh', '-c', 'until nc -zw5 forgejo 3000 >/dev/null 2>&1; do echo waiting for forgejo; sleep 5; done']
+        - name: runner-register
+          image: code.forgejo.org/forgejo/runner:0.0.0
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+              cd /data
+              if [ ! -f .runner ]; then
+                echo "Registering runner ${RUNNER_NAME} against ${FORGEJO_INSTANCE_URL}"
+                forgejo-runner register \
+                  --no-interactive \
+                  --instance "${FORGEJO_INSTANCE_URL}" \
+                  --token "${RUNNER_TOKEN}" \
+                  --name "${RUNNER_NAME}" \
+                  --labels "${RUNNER_LABELS}"
+              else
+                echo "Runner already registered, skipping registration"
+              fi
+          env:
+            - name: FORGEJO_INSTANCE_URL
+              value: 'http://forgejo:3000'
+            - name: RUNNER_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: RUNNER_LABELS
+              value: 'docker:docker://node:20-bookworm,ubuntu-latest:docker://node:20-bookworm,ubuntu-22.04:docker://node:20-bullseye'
+            - name: RUNNER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: forgejo-runner-token
+                  key: token
+          volumeMounts:
+            - mountPath: /data
+              name: forgejo-runner-data
+      containers:
+        - name: runner
+          image: code.forgejo.org/forgejo/runner:0.0.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - forgejo-runner
+            - daemon
+            - --config
+            - /etc/forgejo-runner/config.yaml
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+            readOnlyRootFilesystem: false
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 1
+              memory: 1Gi
+          env:
+            - name: DOCKER_HOST
+              value: tcp://localhost:2376
+            - name: DOCKER_CERT_PATH
+              value: /certs/client
+            - name: DOCKER_TLS_VERIFY
+              value: '1'
+          workingDir: /data
+          volumeMounts:
+            - mountPath: /data
+              name: forgejo-runner-data
+            - mountPath: /etc/forgejo-runner
+              name: forgejo-runner-config
+              readOnly: true
+            - mountPath: /certs
+              name: docker-certs
+              readOnly: true
+        - name: dind
+          image: docker:0.0.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 2
+              memory: 4Gi
+          env:
+            - name: DOCKER_TLS_CERTDIR
+              value: /certs
+          volumeMounts:
+            - mountPath: /certs
+              name: docker-certs
+            - mountPath: /var/lib/docker
+              name: dind-storage
+      volumes:
+        - name: forgejo-runner-config
+          configMap:
+            name: forgejo-runner-config
+        - name: docker-certs
+          emptyDir: {}
+        - name: dind-storage
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: forgejo-runner-data
+        labels:
+          app.kubernetes.io/component: 'runner'
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 0Gi

@@ -1,0 +1,63 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: forgejo
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+  # - transformerAnnotations
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/configmap-forgejo-runner-config.yaml
+  - ./generators/secret-forgejo-config.yaml
+  - ./generators/secret-forgejo-database-user.yaml
+  - ./generators/secret-forgejo-runner-token.yaml
+
+patches:
+  - path: ./patches/certificate-forgejo.yaml
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+      name: forgejo
+  - path: ./patches/ingressroute-forgejo.yaml
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+      name: forgejo
+  - path: ./patches/pvc-forgejo.yaml
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: forgejo
+  - path: ./patches/pvc-forgejo-runner.yaml
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: forgejo-runner
+  - path: ./patches/resource-quota.yaml
+    target:
+      version: v1
+      kind: ResourceQuota
+  - path: ./patches/service-forgejo-ssh.yaml
+    target:
+      version: v1
+      kind: Service
+      name: forgejo-ssh
+
+transformers:
+  # https://hub.docker.com/_/busybox
+  # https://hub.docker.com/_/docker
+  # https://codeberg.org/forgejo/-/packages/container/forgejo
+  # https://code.forgejo.org/forgejo/-/packages/container/runner
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml

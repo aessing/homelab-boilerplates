@@ -1,0 +1,32 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: busybox-imagetransformer
+imageTag:
+  name: busybox
+  newTag: 1.37.0
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: forgejo-imagetransformer
+imageTag:
+  name: codeberg.org/forgejo/forgejo
+  newTag: 15.0.0-rootless
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: forgejo-runner-imagetransformer
+imageTag:
+  name: code.forgejo.org/forgejo/runner
+  newTag: 6.5.0
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: docker-dind-imagetransformer
+imageTag:
+  name: docker
+  newTag: 27.5.1-dind

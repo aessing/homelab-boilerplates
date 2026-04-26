@@ -1,0 +1,157 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: forgejo
+  labels:
+    app.kubernetes.io/component: 'application'
+  annotations:
+    reloader.stakater.com/search: 'false'  # Enables search mode (only reloads if matching secrets/configMaps are found)
+spec:
+  revisionHistoryLimit: 3
+  serviceName: forgejo
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: 'application'
+  replicas: 0
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Retain
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: 'application'
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: database-wait
+          image: busybox:0.0.0
+          command: ['/bin/sh', '-c', 'until nc -zw10 postgres-database-rw.postgres.svc.apps02.home.essing.org 5432 >/dev/null 2>&1; do echo waiting for forgejo database; sleep 5; done']
+        - name: data-permissions
+          image: busybox:0.0.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              for d in attachments avatars repo-avatars repo-archive packages \
+                       lfs actions_log actions_artifacts queues sessions log \
+                       indexers tmp git/repositories ssh; do
+                mkdir -p "/data/$d"
+              done
+              chmod 700 /data/ssh
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          volumeMounts:
+            - mountPath: /data
+              name: forgejo-data
+      containers:
+        - name: forgejo
+          image: codeberg.org/forgejo/forgejo:0.0.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+            readOnlyRootFilesystem: false
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 2
+              memory: 2Gi
+          envFrom:
+            - secretRef:
+                name: forgejo-config
+          env:
+            - name: FORGEJO__database__USER
+              valueFrom:
+                secretKeyRef:
+                  name: forgejo-database-user
+                  key: username
+            - name: FORGEJO__database__PASSWD
+              valueFrom:
+                secretKeyRef:
+                  name: forgejo-database-user
+                  key: password
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+              name: http
+            - containerPort: 2222
+              protocol: TCP
+              name: ssh
+          startupProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          volumeMounts:
+            - mountPath: /data
+              name: forgejo-data
+            - mountPath: /etc/gitea
+              name: forgejo-etc
+            - mountPath: /tmp
+              name: forgejo-tmp
+      volumes:
+        - name: forgejo-etc
+          emptyDir: {}
+        - name: forgejo-tmp
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: forgejo-data
+        labels:
+          app.kubernetes.io/component: 'application'
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 0Gi

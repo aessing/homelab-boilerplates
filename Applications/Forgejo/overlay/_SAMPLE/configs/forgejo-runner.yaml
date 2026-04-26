@@ -1,0 +1,28 @@
+log:
+  level: info
+
+runner:
+  file: .runner
+  capacity: 2
+  envs:
+    HOME: /data
+  fetch_timeout: 5s
+  fetch_interval: 2s
+  labels: []
+
+cache:
+  enabled: true
+  dir: /data/cache
+
+container:
+  network: ""
+  privileged: false
+  options: ""
+  workdir_parent: ""
+  valid_volumes: []
+  docker_host: "tcp://localhost:2376"
+  force_pull: true
+  force_rebuild: false
+
+host:
+  workdir_parent: ""
