@@ -1,4 +1,9 @@
 ---
+# Longhorn requires the `privileged` Pod Security Standard because its
+# manager, engine, and instance-manager pods need direct host access to
+# block devices, iSCSI, and the kernel's nfs/iscsi modules to provision
+# and attach volumes. Restricted/baseline profiles are not viable for
+# this workload — see https://longhorn.io/docs/.
 apiVersion: v1
 kind: Namespace
 metadata:

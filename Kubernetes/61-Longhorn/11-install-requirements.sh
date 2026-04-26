@@ -25,7 +25,7 @@
 # NEEDS TO RUN ON ALL NODES #
 #############################
 
-set -u -o pipefail
+set -euo pipefail
 
 LOG_FILE="11-install-requirements.log"
 exec > >(tee -a "$LOG_FILE") 2>&1

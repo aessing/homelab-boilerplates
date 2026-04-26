@@ -22,7 +22,7 @@
 
 # https://github.com/kube-vip/kube-vip
 
-set -u -o pipefail
+set -euo pipefail
 
 LOG_FILE="11-install-kube-vip.log"
 exec > >(tee -a "$LOG_FILE") 2>&1

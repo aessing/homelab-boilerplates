@@ -23,7 +23,7 @@
 # SOFTWARE.
 # =============================================================================
 
-set -u -o pipefail
+set -euo pipefail
 
 LOG_FILE="11-install-k3s.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
@@ -1941,10 +1941,12 @@ done
 
 echo ""
 echo " - Generate policy from actually connected devices"
-usbguard generate-policy > /tmp/rules.conf
-echo 'allow with-interface one-of { 03:00:01  03:01:01 } if !allowed-matches(with-interface one-of { 03:00:01 03:01:01 })' >> /tmp/rules.conf
-install -m 0600 -o root -g root /tmp/rules.conf "$USBGUARD_CONF"
-rm -f /tmp/rules.conf
+USBGUARD_RULES_TMP="$(mktemp)"
+trap 'rm -f "$USBGUARD_RULES_TMP"' EXIT
+chmod 0600 "$USBGUARD_RULES_TMP"
+usbguard generate-policy > "$USBGUARD_RULES_TMP"
+echo 'allow with-interface one-of { 03:00:01  03:01:01 } if !allowed-matches(with-interface one-of { 03:00:01 03:01:01 })' >> "$USBGUARD_RULES_TMP"
+install -m 0600 -o root -g root "$USBGUARD_RULES_TMP" "$USBGUARD_CONF"
 
 echo ""
 echo " - Activate USBGUARD"

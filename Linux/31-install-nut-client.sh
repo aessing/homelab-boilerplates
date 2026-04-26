@@ -20,7 +20,7 @@
 # SOFTWARE.
 # =============================================================================
 
-set -u -o pipefail
+set -euo pipefail
 
 LOG_FILE="31-install-nut-client.log"
 exec > >(tee -a "$LOG_FILE") 2>&1

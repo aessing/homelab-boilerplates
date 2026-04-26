@@ -19,7 +19,7 @@
 # SOFTWARE.
 # =============================================================================
 
-set -u -o pipefail
+set -euo pipefail
 
 LOG_FILE="11-configure-firewall.log"
 exec > >(tee -a "$LOG_FILE") 2>&1

@@ -19,7 +19,7 @@
 
 # https://update.k3s.io/v1-release/channels
 
-set -u -o pipefail
+set -euo pipefail
 
 LOG_FILE="11-install-k3s.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
