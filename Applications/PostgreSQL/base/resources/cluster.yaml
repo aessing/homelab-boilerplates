@@ -58,6 +58,7 @@ spec:
       postInitApplicationSQL:
         - "REVOKE ALL ON DATABASE postgres FROM PUBLIC;"
         - "GRANT CONNECT ON DATABASE postgres TO postgres;"
+        - "GRANT CONNECT ON DATABASE postgres TO streaming_replica;"
         - "REVOKE ALL ON DATABASE template1 FROM PUBLIC;"
         - "REVOKE ALL ON DATABASE initdb FROM PUBLIC;"
         - "GRANT CONNECT ON DATABASE initdb TO initdb;"
