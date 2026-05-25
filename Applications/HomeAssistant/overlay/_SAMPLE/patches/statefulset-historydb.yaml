@@ -8,4 +8,5 @@
     - -storage.minFreeDiskSpaceBytes=###MIN_FREE_DISK_SPACE###
     - -influx.forceStreamMode
     - -influx.databaseNames=homeassistant
+    - -usePromCompatibleNaming
     - -loggerFormat=json

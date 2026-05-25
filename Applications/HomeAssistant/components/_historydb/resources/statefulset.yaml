@@ -55,6 +55,7 @@ spec:
             - -storage.minFreeDiskSpaceBytes=0GiB
             - -influx.forceStreamMode
             - -influx.databaseNames=homeassistant
+            - -usePromCompatibleNaming
             - -loggerFormat=json
           resources:
             requests:
