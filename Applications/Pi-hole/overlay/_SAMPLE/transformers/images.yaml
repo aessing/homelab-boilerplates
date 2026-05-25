@@ -5,4 +5,4 @@ metadata:
   name: pihole-imagetransformer
 imageTag:
   name: pihole/pihole
-  newTag: 2026.04.0
+  newTag: 2026.05.0

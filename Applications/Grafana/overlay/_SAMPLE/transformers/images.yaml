@@ -5,7 +5,7 @@ metadata:
   name: grafana-haengine-imagetransformer
 imageTag:
   name: redis
-  newTag: 8.6.2
+  newTag: 8.6.3
 ---
 apiVersion: builtin
 kind: ImageTagTransformer
@@ -13,7 +13,7 @@ metadata:
   name: grafana-renderer-imagetransformer
 imageTag:
   name: grafana/grafana-image-renderer
-  newTag: v5.8.1
+  newTag: v5.8.3
 ---
 apiVersion: builtin
 kind: ImageTagTransformer

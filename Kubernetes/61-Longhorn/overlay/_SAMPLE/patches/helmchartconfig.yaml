@@ -5,10 +5,6 @@ metadata:
   name: longhorn
 spec:
   valuesContent: >-
-    image:
-      longhorn:
-        manager:
-          tag: v1.11.0-hotfix-1
     preUpgradeChecker:
       upgradeVersionCheck: false
     persistence:

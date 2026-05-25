@@ -5,4 +5,4 @@ metadata:
   name: nebula-sync-imagetransformer
 imageTag:
   name: ghcr.io/lovelaze/nebula-sync
-  newTag: v0.11.1
+  newTag: v0.11.2

@@ -10,6 +10,12 @@ spec:
     speaker:
       frr:
         enabled: false
+    frrk8s:
+      enabled: false
+    frr-k8s:
+      prometheus:
+        serviceMonitor:
+          enabled: false
     crds:
       enabled: true
       validationFailurePolicy: Fail

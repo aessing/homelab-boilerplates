@@ -5,7 +5,7 @@ metadata:
   name: uptimekuma-imagetransformer
 imageTag:
   name: louislam/uptime-kuma
-  newTag: 2.2.1-rootless
+  newTag: 2.3.2-rootless
 
 ---
 apiVersion: builtin

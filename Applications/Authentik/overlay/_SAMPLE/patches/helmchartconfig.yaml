@@ -14,6 +14,12 @@ spec:
         reloader.stakater.com/match: 'true'
         reloader.stakater.com/ignore: 'false'
       env:
+        - name: AUTHENTIK_LISTEN__HTTP
+          value: 0.0.0.0:9000
+        - name: AUTHENTIK_LISTEN__HTTPS
+          value: 0.0.0.0:9443
+        - name: AUTHENTIK_LISTEN__METRICS
+          value: 0.0.0.0:9300
         - name: AUTHENTIK_POSTGRESQL__USER
           valueFrom:
             secretKeyRef:
