@@ -1,0 +1,30 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: historydb
+  labels:
+    app.kubernetes.io/component: 'historydb'
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: CHANGE_ME
+      kind: Rule
+      middlewares:
+        - name: chain-default
+          namespace: traefik-system
+        - name: historydb-grafana-basicauth
+      services:
+        - name: historydb
+          port: 8428
+          passHostHeader: true
+          # sticky:
+          #   cookie:
+          #     httpOnly: true
+          #     secure: true
+          #     sameSite: none
+  tls:
+    secretName: historydb-certificate

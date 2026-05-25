@@ -18,6 +18,14 @@ imageTag:
 apiVersion: builtin
 kind: ImageTagTransformer
 metadata:
+  name: historydb-imagetransformer
+imageTag:
+  name: victoriametrics/victoria-metrics
+  newTag: v1.144.0
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
   name: homeassistant-imagetransformer
 imageTag:
   name: ghcr.io/home-assistant/home-assistant

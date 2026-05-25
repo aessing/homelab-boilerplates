@@ -25,6 +25,7 @@ HomeAssistant/
 │   │       ├── objectstore.yaml      # Backup object storage
 │   │       └── scheduledbackup.yaml  # Backup schedule
 │   ├── _editor/                      # VS Code editor (code-server)
+│   ├── _historydb/                   # VictoriaMetrics history database
 │   ├── _homeassistant/               # Home Assistant core
 │   │   └── resources/
 │   │       └── multus.yaml           # Multi-network configuration
@@ -44,6 +45,7 @@ HomeAssistant/
 - **Multi-Network Support**: Multus CNI for IoT network access
 - **MQTT Broker**: Integrated Mosquitto for device communication
 - **Code Editor**: VS Code Server for configuration editing
+- **History Database**: VictoriaMetrics for long-term Home Assistant analytics
 - **PostgreSQL Backend**: Highly available database via CloudNativePG
 - **Automated Backups**: Scheduled database backups to S3
 - **TLS Encryption**: Secure connections via cert-manager
@@ -108,6 +110,13 @@ MQTT_PASSWORD=<your-secure-password>
 PASSWORD=<your-secure-password>
 ```
 
+**`secrets/secret-historydb-grafana-auth.env`** - Grafana access through Traefik:
+
+```dotenv
+username=grafana
+password=<your-secure-password>
+```
+
 ### 3. Configure Patches
 
 Edit the patch files in your overlay's `patches/` directory:
@@ -116,18 +125,22 @@ Edit the patch files in your overlay's `patches/` directory:
 |------------|---------|
 | `certificate-homeassistant.yaml` | TLS certificate for Home Assistant |
 | `certificate-editor.yaml` | TLS certificate for code editor |
+| `certificate-historydb.yaml` | TLS certificate for VictoriaMetrics |
 | `certificate-mqtt.yaml` | TLS certificate for MQTT |
 | `homeassistant-db.yaml` | Database instance count, PostgreSQL version, storage |
 | `homeassistant-db-objectstore.yaml` | S3 bucket and endpoint for backups |
 | `homeassistant-db-schedule.yaml` | Backup schedule (cron format) |
 | `ingressroute-homeassistant.yaml` | External hostname for Home Assistant |
 | `ingressroute-editor.yaml` | External hostname for code editor |
+| `ingressroute-historydb.yaml` | External hostname for Grafana access to VictoriaMetrics |
 | `multus-homeassistant.yaml` | Network interface for IoT access |
 | `network-policy.yaml` | Client IP ranges for access |
 | `pvc-homeassistant.yaml` | Home Assistant storage size |
 | `pvc-editor.yaml` | Code editor storage size |
+| `pvc-historydb.yaml` | VictoriaMetrics storage size |
 | `resource-quota.yaml` | Namespace pod and PVC limits |
 | `service-mqtt.yaml` | MQTT LoadBalancer IP address |
+| `statefulset-historydb.yaml` | VictoriaMetrics retention, memory cache, and free disk reserve |
 
 ### 4. Configure Multus
 
@@ -169,6 +182,7 @@ This application uses modular components:
 |-----------|-------------|
 | `_database` | PostgreSQL database via CloudNativePG |
 | `_editor` | VS Code Server for config editing |
+| `_historydb` | VictoriaMetrics history database for Grafana analytics |
 | `_homeassistant` | Home Assistant core with Multus networking |
 | `_mqtt` | Mosquitto MQTT broker |
 
@@ -177,10 +191,26 @@ Enable components in your overlay's `kustomization.yaml`:
 ```yaml
 components:
   - ../../components/_database
+  - ../../components/_historydb
   - ../../components/_homeassistant
   - ../../components/_mqtt
   - ../../components/_editor
 ```
+
+Configure Home Assistant's InfluxDB integration to write internally without authentication:
+
+```yaml
+influxdb:
+  api_version: 1
+  host: historydb
+  port: 8428
+  ssl: false
+  database: home_assistant
+  max_retries: 3
+  precision: s
+```
+
+Configure Grafana with the Prometheus data source URL `https://history.assistant.home.essing.org` and the BasicAuth credentials from `secret-historydb-grafana-auth.env`.
 
 ## Configuration
 
@@ -192,6 +222,10 @@ Replace these placeholders in the patch files:
 |-------------|------|-------------|
 | `###NAME_OF_ORGANISATION###` | `certificate-*.yaml` | Organization name for TLS cert |
 | `###FQDN_OF_APPLICATION###` | `certificate-*.yaml`, `ingressroute-*.yaml` | External domain names |
+| `###FQDN_OF_HISTORYDB###` | `certificate-historydb.yaml`, `ingressroute-historydb.yaml` | External VictoriaMetrics domain |
+| `###RETENTION_PERIOD###` | `statefulset-historydb.yaml` | VictoriaMetrics retention period |
+| `###MEMORY_ALLOWED_BYTES###` | `statefulset-historydb.yaml` | VictoriaMetrics cache budget |
+| `###MIN_FREE_DISK_SPACE###` | `statefulset-historydb.yaml` | Free disk reserve before writes stop |
 | `###INSTANCE_COUNT(3)###` | `homeassistant-db.yaml` | Number of database instances |
 | `###PGSQL_VERSION###` | `homeassistant-db.yaml` | PostgreSQL version (16, 17, 18) |
 | `###PVC_SIZE###` | `homeassistant-db.yaml` | Database storage size |
@@ -226,6 +260,12 @@ kubectl cnpg status homeassistant-database -n homeassistant
 kubectl logs -n homeassistant -l app.kubernetes.io/name=mosquitto
 ```
 
+### Check history database
+
+```bash
+kubectl logs -n homeassistant -l app.kubernetes.io/component=historydb
+```
+
 ### Access code editor
 
 Navigate to the editor URL configured in your ingress route to edit Home Assistant configuration files.
@@ -234,6 +274,7 @@ Navigate to the editor URL configured in your ingress route to edit Home Assista
 
 - [Home Assistant Documentation](https://www.home-assistant.io/docs/)
 - [Home Assistant Integrations](https://www.home-assistant.io/integrations/)
+- [VictoriaMetrics Documentation](https://docs.victoriametrics.com/victoriametrics/)
 - [Mosquitto Documentation](https://mosquitto.org/documentation/)
 - [CloudNativePG Documentation](https://cloudnative-pg.io/documentation/)
 - [Multus CNI Documentation](https://github.com/k8snetworkplumbingwg/multus-cni/blob/master/docs/README.md)

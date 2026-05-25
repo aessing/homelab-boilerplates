@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: historydb
+  labels:
+    app.kubernetes.io/component: 'historydb'
+spec:
+  selector:
+    app.kubernetes.io/component: 'historydb'
+  clusterIP: None
+  ports:
+    - protocol: TCP
+      port: 8428
+      targetPort: 8428
+      name: http
+  type: ClusterIP

@@ -19,6 +19,7 @@ resources:
 
 generators:
   - ./generators/secret-editor-user.yaml
+  - ./generators/secret-historydb-grafana-auth.yaml
   - ./generators/secret-mqtt-acl.yaml
   - ./generators/secret-mqtt-user.yaml
 
@@ -35,6 +36,12 @@ patches:
       version: v1
       kind: Certificate
       name: homeassistant
+  - path: ./patches/certificate-historydb.yaml
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+      name: historydb
   - path: ./patches/certificate-mqtt.yaml
     target:
       group: cert-manager.io
@@ -53,6 +60,12 @@ patches:
       version: v1alpha1
       kind: IngressRoute
       name: homeassistant
+  - path: ./patches/ingressroute-historydb.yaml
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+      name: historydb
   - path: ./patches/multus-homeassistant.yaml
     target:
       group: k8s.cni.cncf.io
@@ -71,6 +84,12 @@ patches:
       version: v1
       kind: StatefulSet
       name: homeassistant
+  - path: ./patches/pvc-historydb.yaml
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: historydb
   - path: ./patches/resource-quota.yaml
     target:
       version: v1
@@ -80,18 +99,19 @@ patches:
       version: v1
       kind: Service
       name: mqtt
-  - path: ./patches/statefulset-editor.yaml
+  - path: ./patches/statefulset-historydb.yaml
     target:
       group: apps
       version: v1
       kind: StatefulSet
-      name: editor
+      name: historydb
 
 transformers:
   # https://hub.docker.com/_/busybox
   # https://hub.docker.com/_/eclipse-mosquitto
   # https://github.com/linuxserver/docker-code-server
   # https://github.com/home-assistant/core
+  # https://github.com/VictoriaMetrics/VictoriaMetrics
   - ./transformers/images.yaml
   - ./transformers/labels.yaml
   - ./transformers/replicas.yaml

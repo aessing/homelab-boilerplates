@@ -1,0 +1,11 @@
+---
+- op: replace
+  path: /spec/template/spec/containers/0/args
+  value:
+    - -httpListenAddr=:8428
+    - -storageDataPath=/victoria-metrics-data
+    - -retentionPeriod=###RETENTION_PERIOD###
+    - -storage.minFreeDiskSpaceBytes=###MIN_FREE_DISK_SPACE###
+    - -influx.forceStreamMode
+    - -influx.databaseNames=homeassistant
+    - -loggerFormat=json

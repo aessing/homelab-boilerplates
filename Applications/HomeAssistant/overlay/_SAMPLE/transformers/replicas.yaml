@@ -23,6 +23,27 @@ fieldSpecs:
 apiVersion: builtin
 kind: ReplicaCountTransformer
 metadata:
+  name: historydb-replicatransformer
+replica:
+  name: historydb
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: true
+    kind: Deployment
+  - path: spec/replicas
+    create: true
+    kind: ReplicationController
+  - path: spec/replicas
+    create: true
+    kind: ReplicaSet
+  - path: spec/replicas
+    create: true
+    kind: StatefulSet
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
   name: homeassistant-replicatransformer
 replica:
   name: homeassistant

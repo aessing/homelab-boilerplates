@@ -4,15 +4,18 @@ kind: Kustomization
 
 resources:
   - ./resources/namespace.yaml
+  - ./resources/network-policy-application-to-historydb.yaml
   - ./resources/network-policy-application-to-mqtt.yaml
   - ./resources/network-policy-clients-to-mqtt.yaml
   - ./resources/network-policy-editor-to-application.yaml
   - ./resources/network-policy-editor-to-mqtt.yaml
   - ./resources/network-policy-traefik-to-application.yaml
   - ./resources/network-policy-traefik-to-editor.yaml
+  - ./resources/network-policy-traefik-to-historydb.yaml
   - ./resources/resource-quota.yaml
 
 components:
   - ../components/_editor
+  - ../components/_historydb
   - ../components/_homeassistant
   - ../components/_mqtt
