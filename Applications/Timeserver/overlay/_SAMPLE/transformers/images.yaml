@@ -5,7 +5,7 @@ metadata:
   name: timeserver-imagetransformer
 imageTag:
   name: ghcr.io/aessing/chronyd
-  newTag: 1.4.6
+  newTag: 1.4.7
 
 ---
 apiVersion: builtin
@@ -14,4 +14,4 @@ metadata:
   name: busybox-imagetransformer
 imageTag:
   name: busybox
-  newTag: 1.37.0
+  newTag: 1.38.0
