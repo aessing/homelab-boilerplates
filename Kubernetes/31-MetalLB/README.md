@@ -137,7 +137,7 @@ kind: Service
 metadata:
   name: my-service
   annotations:
-    metallb.universe.tf/address-pool: default-pool  # Optional: specify pool
+    metallb.io/address-pool: default-pool  # Optional: specify pool
     metallb.universe.tf/loadBalancerIPs: 192.168.1.200  # Optional: request specific IP
 spec:
   type: LoadBalancer

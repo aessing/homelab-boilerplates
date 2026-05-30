@@ -69,7 +69,7 @@ spec:
             metadata:
               name: postgres-database-rw-external
               annotations:
-                metallb.universe.tf/address-pool: default-pool
+                metallb.io/address-pool: default-pool
             spec:
               type: LoadBalancer
               loadBalancerIP: ###READ WRITE REPLICA LOAD BALANCER IP###
@@ -82,7 +82,7 @@ spec:
             metadata:
               name: postgres-database-ro-external
               annotations:
-                metallb.universe.tf/address-pool: default-pool
+                metallb.io/address-pool: default-pool
             spec:
               type: LoadBalancer
               loadBalancerIP: ###READ ONLY REPLICA LOAD BALANCER IP###
@@ -95,7 +95,7 @@ spec:
             metadata:
               name: postgres-database-r-external
               annotations:
-                metallb.universe.tf/address-pool: default-pool
+                metallb.io/address-pool: default-pool
             spec:
               type: LoadBalancer
               loadBalancerIP: ###REPLICA LOAD BALANCER IP###
