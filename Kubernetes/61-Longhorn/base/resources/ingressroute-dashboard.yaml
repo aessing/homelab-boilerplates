@@ -9,13 +9,24 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: CHANGE_ME
-      kind: Rule
+    # Authentik callback path - HIGHEST priority
+    - kind: Rule
+      match: "Host(`CHANGE_ME`) && PathPrefix(`/outpost.goauthentik.io/`)"
+      priority: 15
+      services:
+        - kind: Service
+          name: CHANGE_ME
+          namespace: authentik-outpost
+          port: 9000
+    # Main application (including /api/*) - WITH authentication
+    - kind: Rule
+      match: "Host(`CHANGE_ME`)"
       middlewares:
         - name: chain-admin
           namespace: traefik-system
-        - name: longhorn-dashboard-basicauth
-          namespace: longhorn-system
+        - name: CHANGE_ME
+          namespace: authentik-outpost
+      priority: 10
       services:
         - name: longhorn-frontend
           port: 80

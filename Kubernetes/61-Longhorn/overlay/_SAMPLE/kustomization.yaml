@@ -21,11 +21,9 @@ labels:
 
 resources:
   - ../../base
-  - ./resources/middleware-dashboard-auth.yaml
 
 generators:
-  - ./generators/secret-dashboard-auth.yaml
-  - ./generators/secret-azure-backup-store.yaml
+  - ./generators/secret-backblaze-backup-store.yaml
 
 patches:
   # https://github.com/longhorn/longhorn
@@ -87,10 +85,7 @@ patches:
       name: longhorn-job-trim-weekly
   - path: ./patches/namespace.yaml
     target:
-      name: longhorn-dashboard-basicauth
-  - path: ./patches/namespace.yaml
-    target:
-      name: longhorn-backup-secret-azure
+      name: longhorn-backup-secret-backblaze
   - path: ./patches/storageclass.yaml
     target:
       group: storage.k8s.io

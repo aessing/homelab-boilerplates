@@ -12,7 +12,6 @@ buildMetadata:
 
 resources:
   - ../../base
-  - ./resources/certificate-ldap.yaml
 
 components:
   - ../../components/_application

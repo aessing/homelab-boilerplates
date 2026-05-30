@@ -1,4 +1,15 @@
 ---
+# Real patch against base/resources/ingressroute-dashboard.yaml
+# Set the dashboard FQDN and the Authentik proxy outpost service name.
 - op: replace
   path: /spec/routes/0/match
+  value: "Host(`###FQDN_FOR_LONGHORN_DASHBOARD###`) && PathPrefix(`/outpost.goauthentik.io/`)"
+- op: replace
+  path: /spec/routes/0/services/0/name
+  value: "###AUTHENOUTIK_OUTPOST_SERVICE_NAME###"
+- op: replace
+  path: /spec/routes/1/match
   value: "Host(`###FQDN_FOR_LONGHORN_DASHBOARD###`)"
+- op: replace
+  path: /spec/routes/1/middlewares/1/name
+  value: "###AUTHENOUTIK_OUTPOST_SERVICE_NAME###"

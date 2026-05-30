@@ -137,8 +137,8 @@ systemctl enable --now iscsid
 
 echo ""
 echo " - Remove NFS hardening"
-rm /etc/modprobe.d/hardening-nfs.conf
-rm /etc/modprobe.d/hardening-nfsv4.conf
+rm -f /etc/modprobe.d/hardening-nfs.conf
+rm -f /etc/modprobe.d/hardening-nfsv4.conf
 
 echo ""
 echo " - Disable multipathing for local disks"

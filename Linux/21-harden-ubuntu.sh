@@ -25,7 +25,7 @@
 
 set -euo pipefail
 
-LOG_FILE="11-install-k3s.log"
+LOG_FILE="21-harden-ubuntu.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo ""
@@ -1041,7 +1041,7 @@ fi
 
 echo ""
 echo " - Create automatic logout variable TMOUT"
-if ! grep -q -i "TMOUT" "/etc/profile.d/*" 2> /dev/null; then
+if ! grep -rqi "TMOUT" /etc/profile.d/ 2> /dev/null; then
   echo -e 'TMOUT=600\nreadonly TMOUT\nexport TMOUT' > "$AUTOLOGOUT_SCRIPT"
   #chmod +x "$AUTOLOGOUT_SCRIPT"
 fi
@@ -1297,7 +1297,10 @@ mv /etc/ssh/moduli.tmp /etc/ssh/moduli
 
 echo ""
 echo " - Creating public key for Admin User"
+install -d -m 700 -o "$ADMIN_USER" -g "$ADMIN_USER" "/home/$ADMIN_USER/.ssh"
 echo "$ADMIN_PUBLICKEY" > "/home/$ADMIN_USER/.ssh/authorized_keys"
+chown "$ADMIN_USER:$ADMIN_USER" "/home/$ADMIN_USER/.ssh/authorized_keys"
+chmod 600 "/home/$ADMIN_USER/.ssh/authorized_keys"
 
 echo ""
 echo " - Creating a SSHD users group and adding admin user $ADMIN_USER"
@@ -1411,7 +1414,7 @@ done
 
 echo ""
 echo " - Enabling UFW"
-sed -i 's/IPV6=.*/IPV6=yes/' "$UFW_DEFAULT"
+sed -i 's/IPV6=.*/IPV6=no/' "$UFW_DEFAULT"
 sed -i 's/IPT_SYSCTL=.*/IPT_SYSCTL=\/etc\/sysctl\.conf/' "$UFW_DEFAULT"
 systemctl daemon-reload
 systemctl enable ufw.service
@@ -1524,7 +1527,7 @@ echo "# ------------------------------------------------------------------------
 
 echo ""
 echo " - Backing up original config files"
-CONFIG_FILES="$RESOLVED_CONF $RESOLVED_CONF"
+CONFIG_FILES="$RESOLVED_CONF"
 for CONFIG_FILE in $CONFIG_FILES
 do
   if [ -f "$CONFIG_FILE" ]; then
@@ -1866,7 +1869,7 @@ fi
 
 echo ""
 echo " - Generating random root password"
-ROOT_PASSWORD=$(tr -dc 'A-Za-z0-9!@#$%^&*()_+-=' < /dev/urandom | head -c 64)
+ROOT_PASSWORD=$(tr -dc 'A-Za-z0-9!@#$%^&*()_+-=' < /dev/urandom | head -c 64 || true)
 
 echo ""
 echo " - Changing root password"

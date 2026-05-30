@@ -36,8 +36,8 @@ spec:
       concurrentAutomaticEngineUpgradePerNodeLimit: '3'
       snapshotMaxCount: '60'
     defaultBackupStore:
-      backupTarget: '###AZURE_BLOB_STORAGE_URL###'
-      backupTargetCredentialSecret: 'longhorn-backup-secret-azure'
+      backupTarget: 's3://###S3_BUCKET_NAME###@###S3_REGION###/###ENVIRONMENT###'
+      backupTargetCredentialSecret: 'longhorn-backup-secret-backblaze'
       pollInterval: 0
     longhornUI:
       replicas: ###NUMBER_OF_REPLICAS(1)###

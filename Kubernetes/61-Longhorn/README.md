@@ -10,8 +10,11 @@ This folder contains Kustomize manifests for deploying [Longhorn](https://longho
 - K3s cluster with HelmChart CRD support
 - cert-manager for TLS certificate management
 - Traefik ingress controller for dashboard access
-- Azure Blob Storage account for backup storage (optional but recommended)
-- Authentik outpost for authentication (optional)
+- S3-compatible object storage (e.g. Backblaze B2) for backup storage (recommended)
+- Authentik outpost for dashboard authentication (recommended)
+
+> [!NOTE]
+> The `_SAMPLE` overlay reflects the deployed reality: **S3-compatible backups (Backblaze B2)** and **Authentik SSO** for the dashboard. Azure Blob Storage backups and Traefik Basic Auth are still supported — see [Alternatives](#alternatives).
 
 ### Install Requirements
 
@@ -84,8 +87,7 @@ Each overlay customizes:
 
 | Secret | Description |
 |--------|-------------|
-| `secret-azure-backup-store.env` | Azure Blob Storage credentials for backups |
-| `secret-dashboard-auth.env` | Basic auth credentials for dashboard (if enabled) |
+| `secret-backblaze-backup-store.env` | S3-compatible (Backblaze B2) credentials for backups |
 
 ## Usage
 
@@ -103,8 +105,8 @@ Each overlay customizes:
    - Job patches: Configure backup and maintenance schedules
 
 3. Configure secrets:
-   - `secret-azure-backup-store.env`: Add Azure credentials for backup storage
-   - `secret-dashboard-auth.env`: Set basic auth credentials (if using)
+   - `secret-backblaze-backup-store.env`: Add S3-compatible (Backblaze B2) credentials for backup storage
+   - `ingressroute-dashboard.yaml`: Replace `###ENVIRONMENT###` with the Authentik outpost name and `###FQDN_FOR_LONGHORN_DASHBOARD###` with the dashboard hostname
 
 4. Deploy with Kustomize:
 
@@ -127,19 +129,98 @@ Longhorn uses RecurringJobs to automate volume maintenance:
 
 ## Dashboard Access
 
-The Longhorn dashboard is accessible via Traefik IngressRoute at the configured hostname. Authentication is provided by:
-
-- Authentik proxy outpost (recommended for SSO)
-- Basic auth middleware (optional fallback)
+The Longhorn dashboard is accessible via Traefik IngressRoute at the configured hostname. By default it is protected by an **Authentik proxy outpost** (SSO): the `ingressroute-dashboard.yaml` patch routes the `/outpost.goauthentik.io/` callback to the outpost service and applies the `authentik-outpost-<environment>-proxy-outpost` forward-auth middleware (together with `chain-admin`). To use Traefik Basic Auth instead, see [Alternatives](#alternatives).
 
 ## Backup Storage
 
-This configuration uses Azure Blob Storage for backup storage. Configure the following in `secret-azure-backup-store.env`:
+By default this configuration backs up to **S3-compatible object storage (Backblaze B2)**. Configure the following in `secret-backblaze-backup-store.env`:
 
 ```env
-AZURE_STORAGE_ACCOUNT=<storage-account-name>
-AZURE_STORAGE_ACCESS_KEY=<access-key>
+AWS_ACCESS_KEY_ID=<key-id>
+AWS_ACCESS_KEY_NAME=<key-name>
+AWS_SECRET_ACCESS_KEY=<secret-key>
+AWS_ENDPOINTS=https://s3.<region>.backblazeb2.com
+AWS_REGION=<region>
+AWS_PATH_STYLE='true'
 ```
+
+The backup target itself is set in `helmchartconfig.yaml` (`defaultBackupStore.backupTarget`), e.g. `s3://<bucket>@<region>/<environment>`. To use Azure Blob Storage instead, see [Alternatives](#alternatives).
+
+## Alternatives
+
+The `_SAMPLE` overlay ships the S3/Backblaze + Authentik setup. The two original options are still fully supported — switch back as follows.
+
+### Azure Blob Storage backups (instead of S3/Backblaze)
+
+1. Create `generators/secret-azure-backup-store.yaml`:
+
+   ```yaml
+   ---
+   apiVersion: builtin
+   kind: SecretGenerator
+   metadata:
+     name: longhorn-backup-secret-azure
+   behavior: create
+   options:
+     disableNameSuffixHash: true
+     labels:
+       kustomize-base: overlay
+   envs:
+     - ./secrets/secret-azure-backup-store.env
+   ```
+
+2. Create `secrets/secret-azure-backup-store.env`:
+
+   ```env
+   AZBLOB_ACCOUNT_NAME=<storage-account-name>
+   AZBLOB_ACCOUNT_KEY=<account-shared-access-token>
+   ```
+
+3. In `kustomization.yaml`, swap the backup generator and its namespace patch target from `…-backblaze` to:
+
+   ```yaml
+   generators:
+     - ./generators/secret-azure-backup-store.yaml
+   # …
+     - path: ./patches/namespace.yaml
+       target:
+         name: longhorn-backup-secret-azure
+   ```
+
+4. In `patches/helmchartconfig.yaml`, point the backup store at Azure:
+
+   ```yaml
+   defaultBackupStore:
+     backupTarget: 'azblob://<container>@core.windows.net/'
+     backupTargetCredentialSecret: 'longhorn-backup-secret-azure'
+   ```
+
+### Traefik Basic Auth dashboard (instead of Authentik SSO)
+
+1. Create `resources/middleware-dashboard-auth.yaml`:
+
+   ```yaml
+   ---
+   apiVersion: traefik.io/v1alpha1
+   kind: Middleware
+   metadata:
+     name: longhorn-dashboard-basicauth
+   spec:
+     basicAuth:
+       secret: longhorn-dashboard-basicauth
+       removeHeader: true
+   ```
+
+2. Create `generators/secret-dashboard-auth.yaml` (a `SecretGenerator` named `longhorn-dashboard-basicauth`) and `secrets/secret-dashboard-auth.env`:
+
+   ```env
+   username=<username>
+   password=<htpasswd-or-token>
+   ```
+
+3. In `kustomization.yaml`, add the middleware resource, the secret generator, and a `namespace.yaml` patch targeting `longhorn-dashboard-basicauth`.
+
+4. Replace `patches/ingressroute-dashboard.yaml` with a route that uses the `chain-admin` and `longhorn-dashboard-basicauth` middlewares instead of the Authentik outpost (see the base `ingressroute-dashboard.yaml` for the basic-auth shape).
 
 ## Useful Commands
 
@@ -187,8 +268,8 @@ kubectl -n longhorn-system logs -l app=longhorn-manager
 # Check backup target status
 kubectl -n longhorn-system get settings backup-target
 
-# Check Azure secret
-kubectl -n longhorn-system get secret longhorn-backup-secret-azure
+# Check backup credential secret
+kubectl -n longhorn-system get secret longhorn-backup-secret-backblaze
 ```
 
 ### Node Preparation
