@@ -13,4 +13,4 @@ metadata:
   name: busybox-imagetransformer
 imageTag:
   name: busybox
-  newTag: 1.37.0
+  newTag: 1.38.0

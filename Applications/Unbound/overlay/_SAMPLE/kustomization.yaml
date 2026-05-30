@@ -27,7 +27,7 @@ patches:
       kind: ResourceQuota
 
 transformers:
-  # https://github.com/MatthewVance/unbound-docker/
+  # https://github.com/MatthewVance/unbound-docker-rpi/
   - ./transformers/images.yaml
   - ./transformers/labels.yaml
   - ./transformers/replicas.yaml

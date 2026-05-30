@@ -51,7 +51,7 @@ patches:
 transformers:
   # https://hub.docker.com/_/redis/
   # https://hub.docker.com/r/grafana/grafana-image-renderer
-  # https://hub.docker.com/r/grafana/grafana-oss/tags
+  # https://hub.docker.com/r/grafana/grafana/tags
   - ./transformers/images.yaml
   - ./transformers/labels.yaml
   - ./transformers/replicas.yaml

@@ -87,7 +87,7 @@ The script will:
 
 - Validate the environment file
 - Apply all hardening configurations
-- Log all actions to `11-install-k3s.log`
+- Log all actions to `21-harden-ubuntu.log`
 
 ### 4. Post-Installation Steps
 
@@ -298,7 +298,7 @@ journalctl -t upssched-cmd -f
 ### Check Script Logs
 
 ```bash
-cat 11-install-k3s.log
+cat 21-harden-ubuntu.log
 ```
 
 ### Verify SSH Configuration

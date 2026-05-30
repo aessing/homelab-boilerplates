@@ -220,7 +220,32 @@ The `_SAMPLE` overlay ships the S3/Backblaze + Authentik setup. The two original
 
 3. In `kustomization.yaml`, add the middleware resource, the secret generator, and a `namespace.yaml` patch targeting `longhorn-dashboard-basicauth`.
 
-4. Replace `patches/ingressroute-dashboard.yaml` with a route that uses the `chain-admin` and `longhorn-dashboard-basicauth` middlewares instead of the Authentik outpost (see the base `ingressroute-dashboard.yaml` for the basic-auth shape).
+4. Replace `patches/ingressroute-dashboard.yaml` so the dashboard route uses the `chain-admin` and `longhorn-dashboard-basicauth` middlewares instead of the Authentik proxy outpost, and drop the `/outpost.goauthentik.io/` callback route. The base (`base/resources/ingressroute-dashboard.yaml`) ships the Authentik shape, so the simplest approach is a full-resource patch defining a single route with the basic-auth middleware:
+
+   ```yaml
+   ---
+   apiVersion: traefik.io/v1alpha1
+   kind: IngressRoute
+   metadata:
+     name: longhorn-dashboard
+   spec:
+     entryPoints:
+       - websecure
+     routes:
+       - kind: Rule
+         match: "Host(`<fqdn>`)"
+         middlewares:
+           - name: chain-admin
+             namespace: traefik-system
+           - name: longhorn-dashboard-basicauth
+             namespace: longhorn-system
+         services:
+           - name: longhorn-frontend
+             port: 80
+             passHostHeader: true
+     tls:
+       secretName: longhorn-dashboard-certificate
+   ```
 
 ## Useful Commands
 
