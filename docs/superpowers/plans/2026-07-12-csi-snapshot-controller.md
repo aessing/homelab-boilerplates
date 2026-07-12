@@ -19,6 +19,7 @@
 - Make only `longhorn-delete` the default `VolumeSnapshotClass`.
 - Set `parameters.type: snap` on every Longhorn snapshot class.
 - Keep `_SAMPLE`, `admin01`, `apps01`, `apps02`, and `home01` structurally identical.
+- Preserve the repository ignore convention. Commit `_SAMPLE`, but keep `admin01`, `apps01`, `apps02`, and `home01` as local private overlays.
 - Every deployment apply command must include `--server-side`.
 - Do not use `--force-conflicts` without inspecting the ownership conflict first.
 - Process clusters in this exact order: `ADMIN01`, `APPS01`, `APPS02`, `HOME01`.
@@ -423,7 +424,7 @@ git add Kubernetes/62-CSI-SnapshotController docs/superpowers/plans/2026-07-12-c
 git commit -m "feat: restore Kubernetes CSI snapshot support"
 ```
 
-Expected: one commit containing only the new component and implementation plan.
+Expected: one commit containing the tracked base, `_SAMPLE`, README, and the updated implementation plan. Private overlays remain local and ignored.
 
 ---
 
