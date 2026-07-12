@@ -12,7 +12,7 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 2026.5.4 # The current version of the application
+      app.kubernetes.io/version: 2026.7.2 # The current version of the application
 
 resources:
   - ../../base
