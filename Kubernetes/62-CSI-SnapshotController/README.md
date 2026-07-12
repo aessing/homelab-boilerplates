@@ -104,7 +104,7 @@ kubectl --context ADMIN01 -n kube-system rollout status deployment/snapshot-cont
 kubectl --context ADMIN01 -n kube-system get deployment snapshot-controller -o wide
 kubectl --context ADMIN01 get volumesnapshotclass
 kubectl --context ADMIN01 -n kube-system logs deployment/snapshot-controller --all-pods=true --tail=200
-kubectl --context ADMIN01 -n longhorn-system logs daemonset/longhorn-csi-plugin -c csi-snapshotter --since=10m --tail=200
+kubectl --context ADMIN01 -n longhorn-system logs deployment/csi-snapshotter -c csi-snapshotter --all-pods=true --since=10m --tail=200
 ```
 
 Expected results:

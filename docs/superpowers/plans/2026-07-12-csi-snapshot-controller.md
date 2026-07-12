@@ -318,7 +318,7 @@ kubectl --context ADMIN01 -n kube-system rollout status deployment/snapshot-cont
 kubectl --context ADMIN01 get volumesnapshotclass
 kubectl --context ADMIN01 api-resources --api-group=snapshot.storage.k8s.io
 kubectl --context ADMIN01 -n kube-system logs deployment/snapshot-controller --all-pods=true --tail=200
-kubectl --context ADMIN01 -n longhorn-system logs daemonset/longhorn-csi-plugin -c csi-snapshotter --since=10m --tail=200
+kubectl --context ADMIN01 -n longhorn-system logs deployment/csi-snapshotter -c csi-snapshotter --all-pods=true --since=10m --tail=200
 ```
 
 ## Example VolumeSnapshot
@@ -450,7 +450,7 @@ Run read-only checks for each context before the first apply:
 ```bash
 for context in ADMIN01 APPS01 APPS02 HOME01; do
   kubectl --context "$context" api-resources --api-group=snapshot.storage.k8s.io
-  kubectl --context "$context" -n longhorn-system logs daemonset/longhorn-csi-plugin -c csi-snapshotter --since=10m --tail=100
+  kubectl --context "$context" -n longhorn-system logs deployment/csi-snapshotter -c csi-snapshotter --all-pods=true --since=10m --tail=100
 done
 ```
 
@@ -495,7 +495,7 @@ kubectl --context CONTEXT -n kube-system get deployment snapshot-controller -o j
 kubectl --context CONTEXT get volumesnapshotclass
 kubectl --context CONTEXT api-resources --api-group=snapshot.storage.k8s.io
 kubectl --context CONTEXT -n kube-system logs deployment/snapshot-controller --all-pods=true --since=10m --tail=200
-kubectl --context CONTEXT -n longhorn-system logs daemonset/longhorn-csi-plugin -c csi-snapshotter --since=5m --tail=200
+kubectl --context CONTEXT -n longhorn-system logs deployment/csi-snapshotter -c csi-snapshotter --all-pods=true --since=5m --tail=200
 ```
 
 Expected:
