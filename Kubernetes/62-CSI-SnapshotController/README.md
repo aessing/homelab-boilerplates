@@ -14,9 +14,9 @@ This folder deploys the Kubernetes CSI snapshot CRDs and the common snapshot con
 
 ## Components
 
-- Official external-snapshotter CRDs pinned to `v8.5.0`
+- Official external-snapshotter CRDs pinned to `v8.6.0`
 - Two common snapshot-controller replicas in `kube-system`
-- Controller image pinned to `registry.k8s.io/sig-storage/snapshot-controller:v8.5.0`
+- Controller image pinned to `registry.k8s.io/sig-storage/snapshot-controller:v8.6.0`
 - Three Longhorn `VolumeSnapshotClass` objects
 
 The upstream CRD bundle also installs the Volume Group Snapshot CRDs. Group snapshot behavior remains disabled because no feature gate or `VolumeGroupSnapshotClass` is configured.
@@ -111,7 +111,7 @@ Expected results:
 
 - Six snapshot CRDs are established.
 - The controller Deployment is `2/2` Available.
-- The controller image is `registry.k8s.io/sig-storage/snapshot-controller:v8.5.0`.
+- The controller image is `registry.k8s.io/sig-storage/snapshot-controller:v8.6.0`.
 - `longhorn-delete` is the only default `VolumeSnapshotClass`.
 - Controller and Longhorn CSI snapshotter logs contain no new missing-API, RBAC, leader-election, or reconciliation errors.
 
@@ -172,6 +172,6 @@ kubectl --context ADMIN01 get volumesnapshotclass -o custom-columns=NAME:.metada
 
 ## References
 
-- [Kubernetes CSI external-snapshotter v8.5.0](https://github.com/kubernetes-csi/external-snapshotter/releases/tag/v8.5.0)
+- [Kubernetes CSI external-snapshotter v8.6.0](https://github.com/kubernetes-csi/external-snapshotter/releases/tag/v8.6.0)
 - [Longhorn CSI Snapshot Support](https://longhorn.io/docs/1.12.0/snapshots-and-backups/csi-snapshot-support/enable-csi-snapshot-support/)
 - [Kubernetes Volume Snapshots](https://kubernetes.io/docs/concepts/storage/volume-snapshots/)
