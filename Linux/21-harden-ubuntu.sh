@@ -1375,12 +1375,12 @@ echo "# IPV6 ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
-echo " - Disable IPv6"
+echo " - Enable IPv6"
 if [[ -f /boot/firmware/cmdline.txt ]]; then
-  sed -i 's/^console=serial0,115200.*/& ipv6.disable=1/g' /boot/firmware/cmdline.txt
+  sed -i -E 's/(^|[[:space:]])ipv6\.disable=1([[:space:]]|$)/\1ipv6.disable=0\2/g' /boot/firmware/cmdline.txt
 else
-  if ! grep -q 'ipv6.disable=1' /proc/cmdline; then
-    echo "GRUB_CMDLINE_LINUX=\"\$GRUB_CMDLINE_LINUX ipv6.disable=1\"" > "$GRUB_DEFAULT/99-hardening-ipv6.cfg"
+  if ! grep -q 'ipv6.disable=0' /proc/cmdline; then
+    echo "GRUB_CMDLINE_LINUX=\"\$GRUB_CMDLINE_LINUX ipv6.disable=0\"" > "$GRUB_DEFAULT/99-hardening-ipv6.cfg"
     update-grub
   fi
 fi

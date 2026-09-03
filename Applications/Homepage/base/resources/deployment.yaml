@@ -68,6 +68,9 @@ spec:
               path: /
               port: http
               scheme: HTTP
+              httpHeaders:
+                - name: Host
+                  value: gethomepage.dev
             initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 2
@@ -78,6 +81,9 @@ spec:
               path: /
               port: http
               scheme: HTTP
+              httpHeaders:
+                - name: Host
+                  value: gethomepage.dev
             initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 2
@@ -88,6 +94,9 @@ spec:
               path: /
               port: http
               scheme: HTTP
+              httpHeaders:
+                - name: Host
+                  value: gethomepage.dev
             initialDelaySeconds: 30
             periodSeconds: 60
             timeoutSeconds: 2

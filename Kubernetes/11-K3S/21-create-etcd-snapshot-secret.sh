@@ -130,7 +130,7 @@ echo "# ------------------------------------------------------------------------
 
 echo ""
 echo " - Creating secret for etcd snapshot S3 configuration in kube-system namespace"
-cat <<EOF | kubectl apply -f -
+cat <<EOF | kubectl apply --server-side -f -
 apiVersion: v1
 kind: Secret
 metadata:

@@ -1,0 +1,19 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/component: storage-controller
+      app.kubernetes.io/instance: csi-snapshot-controller
+      app.kubernetes.io/name: csi-snapshot-controller
+      app.kubernetes.io/part-of: system-services
+      app.kubernetes.io/version: 8.6.0
+
+resources:
+  - ../../base
