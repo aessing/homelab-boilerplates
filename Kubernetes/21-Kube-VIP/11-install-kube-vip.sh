@@ -180,7 +180,7 @@ echo "# ------------------------------------------------------------------------
 
 echo ""
 echo " - Apply RBAC rules"
-kubectl apply -f https://kube-vip.io/manifests/rbac.yaml
+kubectl apply --server-side -f https://kube-vip.io/manifests/rbac.yaml
 
 echo ""
 echo " - Download kube-vip image"
@@ -196,7 +196,7 @@ k3s ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:"$KVVERSION" vip /kube-vip
   --taint \
   --controlplane \
   --arp \
-  --leaderElection | kubectl apply -f -
+  --leaderElection | kubectl apply --server-side -f -
 
 echo ""
 echo " - Deleting kube-vip image"
