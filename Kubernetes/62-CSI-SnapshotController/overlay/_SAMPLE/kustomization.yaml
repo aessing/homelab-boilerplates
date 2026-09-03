@@ -13,7 +13,7 @@ labels:
       app.kubernetes.io/instance: csi-snapshot-controller
       app.kubernetes.io/name: csi-snapshot-controller
       app.kubernetes.io/part-of: system-services
-      app.kubernetes.io/version: 8.5.0
+      app.kubernetes.io/version: 8.6.0
 
 resources:
   - ../../base

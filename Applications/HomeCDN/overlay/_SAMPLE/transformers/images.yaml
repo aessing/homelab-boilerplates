@@ -5,4 +5,4 @@ metadata:
   name: homecdn-imagetransformer
 imageTag:
   name: nginxinc/nginx-unprivileged
-  newTag: 1.31.3
+  newTag: 1.31.4
