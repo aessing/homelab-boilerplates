@@ -24,6 +24,9 @@
 # JetBrains IDEs
 .idea/
 
+# Local Git worktrees
+.worktrees/
+
 # ----------------------------- macOS ----------------------------- #
 # General
 .DS_Store

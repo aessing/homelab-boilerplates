@@ -23,9 +23,8 @@ spec:
         enabled: true
         publishedService:
           enabled: false
-    logs:
-      general:
-        level: INFO
+    log:
+      level: INFO
     metrics:
       prometheus:
         addEntryPointsLabels: true
