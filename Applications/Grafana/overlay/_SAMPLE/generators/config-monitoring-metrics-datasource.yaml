@@ -1,0 +1,13 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-metrics-datasource
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: application
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - monitoring-metrics.yaml=./configs/monitoring-metrics.yaml

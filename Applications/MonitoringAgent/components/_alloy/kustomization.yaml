@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: alloy-config
+    behavior: create
+    options:
+      labels:
+        app.kubernetes.io/component: alloy
+      annotations:
+        reloader.stakater.com/match: 'false'
+    files:
+      - 00-main.alloy=./configs/00-main.alloy
+      - 10-infrastructure.alloy=./configs/10-infrastructure.alloy
+      - 20-metric-filters.alloy=./configs/20-metric-filters.alloy
+      - 30-infrastructure-filters.alloy=./configs/30-infrastructure-filters.alloy
+
+resources:
+  - ./resources/serviceaccount.yaml
+  - ./resources/clusterrole.yaml
+  - ./resources/clusterrolebinding.yaml
+  - ./resources/service.yaml
+  - ./resources/statefulset.yaml

@@ -1,0 +1,302 @@
+discovery.kubernetes "infrastructure_pods" {
+  role = "pod"
+}
+
+discovery.relabel "infrastructure_http" {
+  targets = discovery.kubernetes.infrastructure_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Running"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_label_app_kubernetes_io_name", "__meta_kubernetes_pod_label_app", "__meta_kubernetes_pod_label_k8s_app", "__meta_kubernetes_pod_container_port_number"]
+    regex         = "(kube-system;;;kube-dns;9153|kube-system;snapshot-controller;;;8080|certmgr-system;(cert-manager|cainjector|webhook);.*;;9402|certmgr-system;trust-manager;.*;;9402|traefik-system;traefik;.*;;9100|longhorn-system;longhorn;longhorn-manager;;9500|longhorn-system;.*;csi-(attacher|provisioner|resizer|snapshotter);;8000|reloader-system;reloader;.*;;9090|cnpg-system;cloudnative-pg;.*;;8080)"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "instance"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+    regex         = "(.+)"
+    target_label  = "component"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app"]
+    regex         = "(.+)"
+    target_label  = "component"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_k8s_app"]
+    regex         = "(.+)"
+    target_label  = "component"
+  }
+}
+
+prometheus.scrape "infrastructure_http" {
+  targets         = discovery.relabel.infrastructure_http.output
+  job_name        = "kubernetes-infrastructure"
+  scrape_interval = sys.env("SLOW_SCRAPE_INTERVAL")
+  scrape_timeout  = "20s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}
+
+discovery.relabel "cloudnativepg_instances" {
+  targets = discovery.kubernetes.infrastructure_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Running"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name", "__meta_kubernetes_pod_label_app_kubernetes_io_managed_by", "__meta_kubernetes_pod_container_port_number"]
+    regex         = "postgresql;cloudnative-pg;9187"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_cnpg_io_cluster"]
+    target_label  = "cnpg_cluster"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_cnpg_io_instanceName"]
+    target_label  = "cnpg_instance"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_cnpg_io_instanceRole"]
+    target_label  = "cnpg_role"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "instance"
+  }
+}
+
+prometheus.scrape "cloudnativepg_instances" {
+  targets         = discovery.relabel.cloudnativepg_instances.output
+  job_name        = "cloudnativepg-instances"
+  scrape_interval = sys.env("SLOW_SCRAPE_INTERVAL")
+  scrape_timeout  = "20s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}
+
+discovery.kubernetes "kube_vip_pods" {
+  role = "pod"
+
+  selectors {
+    role  = "pod"
+    label = "app.kubernetes.io/name=kube-vip-ds"
+  }
+
+  namespaces {
+    names = ["kube-system"]
+  }
+}
+
+discovery.relabel "kube_vip" {
+  targets = discovery.kubernetes.kube_vip_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Running"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_host_ip"]
+    regex         = "(.+)"
+    replacement   = "$1:2112"
+    target_label  = "__address__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "instance"
+  }
+}
+
+prometheus.scrape "kube_vip" {
+  targets         = discovery.relabel.kube_vip.output
+  job_name        = "kube-vip"
+  scrape_interval = sys.env("SLOW_SCRAPE_INTERVAL")
+  scrape_timeout  = "20s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}
+
+discovery.relabel "metrics_server" {
+  targets = discovery.kubernetes.infrastructure_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Running"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_label_k8s_app", "__meta_kubernetes_pod_container_port_name"]
+    regex         = "kube-system;metrics-server;https"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "instance"
+  }
+
+  rule {
+    replacement  = "metrics-server"
+    target_label = "component"
+  }
+}
+
+prometheus.scrape "metrics_server" {
+  targets         = discovery.relabel.metrics_server.output
+  job_name        = "metrics-server"
+  scheme          = "https"
+  scrape_interval = sys.env("SLOW_SCRAPE_INTERVAL")
+  scrape_timeout  = "20s"
+  forward_to      = [prometheus.relabel.metrics_server.receiver]
+
+  authorization {
+    type             = "Bearer"
+    credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  }
+
+  tls_config {
+    insecure_skip_verify = true
+    min_version          = "TLS12"
+  }
+}
+
+discovery.relabel "metallb" {
+  targets = discovery.kubernetes.infrastructure_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Running"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_label_app_kubernetes_io_name", "__meta_kubernetes_pod_label_app_kubernetes_io_instance", "__meta_kubernetes_pod_container_port_name"]
+    regex         = "metallb-system;metallb;metallb;metricshttps"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+    target_label  = "component"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "instance"
+  }
+}
+
+prometheus.scrape "metallb" {
+  targets         = discovery.relabel.metallb.output
+  job_name        = "metallb"
+  scheme          = "https"
+  scrape_interval = sys.env("SLOW_SCRAPE_INTERVAL")
+  scrape_timeout  = "20s"
+  forward_to      = [prometheus.relabel.metallb.receiver]
+
+  authorization {
+    type             = "Bearer"
+    credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  }
+
+  tls_config {
+    insecure_skip_verify = true
+    min_version          = "TLS12"
+  }
+}

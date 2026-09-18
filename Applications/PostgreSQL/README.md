@@ -21,6 +21,7 @@ PostgreSQL/
 │       ├── network-policy-cnpg.yaml       # Network policy for CNPG operator
 │       ├── network-policy-instance.yaml   # Network policy between instances
 │       ├── network-policy-kubeproxy.yaml  # Network policy for kube-proxy
+│       ├── network-policy-monitoring.yaml # Metrics access from MonitoringAgent
 │       ├── object-store.yaml         # S3-compatible backup storage config
 │       ├── resource-quota.yaml       # Namespace resource quotas
 │       └── scheduled-backup.yaml     # Automated backup schedule
@@ -206,6 +207,27 @@ REVOKE CONNECT ON DATABASE <database_name> FROM PUBLIC;
 GRANT CONNECT ON DATABASE <database_name> TO <role_name>;
 ```
 
+### Monitoring permissions after initialization
+
+Recent CNPG versions use the restricted `cnpg_metrics_exporter` role rather
+than the PostgreSQL superuser. The bootstrap configuration revokes `PUBLIC`
+connection rights on `postgres` and `initdb`. After the cluster is ready and
+CNPG has created the exporter role, run the included idempotent SQL on the
+current writable primary:
+
+```bash
+kubectl --context <context> -n <namespace> exec -i <primary-pod> -c postgres -- \
+  psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < sql/monitoring-permissions.sql
+```
+
+This grants only `CONNECT` on the two system/bootstrap databases. It does not
+grant application-table access or additional role memberships. Keep CNPG's
+existing `pg_monitor` membership unchanged. If custom queries explicitly target
+other restricted databases, review and grant their required access separately.
+Do not put the grant into bootstrap SQL without verifying role creation order.
+An HTTP-successful scrape (`up=1`) alone does not prove the SQL collectors work.
+Check `cnpg_collector_up`, collection errors and actual `cnpg_pg_*` metrics.
+
 ## Network Policies
 
 The deployment includes several network policies for security:
@@ -214,6 +236,8 @@ The deployment includes several network policies for security:
 - **cnpg**: Allows CNPG operator communication
 - **instance**: Allows communication between PostgreSQL instances
 - **kubeproxy**: Allows health checks from kube-proxy
+- **monitoring-to-database-metrics**: Allows the MonitoringAgent Alloy Pod to
+  scrape the instance-manager metrics endpoint on TCP 9187
 
 Customize `patches/network-policy-clients.yaml` to define your allowed client IP ranges.
 

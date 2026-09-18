@@ -148,6 +148,12 @@ The `_SAMPLE.env` file contains all configurable parameters. Copy it and customi
 | `SSH_GROUP` | Group allowed SSH access | `sshd_users` |
 | `SSH_PORT` | SSH listen port | `22` or custom port |
 
+### Monitoring Firewall Configuration
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `MONITORING_CLUSTER_NODE_IPS` | Same-cluster node IPs allowed to scrape node-exporter on TCP 9100, kube-vip on TCP 2112 and MetalLB speaker on TCP 9120 | `192.0.2.11 192.0.2.12 192.0.2.13` |
+
 ### Login Banner Configuration
 
 | Variable | Description |
@@ -223,6 +229,7 @@ sudo ./21-harden-ubuntu.sh <server-name>
 - Enables UFW with deny-all default
 - Configures logging for PSAD integration
 - Allows SSH from specified admin IPs only
+- Optionally allows same-cluster nodes to scrape node-exporter, kube-vip and MetalLB speaker metrics
 - Configures TCP wrapper (hosts.allow/deny)
 
 #### System Security

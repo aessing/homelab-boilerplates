@@ -1,0 +1,1790 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(87, 148, 242, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Separate logical PVC use, Longhorn physical allocation, volume health and backup freshness.",
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "monitoring"
+      ],
+      "targetBlank": false,
+      "title": "Monitoring dashboards",
+      "tooltip": "Open another monitoring dashboard",
+      "type": "dashboards"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "description": "Dashboard purpose, navigation guidance and data-state semantics.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 18,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "Separate logical PVC use, Longhorn physical allocation, volume health and backup freshness.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "13.2.2",
+      "title": "About this dashboard",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Age of the oldest currently returned target sample. A missing result is N/A.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 90
+              },
+              {
+                "color": "red",
+                "value": 180
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max(clamp_min(time() - timestamp(up{cluster=~\"$cluster\"}), 0))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "15s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Oldest observed target sample",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "PVCs not currently Bound.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(kube_persistentvolumeclaim_status_phase{cluster=~\"$cluster\",namespace=~\"$namespace\",persistentvolumeclaim=~\"$pvc\",phase!=\"Bound\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Unbound PVCs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Active Longhorn degraded/faulted one-hot states.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(longhorn_volume_robustness{cluster=~\"$cluster\",pvc_namespace=~\"$namespace\",pvc=~\"$pvc\",robustness=~\"degraded|faulted\"} == 1)",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Degraded or faulted volumes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Current VolumeAttachment objects not attached.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "count(kube_volumeattachment_status_attached{cluster=~\"$cluster\"}) - sum(kube_volumeattachment_status_attached{cluster=~\"$cluster\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Volume attachments not attached",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Deduplicated logical filesystem usage, fullest volume first.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 6,
+      "options": {
+        "displayMode": "gradient",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {},
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sort_desc(100 * max by (cluster, namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes{job=\"kubelet\",cluster=~\"$cluster\",namespace=~\"$namespace\",persistentvolumeclaim=~\"$pvc\"}) / max by (cluster, namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes{job=\"kubelet\",cluster=~\"$cluster\",namespace=~\"$namespace\",persistentvolumeclaim=~\"$pvc\"}))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "{{cluster}} {{namespace}} {{node}} {{pod}} {{persistentvolumeclaim}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "PVC filesystem used",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Logical filesystem bytes from kubelet.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes{job=\"kubelet\",cluster=~\"$cluster\",namespace=~\"$namespace\",persistentvolumeclaim=~\"$pvc\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "60s",
+          "legendFormat": "used {{persistentvolumeclaim}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes{job=\"kubelet\",cluster=~\"$cluster\",namespace=~\"$namespace\",persistentvolumeclaim=~\"$pvc\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "60s",
+          "legendFormat": "available {{persistentvolumeclaim}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "PVC used and available bytes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Longhorn logical capacity versus physical allocation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, pvc_namespace, pvc, volume) (longhorn_volume_capacity_bytes{cluster=~\"$cluster\",pvc_namespace=~\"$namespace\",pvc=~\"$pvc\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "60s",
+          "legendFormat": "capacity {{pvc}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, pvc_namespace, pvc, volume) (longhorn_volume_actual_size_bytes{cluster=~\"$cluster\",pvc_namespace=~\"$namespace\",pvc=~\"$pvc\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "60s",
+          "legendFormat": "actual {{pvc}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Longhorn volume sizes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Longhorn volume throughput.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, pvc_namespace, pvc, volume) (longhorn_volume_read_throughput{cluster=~\"$cluster\",pvc_namespace=~\"$namespace\",pvc=~\"$pvc\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "60s",
+          "legendFormat": "read {{pvc}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, pvc_namespace, pvc, volume) (longhorn_volume_write_throughput{cluster=~\"$cluster\",pvc_namespace=~\"$namespace\",pvc=~\"$pvc\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "60s",
+          "legendFormat": "write {{pvc}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Longhorn I/O",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Longhorn engine read and write latency, converted from nanoseconds to seconds. This is volume I/O latency, not replica synchronization lag.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 23
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, pvc_namespace, pvc, volume) (longhorn_volume_read_latency{cluster=~\"$cluster\",pvc_namespace=~\"$namespace\",pvc=~\"$pvc\"}) / 1000000000",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "read {{cluster}} {{pvc}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, pvc_namespace, pvc, volume) (longhorn_volume_write_latency{cluster=~\"$cluster\",pvc_namespace=~\"$namespace\",pvc=~\"$pvc\"}) / 1000000000",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "write {{cluster}} {{pvc}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Longhorn volume I/O latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Active one-hot volume state. Interpret the textual state label, not the numeric one-hot value.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, pvc_namespace, pvc, volume, state) (longhorn_volume_state{cluster=~\"$cluster\",pvc_namespace=~\"$namespace\",pvc=~\"$pvc\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Longhorn volume state",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Physical Longhorn node storage utilization.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * max by (cluster, exported_node) (longhorn_node_storage_usage_bytes{cluster=~\"$cluster\"}) / clamp_min(max by (cluster, exported_node) (longhorn_node_storage_capacity_bytes{cluster=~\"$cluster\"}), 1)",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Longhorn node storage",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Controller errors in the selected range. Nonzero counts are review signals.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open controller diagnostics",
+              "url": "/d/mon-platform?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-component=${__data.fields.component}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, component, controller) (increase(controller_runtime_reconcile_errors_total{cluster=~\"$cluster\",component=~\"longhorn.*|snapshot.*\"}[$__range]))",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Storage controller reconcile errors",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Active one-hot replica states. Interpret the state label rather than treating every value of one as healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 55
+      },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, volume, replica, state) (longhorn_replica_state{cluster=~\"$cluster\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Longhorn replica state",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Current replica rebuild percentage where a rebuild is active.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 63
+      },
+      "id": 15,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, volume, replica) (longhorn_engine_rebuild_progress{cluster=~\"$cluster\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Longhorn rebuild progress",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Largest current Longhorn snapshots by actual size, enriched with PVC namespace and name.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 71
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "topk(25, longhorn_snapshot_actual_size_bytes{cluster=~\"$cluster\"} * on(cluster, volume) group_left(pvc_namespace, pvc) (max by (cluster, volume, pvc_namespace, pvc) (longhorn_volume_capacity_bytes{cluster=~\"$cluster\",pvc_namespace=~\"$namespace\",pvc=~\"$pvc\"}) > bool 0))",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Longhorn snapshot overview",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Hours since the last exported Longhorn volume backup timestamp. Volumes without a backup timestamp remain absent.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 79
+      },
+      "id": 17,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "(time() - max by (cluster, pvc_namespace, pvc, volume) (longhorn_volume_last_backup_at{cluster=~\"$cluster\",pvc_namespace=~\"$namespace\",pvc=~\"$pvc\"} > 0)) / 3600",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Last Longhorn backup age",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Backup state codes exported by Longhorn. Completed is healthy history; Error requires review.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "New"
+                },
+                "1": {
+                  "text": "Pending"
+                },
+                "2": {
+                  "text": "In progress"
+                },
+                "3": {
+                  "text": "Completed"
+                },
+                "4": {
+                  "text": "Error"
+                },
+                "5": {
+                  "text": "Unknown"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 87
+      },
+      "id": 18,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, volume, backup, recurring_job) (longhorn_backup_state{cluster=~\"$cluster\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Longhorn backup state",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "tags": [
+    "monitoring",
+    "metrics",
+    "infrastructure"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(up, cluster)",
+        "description": "Filter by cluster",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": true,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(kube_persistentvolumeclaim_info{cluster=~\"$cluster\"}, namespace)",
+        "description": "Filter by namespace",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Namespace",
+        "multi": true,
+        "name": "namespace",
+        "options": [],
+        "query": {
+          "query": "label_values(kube_persistentvolumeclaim_info{cluster=~\"$cluster\"}, namespace)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(kube_persistentvolumeclaim_info{cluster=~\"$cluster\",namespace=~\"$namespace\"}, persistentvolumeclaim)",
+        "description": "Filter by pvc",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Pvc",
+        "multi": true,
+        "name": "pvc",
+        "options": [],
+        "query": {
+          "query": "label_values(kube_persistentvolumeclaim_info{cluster=~\"$cluster\",namespace=~\"$namespace\"}, persistentvolumeclaim)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "5m",
+      "15m"
+    ],
+    "time_options": [
+      "1h",
+      "3h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d",
+      "90d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Storage and Longhorn",
+  "uid": "mon-storage",
+  "version": 1,
+  "weekStart": "monday"
+}

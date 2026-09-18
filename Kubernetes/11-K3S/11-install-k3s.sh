@@ -321,6 +321,14 @@ if exists_in_list "$K3S_NODES_SERVERS" " " "$SERVERIP"; then
       ufw allow from "$ip" to any port 2379:2380 proto tcp comment 'ETCD TCP - Server Nodes'
     done
   fi
+
+  if [[ "${K3S_ETCD_EXPOSE_METRICS:-false}" == "true" ]]; then
+    echo ""
+    echo " - Allow cluster nodes to scrape embedded etcd metrics"
+    for ip in $K3S_NODES_ALL; do
+      ufw allow from "$ip" to any port 2381 proto tcp comment 'ETCD metrics - Cluster nodes'
+    done
+  fi
 fi
 
 echo ""
@@ -423,8 +431,12 @@ if exists_in_list "$K3S_NODES_SERVERS" " " "$SERVERIP"; then
   fi
 
   # Database options
+  if [[ "${K3S_ETCD_EXPOSE_METRICS:-false}" == "true" ]]; then
+    echo "etcd-expose-metrics: true" >> "$K3S_CONF"
+  else
+    echo "etcd-expose-metrics: false" >> "$K3S_CONF"
+  fi
   {
-    echo "etcd-expose-metrics: false"
     echo "etcd-snapshot-retention: $K3S_ETCD_SNAPSHOT_RETENTION"
     echo "etcd-snapshot-schedule-cron: \"$K3S_ETCD_SNAPSHOT_SCHEDULE_CRON\""
     echo "etcd-s3: $K3S_ETCD_SNAPSHOT_S3_ENABLED"

@@ -10,6 +10,7 @@ resources:
   - ./resources/network-policy-cnpg.yaml
   - ./resources/network-policy-instance.yaml
   - ./resources/network-policy-kubeproxy.yaml
+  - ./resources/network-policy-monitoring.yaml
   - ./resources/object-store.yaml
   - ./resources/resource-quota.yaml
   - ./resources/scheduled-backup.yaml

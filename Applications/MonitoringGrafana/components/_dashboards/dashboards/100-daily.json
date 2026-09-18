@@ -1,0 +1,1415 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(87, 148, 242, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Review the previous completed day. Values describe observed samples and counter changes, not an application SLO or event archive.",
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "monitoring"
+      ],
+      "targetBlank": false,
+      "title": "Monitoring dashboards",
+      "tooltip": "Open another monitoring dashboard",
+      "type": "dashboards"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "description": "Dashboard purpose, navigation guidance and data-state semantics.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 18,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "Review the previous completed day. Values describe observed samples and counter changes, not an application SLO or event archive.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "13.2.2",
+      "title": "About this dashboard",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Age of the oldest currently returned target sample. A missing result is N/A.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 90
+              },
+              {
+                "color": "red",
+                "value": 180
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max(clamp_min(time() - timestamp(up{cluster=~\"$cluster\"}), 0))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "15s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Oldest observed target sample",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Average observed target scrape state over the selected completed day. Green starts at 99.5%.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99.5
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * avg(avg_over_time(up{cluster=~\"$cluster\"}[$__range]))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Observed target availability",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Restart counter increase in the selected period. One to four is a warning, five or more is critical.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(kube_pod_container_status_restarts_total{cluster=~\"$cluster\"}[$__range]))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Pod restarts",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "API server 5xx responses in the selected period. One to four is a warning, five or more is critical.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(apiserver_request_total{cluster=~\"$cluster\",code=~\"5..\"}[$__range]))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "API 5xx responses",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Native etcd leader changes in the selected period. A nonzero count is a review signal.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(etcd_server_leader_changes_seen_total{job=\"etcd\",cluster=~\"$cluster\"}[$__range]))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "etcd leader changes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Observed scrape availability, smallest value first. Missing periods remain unknown.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * avg by (cluster, job) (avg_over_time(up{cluster=~\"$cluster\"}[$__range]))",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Target availability by cluster and job",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Largest restart increases in the selected period.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short",
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open Pod diagnostics",
+              "url": "/d/mon-pod?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.namespace}&var-pod=${__data.fields.pod}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "topk(20, sum by (cluster, namespace, pod, container) (increase(kube_pod_container_status_restarts_total{cluster=~\"$cluster\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Pod restart increases",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "API error responses during the selected period. Small counts are warnings because expected client errors can occur.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, code, verb, resource) (increase(apiserver_request_total{cluster=~\"$cluster\",code=~\"4..|5..\"}[$__range]))",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "API errors",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "DNS non-NOERROR and ingress 4xx/5xx counts as separate findings. Small counts are warnings.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(sum by (cluster, rcode) (increase(coredns_dns_responses_total{cluster=~\"$cluster\",rcode!=\"NOERROR\"}[$__range])), \"source\", \"CoreDNS\", \"\", \"\") or label_replace(sum by (cluster, code) (increase(traefik_service_requests_total{cluster=~\"$cluster\",code=~\"4..|5..\"}[$__range])), \"source\", \"Traefik\", \"\", \"\")",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "DNS and ingress errors",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Current end-of-period Longhorn findings. This is not a reconstructed incident history.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open storage diagnostics",
+              "url": "/d/mon-storage?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.pvc_namespace}&var-pvc=${__data.fields.pvc}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, pvc_namespace, pvc, volume, robustness) (longhorn_volume_robustness{cluster=~\"$cluster\",robustness=~\"degraded|faulted\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Storage findings",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "End-of-period age of latest successful CNPG backup. Old failed objects are not daily failures.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "h",
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open PostgreSQL diagnostics",
+              "url": "/d/mon-postgres?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.namespace}&var-cnpg_cluster=${__data.fields.cnpg_cluster}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "(time() - max by (cluster, namespace, cnpg_cluster) (cnpg_resource_backup_last_success_timestamp_seconds{cluster=~\"$cluster\"})) / 3600",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "PostgreSQL backup freshness",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Hours since the latest exported Longhorn volume backup. Volumes without a backup timestamp remain absent rather than appearing extremely old.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 56
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "(time() - max by (cluster, pvc_namespace, pvc, volume) (longhorn_volume_last_backup_at{cluster=~\"$cluster\"} > 0)) / 3600",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Longhorn backup freshness",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Largest current Longhorn snapshots by actual size. System snapshots can exist even when they were not created manually.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 64
+      },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "topk(25, max by (cluster, volume, snapshot, user_created) (longhorn_snapshot_actual_size_bytes{cluster=~\"$cluster\"}))",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Longhorn snapshot overview",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "End-of-period certificate lifetime, shortest lifetime first.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 7
+              },
+              {
+                "color": "green",
+                "value": 14
+              }
+            ]
+          },
+          "unit": "d"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 72
+      },
+      "id": 15,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "(min by (cluster, exported_namespace, name) (certmanager_certificate_expiration_timestamp_seconds{cluster=~\"$cluster\"}) - time()) / 86400",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Certificate lifetime",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Top sampled Pod CPU rates near the period end. This is not the day's maximum.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "cores"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 80
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "topk(20, sum by (cluster, namespace, pod) (rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\",container!=\"\",container!=\"POD\"}[$__rate_interval])))",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Top CPU consumers",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 41,
+  "tags": [
+    "monitoring",
+    "metrics",
+    "infrastructure"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(up, cluster)",
+        "description": "Filter by cluster",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": true,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1d/d",
+    "to": "now/d"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "5m",
+      "15m"
+    ],
+    "time_options": [
+      "1h",
+      "3h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d",
+      "90d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Daily Review",
+  "uid": "mon-daily",
+  "version": 1,
+  "weekStart": "monday"
+}

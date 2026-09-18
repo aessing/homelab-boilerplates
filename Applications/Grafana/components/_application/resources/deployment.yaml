@@ -45,7 +45,7 @@ spec:
               memory: 256Mi
             limits:
               cpu: 1
-              memory: 512Mi
+              memory: 2Gi
           env:
             - name: POD_IP
               valueFrom:
@@ -92,9 +92,14 @@ spec:
             - name: GF_ANALYTICS_CHECK_FOR_UPDATES
               value: 'true'
             - name: GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES
-              value: 'true'
+              value: 'false'
             - name: GF_ANALYTICS_FEEDBACK_LINKS_ENABLED
               value: 'false'
+
+            - name: GF_PLUGINS_PREINSTALL_AUTO_UPDATE
+              value: 'false'
+            - name: GF_PLUGINS_PREINSTALL_DISABLED
+              value: 'true'
 
             - name: GF_SECURITY_ADMIN_USER
               valueFrom:

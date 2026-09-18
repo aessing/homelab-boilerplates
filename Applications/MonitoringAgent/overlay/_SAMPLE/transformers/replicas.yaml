@@ -1,0 +1,25 @@
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: alloy-replica-transformer
+replica:
+  name: alloy
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: true
+    kind: StatefulSet
+
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: kube-state-metrics-replica-transformer
+replica:
+  name: kube-state-metrics
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: true
+    kind: Deployment

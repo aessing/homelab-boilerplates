@@ -1,0 +1,48 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-core
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: application
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - 00-overview.json=./dashboards/00-overview.json
+  - 10-cluster.json=./dashboards/10-cluster.json
+  - 20-node.json=./dashboards/20-node.json
+  - 30-pod.json=./dashboards/30-pod.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-platform
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: application
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - 40-k3s-etcd.json=./dashboards/40-k3s-etcd.json
+  - 50-network.json=./dashboards/50-network.json
+  - 60-storage.json=./dashboards/60-storage.json
+  - 70-postgres.json=./dashboards/70-postgres.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-operations
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: application
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - 80-platform.json=./dashboards/80-platform.json
+  - 90-pipeline.json=./dashboards/90-pipeline.json
+  - 100-daily.json=./dashboards/100-daily.json
+  - 110-capacity.json=./dashboards/110-capacity.json

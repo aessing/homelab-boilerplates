@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: monitoring-cnpg-state
+    files:
+      - custom-resources.yaml=./configs/custom-resources.yaml
+
+resources:
+  - ./resources/clusterrole.yaml
+  - ./resources/clusterrolebinding.yaml
+
+patches:
+  - path: ./patches/deployment.yaml

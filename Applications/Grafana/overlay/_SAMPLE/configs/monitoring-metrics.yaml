@@ -1,0 +1,17 @@
+apiVersion: 1
+datasources:
+  - name: Monitoring Metrics
+    uid: monitoring-metrics
+    type: prometheus
+    access: proxy
+    url: https://metrics.example.com
+    basicAuth: true
+    basicAuthUser: $VM_USERNAME
+    secureJsonData:
+      basicAuthPassword: $VM_PASSWORD
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s
+      tlsSkipVerify: false
+    editable: false
+    isDefault: false

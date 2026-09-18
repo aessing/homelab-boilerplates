@@ -1,0 +1,36 @@
+---
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: monitoring-agent-label-transformer
+labels:
+  app.kubernetes.io/name: monitoring-agent
+  app.kubernetes.io/instance: monitoring-agent-sample
+  app.kubernetes.io/part-of: monitoring
+fieldSpecs:
+  - path: metadata/labels
+    create: true
+  - path: spec/selector
+    create: true
+    kind: Service
+  - path: spec/selector/matchLabels
+    create: true
+    kind: Deployment
+  - path: spec/selector/matchLabels
+    create: true
+    kind: StatefulSet
+  - path: spec/selector/matchLabels
+    create: true
+    kind: DaemonSet
+  - path: spec/template/metadata/labels
+    create: true
+    kind: Deployment
+  - path: spec/template/metadata/labels
+    create: true
+    kind: StatefulSet
+  - path: spec/template/metadata/labels
+    create: true
+    kind: DaemonSet
+  - path: spec/volumeClaimTemplates/metadata/labels
+    create: true
+    kind: StatefulSet

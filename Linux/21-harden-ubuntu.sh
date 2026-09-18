@@ -1456,6 +1456,14 @@ for admin_ip in $ADMIN_IPS; do
 done
 
 echo ""
+echo " - Allow cluster nodes to scrape host-network monitoring endpoints"
+for monitoring_node_ip in ${MONITORING_CLUSTER_NODE_IPS:-}; do
+  ufw allow from "$monitoring_node_ip" to any port 9100 proto tcp comment 'Monitoring node-exporter - Cluster nodes'
+  ufw allow from "$monitoring_node_ip" to any port 2112 proto tcp comment 'Monitoring kube-vip - Cluster nodes'
+  ufw allow from "$monitoring_node_ip" to any port 9120 proto tcp comment 'Monitoring MetalLB speaker - Cluster nodes'
+done
+
+echo ""
 echo " - Enable logging"
 ufw logging on
 ufw reload

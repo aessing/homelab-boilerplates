@@ -1,0 +1,116 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alloy
+  labels:
+    app.kubernetes.io/component: alloy
+spec:
+  serviceName: alloy
+  replicas: 0
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: alloy
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Retain
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: alloy
+    spec:
+      serviceAccountName: alloy
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: alloy
+          image: grafana/alloy:0.0.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --storage.path=/var/lib/alloy/data
+            - /etc/alloy/config
+          envFrom:
+            - configMapRef:
+                name: alloy-environment
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: '0'
+              memory: '0'
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          ports:
+            - name: http
+              containerPort: 12345
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy/config
+              readOnly: true
+            - name: remote-write-token
+              mountPath: /var/run/secrets/monitoring-agent
+              readOnly: true
+            - name: alloy-data
+              mountPath: /var/lib/alloy
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: alloy-config
+              - configMap:
+                  name: alloy-central-telemetry
+                  optional: true
+        - name: remote-write-token
+          secret:
+            secretName: monitoring-agent-remote-write
+            items:
+              - key: token
+                path: token
+        - name: tmp
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: alloy-data
+        labels:
+          app.kubernetes.io/component: alloy
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 0Gi

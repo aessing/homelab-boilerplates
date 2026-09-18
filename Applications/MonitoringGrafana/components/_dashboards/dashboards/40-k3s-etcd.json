@@ -1,0 +1,1672 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(87, 148, 242, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Inspect API server, scheduler, kubelet and native etcd control-plane behavior while retaining per-node identity.",
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "monitoring"
+      ],
+      "targetBlank": false,
+      "title": "Monitoring dashboards",
+      "tooltip": "Open another monitoring dashboard",
+      "type": "dashboards"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "description": "Dashboard purpose, navigation guidance and data-state semantics.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 18,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "Inspect API server, scheduler, kubelet and native etcd control-plane behavior while retaining per-node identity.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "13.2.2",
+      "title": "About this dashboard",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Age of the oldest currently returned target sample. A missing result is N/A.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 90
+              },
+              {
+                "color": "red",
+                "value": 180
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max(clamp_min(time() - timestamp(up{cluster=~\"$cluster\"}), 0))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "15s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Oldest observed target sample",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Server-error share of API requests. Amber starts at 0.1%, red at 1%.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 0.001
+              },
+              {
+                "color": "red",
+                "value": 0.01
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(apiserver_request_total{cluster=~\"$cluster\",code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(apiserver_request_total{cluster=~\"$cluster\"}[$__rate_interval])), 0.000001)",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "API 5xx ratio",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Native etcd members currently reporting no leader.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "count(etcd_server_has_leader{job=\"etcd\",cluster=~\"$cluster\"}) - sum(etcd_server_has_leader{job=\"etcd\",cluster=~\"$cluster\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "etcd members without leader",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Leader changes in the selected range. A nonzero value is a review signal, not automatically an outage.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(etcd_server_leader_changes_seen_total{job=\"etcd\",cluster=~\"$cluster\"}[$__range]))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "etcd leader changes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Failed proposals in the selected range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(etcd_server_proposals_failed_total{job=\"etcd\",cluster=~\"$cluster\"}[$__range]))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Failed etcd proposals",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Current pending proposals across native etcd members. One to four is a warning, five or more is critical.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(etcd_server_proposals_pending{job=\"etcd\",cluster=~\"$cluster\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Pending etcd proposals",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "API requests by verb.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, verb) (rate(apiserver_request_total{cluster=~\"$cluster\"}[$__rate_interval]))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "{{cluster}} {{verb}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "API request rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Coarse retained-bucket p95 and mean API duration.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (cluster, le) (rate(apiserver_request_duration_seconds_bucket{cluster=~\"$cluster\"}[$__rate_interval])))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "coarse p95 {{cluster}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster) (rate(apiserver_request_duration_seconds_sum{cluster=~\"$cluster\"}[$__rate_interval])) / clamp_min(sum by (cluster) (rate(apiserver_request_duration_seconds_count{cluster=~\"$cluster\"}[$__rate_interval])), 0.000001)",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "mean {{cluster}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "API request duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Current read/write API inflight requests.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, request_kind) (apiserver_current_inflight_requests{cluster=~\"$cluster\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "{{cluster}} {{request_kind}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "API inflight requests",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Scheduling attempt outcome rate.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, result) (rate(scheduler_schedule_attempts_total{cluster=~\"$cluster\"}[$__rate_interval]))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "{{cluster}} {{result}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Scheduler attempts",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Per-node coarse p95 Pod start duration.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (cluster, node, le) (rate(kubelet_pod_start_duration_seconds_bucket{cluster=~\"$cluster\"}[$__rate_interval])))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "coarse p95 {{cluster}} {{node}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Kubelet Pod startup duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Per-member in-use, allocated and quota bytes.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, node) (etcd_mvcc_db_total_size_in_use_in_bytes{job=\"etcd\",cluster=~\"$cluster\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "used {{cluster}} {{node}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, node) (etcd_mvcc_db_total_size_in_bytes{job=\"etcd\",cluster=~\"$cluster\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "allocated {{cluster}} {{node}}",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, node) (etcd_server_quota_backend_bytes{job=\"etcd\",cluster=~\"$cluster\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "quota {{cluster}} {{node}}",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "etcd database size and quota",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Coarse per-member retained-bucket latency.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 36
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (cluster, node, le) (rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=\"etcd\",cluster=~\"$cluster\"}[$__rate_interval])))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "WAL fsync p95 {{node}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (cluster, node, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket{job=\"etcd\",cluster=~\"$cluster\"}[$__rate_interval])))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "backend commit p95 {{node}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "etcd storage latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Coarse per-member peer round-trip p95.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 36
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (cluster, node, le) (rate(etcd_network_peer_round_trip_time_seconds_bucket{job=\"etcd\",cluster=~\"$cluster\"}[$__rate_interval])))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "peer p95 {{cluster}} {{node}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "etcd peer round-trip time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Shared K3s control-plane workqueues are collected once per cluster where possible.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 44
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, name) (workqueue_depth{cluster=~\"$cluster\",job=\"kubelet\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Control-plane workqueue depth",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Each native member's leader perception.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 52
+      },
+      "id": 17,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, node) (etcd_server_has_leader{job=\"etcd\",cluster=~\"$cluster\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "etcd member state",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "tags": [
+    "monitoring",
+    "metrics",
+    "infrastructure"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(up, cluster)",
+        "description": "Filter by cluster",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": true,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "5m",
+      "15m"
+    ],
+    "time_options": [
+      "1h",
+      "3h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d",
+      "90d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "K3s and etcd",
+  "uid": "mon-k3s",
+  "version": 1,
+  "weekStart": "monday"
+}

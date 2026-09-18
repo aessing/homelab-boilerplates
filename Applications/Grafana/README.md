@@ -171,6 +171,8 @@ This application uses modular components:
 | `_database` | PostgreSQL database via CloudNativePG |
 | `_haengine` | Home Assistant custom engine |
 | `_renderer` | Image renderer for alert notifications |
+| `_home-assistant-historydb-datasource` | Provisioned **Home Assistant HistoryDB** datasource |
+| `_monitoring-metrics-datasource` | Provisioned read-only **Monitoring Metrics** datasource backed by VictoriaMetrics |
 
 Enable components in your overlay's `kustomization.yaml`:
 
@@ -181,6 +183,41 @@ components:
   - ../../components/_renderer
   # - ../../components/_haengine  # Optional
 ```
+
+### Central metrics datasource
+
+The `_monitoring-metrics-datasource` component provisions VictoriaMetrics as the
+Prometheus-compatible server-side datasource **Monitoring Metrics**. Its stable
+UID is `monitoring-metrics`. Each enabled overlay generates
+the datasource ConfigMap from its own `configs/monitoring-metrics.yaml`, where
+the environment-specific query URL is configured. The private overlay generates the
+`grafana-monitoring-datasource` Secret from an ignored `.env` file with
+`username` and `password` keys. These credentials must match the dedicated
+Grafana reader in vmauth. Do not reuse Grafana's own metrics endpoint credential
+or an Alloy writer token.
+
+The public sample contains only an `example.com` URL and Secret references. It
+does not contain credentials.
+
+The optional dashboard component lives in
+[`Applications/MonitoringGrafana`](../MonitoringGrafana/README.md). It reuses
+this datasource and existing Grafana server. It does not deploy another Grafana
+instance.
+
+### Home Assistant HistoryDB datasource
+
+The `_home-assistant-historydb-datasource` component provisions the Home
+Assistant Prometheus-compatible HistoryDB endpoint. Each enabled overlay
+generates the datasource ConfigMap from its own
+`configs/home-assistant-historydb.yaml`. When adopting an existing datasource,
+keep its current UID in this file to avoid creating a duplicate. The private
+overlay generates the `grafana-home-assistant-historydb-datasource` Secret from
+an ignored `.env` file with `username` and `password` keys. The Secret is created
+in the Grafana namespace because Kubernetes Secrets cannot be referenced across
+namespaces.
+
+The public sample contains only an `example.com` URL and Secret references. It
+does not contain credentials.
 
 ## Configuration
 

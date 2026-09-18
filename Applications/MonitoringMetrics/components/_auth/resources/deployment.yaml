@@ -1,0 +1,94 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vmauth
+  labels:
+    app.kubernetes.io/component: auth
+spec:
+  replicas: 0
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: auth
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: auth
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: vmauth
+          image: victoriametrics/vmauth:0.0.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - -auth.config=/etc/vmauth/auth.yml
+            - -configCheckInterval=1m
+            - -httpListenAddr=:8427
+            - -httpInternalListenAddr=:8426
+            - -http.header.disableServerHostname
+            - -loggerFormat=json
+          envFrom:
+            - secretRef:
+                name: monitoring-metrics-auth
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: '0'
+              memory: '0'
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          ports:
+            - name: http
+              containerPort: 8427
+              protocol: TCP
+            - name: internal
+              containerPort: 8426
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /health
+              port: internal
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: internal
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: internal
+            periodSeconds: 30
+            timeoutSeconds: 2
+            failureThreshold: 3
+          volumeMounts:
+            - name: config
+              mountPath: /etc/vmauth
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: vmauth-config

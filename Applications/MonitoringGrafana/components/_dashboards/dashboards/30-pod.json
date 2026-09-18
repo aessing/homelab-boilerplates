@@ -1,0 +1,1385 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(87, 148, 242, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Explain Pod availability, resource use, throttling, restarts and container termination reasons.",
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "monitoring"
+      ],
+      "targetBlank": false,
+      "title": "Monitoring dashboards",
+      "tooltip": "Open another monitoring dashboard",
+      "type": "dashboards"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "description": "Dashboard purpose, navigation guidance and data-state semantics.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 18,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "Explain Pod availability, resource use, throttling, restarts and container termination reasons.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "13.2.2",
+      "title": "About this dashboard",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Age of the oldest currently returned target sample. A missing result is N/A.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 90
+              },
+              {
+                "color": "red",
+                "value": 180
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max(clamp_min(time() - timestamp(up{cluster=~\"$cluster\"}), 0))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "15s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Oldest observed target sample",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Current Running phase.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(kube_pod_status_phase{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",phase=\"Running\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Running Pods",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Containers that are not ready inside Pods whose current phase is Running. Completed Jobs are excluded.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum((1 - kube_pod_container_status_ready{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\"}) * on(cluster, namespace, pod) group_left() (kube_pod_status_phase{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",phase=\"Running\"} == 1))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Not-ready containers",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Counter increase during the selected range. One to four is a warning, five or more is critical.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(kube_pod_container_status_restarts_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\"}[$__range]))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Restarts in range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Observed cgroup OOM events in the selected range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(container_oom_events_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",container!=\"\"}[$__range]))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "15s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "OOM events in range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "CPU cores used by each selected container.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "cores"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, namespace, pod, container) (rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",container!=\"\",container!=\"POD\"}[$__rate_interval]))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "15s",
+          "legendFormat": "{{pod}} {{container}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Container CPU",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Working set and resident memory.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, namespace, pod, container) (container_memory_working_set_bytes{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",container!=\"\",container!=\"POD\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "working set {{pod}} {{container}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, namespace, pod, container) (container_memory_rss{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",container!=\"\",container!=\"POD\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "RSS {{pod}} {{container}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Container working set and RSS",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Fraction of CFS periods throttled. N/A when no quota periods exist.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, namespace, pod, container) (rate(container_cpu_cfs_throttled_periods_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",container!=\"\",container!=\"POD\"}[$__rate_interval])) / clamp_min(sum by (cluster, namespace, pod, container) (rate(container_cpu_cfs_periods_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",container!=\"\",container!=\"POD\"}[$__rate_interval])), 0.000001)",
+          "format": "time_series",
+          "instant": false,
+          "interval": "15s",
+          "legendFormat": "{{pod}} {{container}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "CPU throttled periods",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Pod network traffic. Host-networked Pods may not have isolated values.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, namespace, pod) (rate(container_network_receive_bytes_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\"}[$__rate_interval]))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "15s",
+          "legendFormat": "receive {{pod}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, namespace, pod) (rate(container_network_transmit_bytes_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\"}[$__rate_interval]))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "15s",
+          "legendFormat": "transmit {{pod}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Pod network traffic",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "One-hot current Pod phase.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, namespace, pod, phase) (kube_pod_status_phase{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Current Pod phases",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Last observed reason, not a complete incident history. Interpret the reason label, because a recorded termination is not always a fault.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, namespace, pod, container, reason) (kube_pod_container_status_last_terminated_reason{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Last termination reason",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Current scheduling and owning controller identity.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "short",
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open node diagnostics",
+              "url": "/d/mon-node?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-node=${__data.fields.node}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster, namespace, pod, node, owner_kind, owner_name) (kube_pod_info{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\"} * on (cluster, namespace, pod) group_left(owner_kind, owner_name) kube_pod_owner{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",owner_is_controller=\"true\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Pod owners and nodes",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Zero or absent means no configured limit and is not a usage ratio.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, namespace, pod, container) (kube_pod_container_resource_limits{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",resource=\"memory\",unit=\"byte\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Configured memory limits",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "tags": [
+    "monitoring",
+    "metrics",
+    "infrastructure"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(up, cluster)",
+        "description": "Filter by cluster",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": true,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(kube_namespace_status_phase{cluster=~\"$cluster\"}, namespace)",
+        "description": "Filter by namespace",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Namespace",
+        "multi": true,
+        "name": "namespace",
+        "options": [],
+        "query": {
+          "query": "label_values(kube_namespace_status_phase{cluster=~\"$cluster\"}, namespace)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(kube_pod_info{cluster=~\"$cluster\",namespace=~\"$namespace\"}, pod)",
+        "description": "Filter by pod",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Pod",
+        "multi": true,
+        "name": "pod",
+        "options": [],
+        "query": {
+          "query": "label_values(kube_pod_info{cluster=~\"$cluster\",namespace=~\"$namespace\"}, pod)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "5m",
+      "15m"
+    ],
+    "time_options": [
+      "1h",
+      "3h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d",
+      "90d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Pod and Container Diagnostics",
+  "uid": "mon-pod",
+  "version": 1,
+  "weekStart": "monday"
+}

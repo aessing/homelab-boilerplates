@@ -1,0 +1,61 @@
+users:
+  - name: cluster-a-writer
+    bearer_token: "%{WRITER_CLUSTER_A_TOKEN}"
+    headers:
+      - "Authorization:"
+    url_map:
+      - src_paths:
+          - "/api/v1/write"
+        url_prefix: "http://victoriametrics:8428/?extra_label=cluster=cluster-a"
+  - name: cluster-b-writer
+    bearer_token: "%{WRITER_CLUSTER_B_TOKEN}"
+    headers:
+      - "Authorization:"
+    url_map:
+      - src_paths:
+          - "/api/v1/write"
+        url_prefix: "http://victoriametrics:8428/?extra_label=cluster=cluster-b"
+  - name: cluster-c-writer
+    bearer_token: "%{WRITER_CLUSTER_C_TOKEN}"
+    headers:
+      - "Authorization:"
+    url_map:
+      - src_paths:
+          - "/api/v1/write"
+        url_prefix: "http://victoriametrics:8428/?extra_label=cluster=cluster-c"
+  - name: cluster-d-writer
+    bearer_token: "%{WRITER_CLUSTER_D_TOKEN}"
+    headers:
+      - "Authorization:"
+    url_map:
+      - src_paths:
+          - "/api/v1/write"
+        url_prefix: "http://victoriametrics:8428/?extra_label=cluster=cluster-d"
+  - name: grafana-reader
+    username: "%{GRAFANA_USERNAME}"
+    password: "%{GRAFANA_PASSWORD}"
+    headers:
+      - "Authorization:"
+    url_map:
+      - src_paths:
+          - "/api/v1/query"
+          - "/api/v1/query_range"
+          - "/api/v1/series"
+          - "/api/v1/labels"
+          - "/api/v1/label/[^/]+/values"
+          - "/api/v1/metadata"
+          - "/api/v1/status/buildinfo"
+        url_prefix: "http://victoriametrics:8428/"
+  - name: management-telemetry-reader
+    bearer_token: "%{TELEMETRY_TOKEN}"
+    headers:
+      - "Authorization:"
+    url_map:
+      - src_paths:
+          - "/telemetry/victoriametrics/metrics"
+        drop_src_path_prefix_parts: 2
+        url_prefix: "http://victoriametrics:8428/"
+      - src_paths:
+          - "/telemetry/vmauth/metrics"
+        drop_src_path_prefix_parts: 2
+        url_prefix: "http://127.0.0.1:8426/"
