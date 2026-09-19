@@ -236,7 +236,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -314,7 +314,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -392,7 +392,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -814,21 +814,14 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Current end-of-period Longhorn findings. This is not a reconstructed incident history.",
+      "description": "Current Longhorn volumes whose robustness state is not healthy. Zero is valid only while Longhorn telemetry is present.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "decimals": 2,
+          "custom": {},
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -856,29 +849,27 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 4,
         "w": 24,
         "x": 0,
         "y": 40
       },
       "id": 11,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
-          "show": false
+          "fields": "",
+          "values": false
         },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
-          }
-        ]
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "targets": [
         {
@@ -887,17 +878,17 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster, pvc_namespace, pvc, volume, robustness) (longhorn_volume_robustness{cluster=~\"$cluster\",robustness=~\"degraded|faulted\"} == 1)",
-          "format": "table",
+          "expr": "sum(longhorn_volume_robustness{cluster=~\"$cluster\",state!=\"healthy\"} == 1) or (0 * count(longhorn_volume_robustness{cluster=~\"$cluster\"}))",
+          "format": "time_series",
           "instant": true,
-          "interval": "60s",
+          "interval": "30s",
           "legendFormat": "",
           "range": false,
           "refId": "A"
         }
       ],
       "title": "Storage findings",
-      "type": "table"
+      "type": "stat"
     },
     {
       "datasource": {
@@ -953,7 +944,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 44
       },
       "id": 12,
       "options": {
@@ -1040,7 +1031,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 52
       },
       "id": 13,
       "options": {
@@ -1127,7 +1118,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 64
+        "y": 60
       },
       "id": 14,
       "options": {
@@ -1214,7 +1205,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 68
       },
       "id": 15,
       "options": {
@@ -1301,7 +1292,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 80
+        "y": 76
       },
       "id": 16,
       "options": {
@@ -1384,8 +1375,8 @@
     ]
   },
   "time": {
-    "from": "now-1d/d",
-    "to": "now/d"
+    "from": "now-24h",
+    "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [

@@ -38,3 +38,11 @@ metadata:
 imageTag:
   name: eclipse-mosquitto
   newTag: 2.1.2-alpine
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: mqtt-metrics-imagetransformer
+imageTag:
+  name: ghcr.io/d0ugal/mosquitto-exporter
+  newTag: v0.2.50

@@ -205,10 +205,7 @@ spec:
             - name: GF_METRICS_ENABLED
               value: 'true'
             - name: GF_METRICS_BASIC_AUTH_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: grafana-metrics
-                  key: username
+              value: metrics
             - name: GF_METRICS_BASIC_AUTH_PASSWORD
               valueFrom:
                 secretKeyRef:

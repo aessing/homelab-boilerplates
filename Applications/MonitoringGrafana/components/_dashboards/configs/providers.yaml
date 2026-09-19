@@ -1,11 +1,30 @@
 apiVersion: 1
 providers:
+  - name: monitoring-operations-center
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    allowUiUpdates: false
+    updateIntervalSeconds: 60
+    options:
+      path: /var/lib/grafana/monitoring-root-dashboards
+  - name: monitoring-applications
+    orgId: 1
+    folder: Monitoring Applications
+    folderUid: monitoring-applications
+    type: file
+    disableDeletion: false
+    allowUiUpdates: false
+    updateIntervalSeconds: 60
+    options:
+      path: /var/lib/grafana/monitoring-application-dashboards
   - name: monitoring-infrastructure
     orgId: 1
     folder: Monitoring Metrics
     folderUid: monitoring-infrastructure
     type: file
-    disableDeletion: true
+    disableDeletion: false
     allowUiUpdates: false
     updateIntervalSeconds: 60
     options:
@@ -15,7 +34,7 @@ providers:
     folder: Monitoring Logs
     folderUid: monitoring-logs
     type: file
-    disableDeletion: true
+    disableDeletion: false
     allowUiUpdates: false
     updateIntervalSeconds: 60
     options:

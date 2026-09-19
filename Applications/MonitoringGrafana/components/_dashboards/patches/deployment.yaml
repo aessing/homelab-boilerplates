@@ -9,6 +9,12 @@ spec:
       containers:
         - name: grafana
           volumeMounts:
+            - name: monitoring-root-dashboards
+              mountPath: /var/lib/grafana/monitoring-root-dashboards
+              readOnly: true
+            - name: monitoring-application-dashboards
+              mountPath: /var/lib/grafana/monitoring-application-dashboards
+              readOnly: true
             - name: monitoring-dashboard-provider
               mountPath: /etc/grafana/provisioning/dashboards/monitoring.yaml
               subPath: monitoring.yaml
@@ -20,6 +26,20 @@ spec:
               mountPath: /var/lib/grafana/monitoring-log-dashboards
               readOnly: true
       volumes:
+        - name: monitoring-root-dashboards
+          configMap:
+            name: grafana-monitoring-dashboards-root
+        - name: monitoring-application-dashboards
+          projected:
+            sources:
+              - configMap:
+                  name: grafana-monitoring-dashboards-applications-core
+              - configMap:
+                  name: grafana-monitoring-dashboards-applications-services
+              - configMap:
+                  name: grafana-monitoring-dashboards-applications-network
+              - configMap:
+                  name: grafana-monitoring-dashboards-applications-backends
         - name: monitoring-log-dashboards
           configMap:
             name: grafana-monitoring-dashboards-logs

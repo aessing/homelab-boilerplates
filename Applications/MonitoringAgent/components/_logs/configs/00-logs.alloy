@@ -130,6 +130,14 @@ loki.process "pod_logs" {
     max_partial_lines = 100
   }
 
+  // A recently modified CRI file can still contain old lines when durable tail
+  // positions are missing. Keep a safety margin below Loki's 168h acceptance
+  // window so replay cannot become a delivery failure.
+  stage.drop {
+    older_than          = "167h"
+    drop_counter_reason = "older_than_loki_acceptance_window"
+  }
+
   stage.decolorize {}
 
   // Database diagnostics may embed failed statements even with log_statement=none.

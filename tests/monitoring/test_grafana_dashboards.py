@@ -22,7 +22,6 @@ EXPECTED = {
     "40-k3s-etcd.json": "mon-k3s",
     "50-network.json": "mon-network",
     "60-storage.json": "mon-storage",
-    "70-postgres.json": "mon-postgres",
     "80-platform.json": "mon-platform",
     "90-pipeline.json": "mon-pipeline",
     "100-daily.json": "mon-daily",
@@ -36,7 +35,6 @@ EXPECTED_TITLES = {
     "K3s and etcd",
     "DNS and Networking",
     "Storage and Longhorn",
-    "PostgreSQL and Backups",
     "Controllers and Certificates",
     "Collection and Metrics Backend",
     "Daily Review",
@@ -101,7 +99,7 @@ class GrafanaDashboards(unittest.TestCase):
             "folder: Monitoring Metrics",
             "folderUid: monitoring-infrastructure",
             "type: file",
-            "disableDeletion: true",
+            "disableDeletion: false",
             "allowUiUpdates: false",
             "path: /var/lib/grafana/monitoring-dashboards",
         ):
@@ -110,7 +108,7 @@ class GrafanaDashboards(unittest.TestCase):
 
     def test_generated_json_is_canonical(self):
         builder = load_builder()
-        by_file = {spec["file"]: spec for spec in builder.DASHBOARDS}
+        by_file = {spec["file"]: spec for spec in builder.PROVISIONED_DASHBOARDS}
         self.assertEqual(set(by_file), set(EXPECTED))
         for name, dashboard in self.dashboards.items():
             with self.subTest(dashboard=name):
@@ -136,7 +134,8 @@ class GrafanaDashboards(unittest.TestCase):
                         if "rate(" in expr:
                             self.assertIn("$__rate_interval", expr)
                 self.assertGreaterEqual(len(dashboard["panels"]), 12)
-                self.assertLessEqual(query_count, 22)
+                # Node diagnostics also includes four host-maintenance queries.
+                self.assertLessEqual(query_count, 27 if name == "20-node.json" else 22)
 
     def test_layout_does_not_overlap(self):
         for name, dashboard in self.dashboards.items():
@@ -172,10 +171,10 @@ class GrafanaDashboards(unittest.TestCase):
                 for panel in dashboard["panels"]:
                     for data_link in panel.get("fieldConfig", {}).get("defaults", {}).get("links", []):
                         target_uid = data_link["url"].split("/d/", 1)[1].split("?", 1)[0]
-                        self.assertIn(target_uid, set(EXPECTED.values()))
+                        self.assertIn(target_uid, set(EXPECTED.values()) | {"mon-postgres"})
                         self.assertIn("${__url_time_range}", data_link["url"])
                         self.assertIn("var-cluster=", data_link["url"])
-        operational = set(EXPECTED) - {"100-daily.json", "110-capacity.json"}
+        operational = set(EXPECTED) - {"100-daily.json"}
         for name in operational:
             self.assertEqual(self.dashboards[name]["time"], {"from": "now-1h", "to": "now"})
             self.assertEqual(self.dashboards[name]["refresh"], "15s")
@@ -186,10 +185,10 @@ class GrafanaDashboards(unittest.TestCase):
             self.assertNotIn("**Purpose**", description["options"]["content"])
             self.assertTrue(description["options"]["content"].startswith(dashboard["description"]))
             self.assertIn(dashboard["description"], description["options"]["content"])
-        self.assertEqual(self.dashboards["100-daily.json"]["time"], {"from": "now-1d/d", "to": "now/d"})
+        self.assertEqual(self.dashboards["100-daily.json"]["time"], {"from": "now-24h", "to": "now"})
         self.assertEqual(self.dashboards["100-daily.json"]["refresh"], "")
-        self.assertEqual(self.dashboards["110-capacity.json"]["time"]["from"], "now-7d")
-        self.assertEqual(self.dashboards["110-capacity.json"]["refresh"], "")
+        self.assertEqual(self.dashboards["110-capacity.json"]["time"]["from"], "now-1h")
+        self.assertEqual(self.dashboards["110-capacity.json"]["refresh"], "15s")
 
     def test_visual_and_missing_data_contract(self):
         suite_text = ""
@@ -226,7 +225,8 @@ class GrafanaDashboards(unittest.TestCase):
         self.assertIn("sum by (cluster) (rate(coredns_cache_misses_total", coredns)
         self.assertIn(")) + sum by (cluster) (rate(coredns_cache_misses_total", coredns)
 
-        database = expression(self.dashboards["70-postgres.json"], "Database cache hit ratio")
+        builder = load_builder()
+        database = expression(builder.build(next(spec for spec in builder.DASHBOARDS if spec["uid"] == "mon-postgres")), "Database cache hit ratio")
         self.assertIn("cnpg_pg_stat_database_blks_hit", database)
         self.assertIn("cnpg_pg_stat_database_blks_read", database)
         self.assertNotIn("cnpg_cache_hits", database)
@@ -315,7 +315,8 @@ class GrafanaDashboards(unittest.TestCase):
         self.assertEqual(io["y"], latency["y"])
         self.assertEqual(io["x"] + io["w"], latency["x"])
 
-        postgres = self.dashboards["70-postgres.json"]
+        builder = load_builder()
+        postgres = builder.build(next(spec for spec in builder.DASHBOARDS if spec["uid"] == "mon-postgres"))
         replication = panel(postgres, "Replication delay")
         self.assertEqual(replication["fieldConfig"]["defaults"]["unit"], "ms")
         self.assertIn("1000 *", replication["targets"][0]["expr"])
@@ -343,7 +344,8 @@ class GrafanaDashboards(unittest.TestCase):
             {"color": "red", "value": 5},
         ])
 
-        postgres = self.dashboards["70-postgres.json"]
+        builder = load_builder()
+        postgres = builder.build(next(spec for spec in builder.DASHBOARDS if spec["uid"] == "mon-postgres"))
         suspended_steps = panel(postgres, "Suspended backup schedules")["fieldConfig"]["defaults"]["thresholds"]["steps"]
         self.assertEqual(suspended_steps, [
             {"color": "green", "value": None},
@@ -373,7 +375,7 @@ class GrafanaDashboards(unittest.TestCase):
             self.assertLess(path.stat().st_size, 200 * 1024, path.name)
         docs = render(ROOT / "Applications" / "Grafana" / "overlay" / "_SAMPLE")
         configmaps = [doc for doc in docs if doc["kind"] == "ConfigMap" and doc["metadata"]["name"].startswith("grafana-monitoring-dashboard")]
-        self.assertEqual(len(configmaps), 5)
+        self.assertEqual(len(configmaps), 10)
         for configmap in configmaps:
             total = sum(len(value.encode()) for value in configmap.get("data", {}).values())
             self.assertLess(total, 1024 * 1024)

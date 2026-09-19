@@ -113,6 +113,8 @@ loki.source.file "fixture" {
 
     def test_real_cri_redaction_sql_exclusion_and_startup_logs(self):
         source = CONFIG.read_text()
+        self.assertIn('older_than          = "167h"', source)
+        self.assertIn('drop_counter_reason = "older_than_loki_acceptance_window"', source)
         pipeline = source[source.index('loki.process "pod_logs"'):source.index('loki.source.file "pod_logs"')]
         fixtures = {
             "ordinary": ('startup-marker\n', {}),
@@ -127,11 +129,12 @@ loki.source.file "fixture" {
         with tempfile.TemporaryDirectory(prefix="monitoring-log-fixtures-") as directory:
             temp = Path(directory)
             targets = []
+            timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             for key, (content, labels) in fixtures.items():
                 if key == "partial":
-                    text = "2026-01-01T00:00:00Z stdout P partial-marker-\n2026-01-01T00:00:00Z stdout F end\n"
+                    text = f"{timestamp} stdout P partial-marker-\n{timestamp} stdout F end\n"
                 else:
-                    text = "2026-01-01T00:00:00Z stdout F " + content
+                    text = f"{timestamp} stdout F " + content
                 (temp / (key + ".log")).write_text(text)
                 labels.update({"__path__": "/fixtures/" + key + ".log", "source": "pod", "namespace": "fixture", "pod": "test-pod", "pod_uid": "test-uid"})
                 targets.append("{" + ", ".join(json.dumps(k) + " = " + json.dumps(v) for k, v in labels.items()) + "}")

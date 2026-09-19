@@ -156,7 +156,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -232,7 +232,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -308,7 +308,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -380,7 +380,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -779,7 +779,7 @@
     {
       "type": "logs",
       "title": "Pod diagnostics",
-      "description": "Pod-only view. Unpack restores Pod identity for inspection and displays the sanitized original message.",
+      "description": "Pod-only view of sanitized original messages. Expand records to inspect available labels. No JSON unpacking is required.",
       "datasource": {
         "type": "loki",
         "uid": "monitoring-logs"

@@ -1,10 +1,10 @@
 # MonitoringGrafana
 
 Grafana OSS dashboards for Kubernetes, hosts, infrastructure controllers,
-storage, PostgreSQL and the metrics pipeline. This package is loaded by the
+storage, PostgreSQL, applications and the metrics pipeline. This package is loaded by the
 existing [Grafana application](../Grafana/README.md).
 
-The dashboard JSON is generated from one deterministic Python definition, then
+The dashboard JSON is generated from deterministic Python definitions, then
 validated and provisioned through the existing Grafana deployment.
 
 ## Design and location
@@ -21,8 +21,57 @@ validated and provisioned through the existing Grafana deployment.
 - Edition: Grafana OSS. No Enterprise license or external panel plugin required.
 
 The package does not deploy another Grafana instance. Provisioning creates the
-Monitoring Metrics folder and assigns all twelve dashboards to it. Dashboards never
+Monitoring Metrics folder and assigns eleven infrastructure dashboards to it. Dashboards never
 need to be imported individually into the root dashboard list.
+
+Eleven dashboards are also provisioned into **Monitoring Applications** (UID
+`monitoring-applications`). They use the existing Monitoring Metrics and
+Monitoring Logs datasources, with no new collectors or Grafana plugins:
+
+| Dashboard | Purpose |
+| --- | --- |
+| Applications Overview | Namespace-filtered readiness, scrape failures, CPU, memory, restarts and logs, including applications without native metrics |
+| Uptime Kuma | Application health, event loop, MariaDB, container resources and logs |
+| Uptime Kuma Monitors | Paginated status history, rolling availability, latency and certificate lifetime |
+| Authentik | Server, worker, outpost connectivity, request load and background tasks |
+| Grafana and Renderer | Requests, rendering queue, browser activity, Redis and memory pressure |
+| Home Assistant and MQTT | Entity availability, automation activity, broker connectivity, traffic and VictoriaMetrics HistoryDB |
+| HomeCDN | NGINX status, connections, requests, container resources and logs |
+| Timeserver (Chrony) | Collection health, reference, stratum, offset, delay and application logs |
+| Monitoring Logs (Loki) | Ingestion, rejected entries, compaction, requests, storage and logs |
+| Monitoring Metrics (VictoriaMetrics) | Ingestion, read-only state, write reserve, requests, storage and logs |
+| PostgreSQL and Backups | CloudNativePG readiness, collectors, backups, replication, resources and logs. This is the only PostgreSQL dashboard. |
+
+**Operations Center** is provisioned at Grafana's root, outside the monitoring
+folders. It summarizes cluster and node health, monitors, workloads, capacity,
+databases and telemetry delivery, with links to diagnostic dashboards.
+
+Kuma group monitors and individual monitors have separate status-history panels.
+The exporter does not provide parent-child relationships, so this is not a nested
+copy of Kuma's tree. History is sampled telemetry, with 20 rows per page and up to
+120 time samples. Short transitions can be missed when viewing long periods.
+Missing samples remain gaps. All application dashboards start at one hour.
+Healthy, quiet deployments can therefore have an empty log panel without a
+collection failure.
+
+Home Assistant's availability metric includes both `unavailable` and `unknown`
+states. The dashboard labels this explicitly. Containers without a memory limit
+show **No limit configured**, not a fabricated utilization percentage.
+
+Each application dashboard refreshes once a minute. Tables and logs use full
+width. Cluster filters persist in the URL. The overview adds a namespace filter,
+and Uptime Kuma adds monitor ID and rolling-window filters. The log search field
+filters displayed log lines, not the volume charts. Each log view is capped at
+500 lines. Missing data remains N/A. Exporter HTTP health and backend collection
+health are separate signals. An unavailable Chrony backend cannot establish clock
+synchronization, and NGINX stub_status supplies neither HTTP status codes nor
+traffic bytes. HistoryDB has a separate backend scope from central metrics.
+
+Homepage and Scrypted intentionally have workload/resource/log coverage only.
+PostgreSQL and backup diagnostics live in Monitoring Applications. Application logs
+are operational, sanitized records, and empty results may indicate a quiet source.
+Queries can reveal runtime entity or monitor names to authorized Grafana readers,
+but no personal names, endpoints or credentials are embedded in the JSON.
 
 Two additional dashboards are provisioned into **Monitoring Logs**, folder UID
 `monitoring-logs`, from `components/_dashboards/log-dashboards/`:
@@ -165,6 +214,8 @@ Regenerate the canonical JSON and run the repository checks:
 
 ```bash
 python3 Applications/MonitoringGrafana/scripts/build_dashboards.py
+python3 Applications/MonitoringGrafana/scripts/build_log_dashboards.py
+python3 Applications/MonitoringGrafana/scripts/build_application_dashboards.py
 python3 -m unittest discover -s tests/monitoring -v
 MONITORING_PRIVATE_OVERLAYS=1 \
   python3 -m unittest discover -s tests/monitoring -v
@@ -172,6 +223,22 @@ MONITORING_PRIVATE_OVERLAYS=1 \
 
 The second test command renders local private overlays. Its output must remain
 private because environment-specific names may appear in failures.
+
+Optionally validate application expressions against the running backends before
+deployment. This read-only check prints query status and result counts, never log
+lines or metric label values. Zero result counts require interpretation, they do
+not indicate healthy services:
+
+```bash
+# In a separate terminal, stop with Ctrl-C after checking:
+kubectl --context your-monitoring-context -n monitoring-logs \
+  port-forward pod/loki-0 19100:3100
+```
+
+```bash
+python3 Applications/MonitoringGrafana/scripts/check_application_queries.py \
+  --context your-monitoring-context --loki-url http://127.0.0.1:19100
+```
 
 ### 6. Deploy to the Grafana cluster
 
@@ -202,7 +269,7 @@ kubectl --context "$GRAFANA_CONTEXT" -n grafana logs \
 ```
 
 Check for dashboard provisioning, duplicate UID, invalid JSON and datasource
-errors. Then open **Dashboards > Monitoring Metrics**. Expect these twelve dashboards:
+errors. Then open **Dashboards > Monitoring Metrics**. Expect these eleven dashboards:
 
 - Overview
 - Cluster and Workloads
@@ -211,7 +278,6 @@ errors. Then open **Dashboards > Monitoring Metrics**. Expect these twelve dashb
 - K3s and etcd
 - DNS and Networking
 - Storage and Longhorn
-- PostgreSQL and Backups
 - Controllers and Certificates
 - Collection and Metrics Backend
 - Daily Review
@@ -229,8 +295,8 @@ viewport.
 
 ### 8. Use the report views
 
-Daily Review defaults to the previous completed day. Capacity and Reliability
-defaults to seven days, with longer ranges available. Refresh is off by default.
+Daily Review defaults to the rolling previous 24 hours.
+All other dashboards default to the previous hour, with longer ranges available.
 Choose an absolute interval when sharing a reproducible historical report.
 
 Use authorized dashboard links and **Inspect > Data > Download CSV** for panel

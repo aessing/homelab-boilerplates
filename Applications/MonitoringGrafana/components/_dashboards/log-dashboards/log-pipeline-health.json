@@ -158,7 +158,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -232,7 +232,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -299,14 +299,14 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Entries abandoned after delivery failures, separate from deliberate privacy exclusions.",
+      "description": "New entries abandoned in the last five minutes. Historical drops remain visible in the range table below.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -356,7 +356,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(increase(loki_write_dropped_entries_total{cluster=~\"$cluster\",job=~\"alloy|alloy-logs\"}[$__range]))",
+          "expr": "sum(increase(loki_write_dropped_entries_total{cluster=~\"$cluster\",job=~\"alloy|alloy-logs\"}[5m]))",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -365,7 +365,7 @@
           "refId": "A"
         }
       ],
-      "title": "Delivery drops in range",
+      "title": "Delivery drops last 5m",
       "type": "stat"
     },
     {
@@ -373,14 +373,14 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Shared-backend rejections, grouped by reason below. May be absent until first rejection.",
+      "description": "New shared-backend rejections in the last five minutes. Range totals remain grouped by reason below.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -430,7 +430,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(increase(loki_discarded_samples_total{job=\"loki\"}[$__range]))",
+          "expr": "sum(increase(loki_discarded_samples_total{job=\"loki\"}[5m]))",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -439,7 +439,7 @@
           "refId": "A"
         }
       ],
-      "title": "Loki rejected entries",
+      "title": "Loki rejected entries last 5m",
       "type": "stat"
     },
     {
@@ -1346,6 +1346,89 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
+      "description": "Historical drops in the selected range. These remain visible after delivery has recovered and roll out when the time window advances.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 56
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, reason) (increase(loki_write_dropped_entries_total{cluster=~\"$cluster\",job=~\"alloy|alloy-logs\"}[$__range]))",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Delivery drops by cluster and reason",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
       "description": "Compactor leadership/running state in the single-binary TSDB backend.",
       "fieldConfig": {
         "defaults": {
@@ -1353,7 +1436,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -1377,9 +1460,9 @@
         "h": 4,
         "w": 8,
         "x": 0,
-        "y": 56
+        "y": 64
       },
-      "id": 16,
+      "id": 17,
       "options": {
         "colorMode": "background_solid",
         "graphMode": "area",
@@ -1455,9 +1538,9 @@
         "h": 4,
         "w": 8,
         "x": 8,
-        "y": 56
+        "y": 64
       },
-      "id": 17,
+      "id": 18,
       "options": {
         "colorMode": "background_solid",
         "graphMode": "area",
@@ -1533,9 +1616,9 @@
         "h": 4,
         "w": 8,
         "x": 16,
-        "y": 56
+        "y": 64
       },
-      "id": 18,
+      "id": 19,
       "options": {
         "colorMode": "background_solid",
         "graphMode": "area",
@@ -1639,9 +1722,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 60
+        "y": 68
       },
-      "id": 19,
+      "id": 20,
       "options": {
         "legend": {
           "calcs": [
@@ -1738,9 +1821,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 68
+        "y": 76
       },
-      "id": 20,
+      "id": 21,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1821,9 +1904,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 76
+        "y": 84
       },
-      "id": 21,
+      "id": 22,
       "options": {
         "cellHeight": "sm",
         "footer": {

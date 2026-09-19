@@ -25,6 +25,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/component: 'mqtt'  # The component within the architecture
+        monitoring-metrics-scrape: 'true'
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
@@ -115,6 +116,42 @@ spec:
             - name: mqtt-certificate-vol
               mountPath: '/mosquitto/certs'
               readOnly: true
+        - name: mqtt-metrics
+          image: ghcr.io/d0ugal/mosquitto-exporter:0.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MOSQUITTO_BROKER_ENDPOINT
+              value: tcp://127.0.0.1:1883
+            - name: MOSQUITTO_USERNAME
+              value: monitoring_exporter
+            - name: MOSQUITTO_CLIENT_ID
+              value: monitoring-exporter
+            - name: SERVER_PORT
+              value: "9234"
+            - name: MOSQUITTO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mqtt-exporter-auth
+                  key: password
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            limits:
+              cpu: 50m
+              memory: 32Mi
+          ports:
+            - containerPort: 9234
+              protocol: TCP
+              name: metrics
       volumes:
         - name: mqtt-config-vol
           configMap:

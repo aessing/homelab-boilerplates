@@ -236,7 +236,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -310,7 +310,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -377,14 +377,14 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Failed proposals in the selected range.",
+      "description": "Consensus proposals that did not commit in the selected range. Brief control-plane or leader interruptions can increment this counter. It does not by itself prove data loss.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -458,7 +458,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -529,6 +529,89 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
+      "description": "Members that observed failed proposals in the selected range. Correlate the timestamp with leader changes, API errors and node networking.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, node) (increase(etcd_server_proposals_failed_total{job=\"etcd\",cluster=~\"$cluster\"}[$__range])) > 0",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Failed etcd proposals by member",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
       "description": "API requests by verb.",
       "fieldConfig": {
         "defaults": {
@@ -592,9 +675,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 12
+        "y": 20
       },
-      "id": 8,
+      "id": 9,
       "options": {
         "legend": {
           "calcs": [
@@ -698,9 +781,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 20
       },
-      "id": 9,
+      "id": 10,
       "options": {
         "legend": {
           "calcs": [
@@ -818,9 +901,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 20
+        "y": 28
       },
-      "id": 10,
+      "id": 11,
       "options": {
         "legend": {
           "calcs": [
@@ -924,9 +1007,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 20
+        "y": 28
       },
-      "id": 11,
+      "id": 12,
       "options": {
         "legend": {
           "calcs": [
@@ -1030,9 +1113,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 28
+        "y": 36
       },
-      "id": 12,
+      "id": 13,
       "options": {
         "legend": {
           "calcs": [
@@ -1136,9 +1219,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 28
+        "y": 36
       },
-      "id": 13,
+      "id": 14,
       "options": {
         "legend": {
           "calcs": [
@@ -1270,9 +1353,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 36
+        "y": 44
       },
-      "id": 14,
+      "id": 15,
       "options": {
         "legend": {
           "calcs": [
@@ -1390,9 +1473,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 36
+        "y": 44
       },
-      "id": 15,
+      "id": 16,
       "options": {
         "legend": {
           "calcs": [
@@ -1475,9 +1558,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 52
       },
-      "id": 16,
+      "id": 17,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1558,9 +1641,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 52
+        "y": 60
       },
-      "id": 17,
+      "id": 18,
       "options": {
         "cellHeight": "sm",
         "footer": {

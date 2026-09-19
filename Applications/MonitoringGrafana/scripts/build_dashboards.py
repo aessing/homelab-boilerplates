@@ -13,7 +13,7 @@ DATASOURCE = {"type": "prometheus", "uid": "monitoring-metrics"}
 VM_PVC_LABELS = 'namespace="monitoring-metrics",persistentvolumeclaim=~"victoriametrics-data-victoriametrics-.*"'
 VM_PVC_CAPACITY = f'max(kubelet_volume_stats_capacity_bytes{{{VM_PVC_LABELS}}})'
 VM_PVC_USED = f'max(kubelet_volume_stats_used_bytes{{{VM_PVC_LABELS}}})'
-VM_WRITE_STOP = f'{VM_PVC_CAPACITY} - max(vm_free_disk_space_limit_bytes)'
+VM_WRITE_STOP = f'{VM_PVC_CAPACITY} - max(vm_free_disk_space_limit_bytes{{job="victoriametrics"}})'
 
 
 def query(expr, legend="", interval="30s", instant=False, fmt="time_series"):
@@ -160,7 +160,10 @@ def panel(kind, title, items, description, unit="short", width=12, height=8, thr
 
 
 def stat(title, expr, description, unit="short", threshold="warm", interval="30s", width=6):
-    return panel("stat", title, [query(expr, interval=interval, instant=True)], description, unit, width, 4, threshold)
+    result = panel("stat", title, [query(expr, interval=interval, instant=True)], description, unit, width, 4, threshold)
+    if unit == "short":
+        result["fieldConfig"]["defaults"]["decimals"] = 0
+    return result
 
 
 def chart(title, items, description, unit="short", interval="30s", width=12):
@@ -278,7 +281,7 @@ DASHBOARDS = [
             table("StatefulSet readiness gap", 'sum by (cluster, namespace, statefulset) (clamp_min(kube_statefulset_replicas{cluster=~"$cluster",namespace=~"$namespace"} - kube_statefulset_status_replicas_ready{cluster=~"$cluster",namespace=~"$namespace"}, 0))', "Desired minus ready StatefulSet replicas.", "short", "critical"),
             table("DaemonSet unavailable", 'sum by (cluster, namespace, daemonset) (kube_daemonset_status_number_unavailable{cluster=~"$cluster",namespace=~"$namespace"})', "Unavailable DaemonSet Pods.", "short", "critical"),
             table("Failed Jobs and suspended CronJobs", 'label_replace(sum by (cluster, namespace) (kube_job_status_failed{cluster=~"$cluster",namespace=~"$namespace"}), "finding", "failed jobs", "", "") or label_replace(sum by (cluster, namespace) (kube_cronjob_spec_suspend{cluster=~"$cluster",namespace=~"$namespace"}), "finding", "suspended CronJobs", "", "")', "Current failed Jobs and explicitly suspended CronJobs as separate findings. Suspended schedules can be intentional.", "short", "warning"),
-            table("HPA replica gap", 'max by (cluster, namespace, horizontalpodautoscaler) (clamp_min(kube_horizontalpodautoscaler_status_desired_replicas{cluster=~"$cluster",namespace=~"$namespace"} - kube_horizontalpodautoscaler_status_current_replicas{cluster=~"$cluster",namespace=~"$namespace"}, 0))', "Desired minus current HPA replicas. N/A when no HPA metrics are exported.", "short", "warning"),
+            stat("HPA replica gap", 'sum(clamp_min(kube_horizontalpodautoscaler_status_desired_replicas{cluster=~"$cluster",namespace=~"$namespace"} - kube_horizontalpodautoscaler_status_current_replicas{cluster=~"$cluster",namespace=~"$namespace"}, 0)) or (0 * count(kube_namespace_status_phase{cluster=~"$cluster",namespace=~"$namespace",phase="Active"}))', "Total desired minus current HPA replicas. A verified zero also covers namespaces with no configured HPA. N/A remains possible when namespace inventory is missing.", threshold="warning", width=24),
             table("Pod disruption budgets", 'min by (cluster, namespace, poddisruptionbudget) (kube_poddisruptionbudget_status_pod_disruptions_allowed{cluster=~"$cluster",namespace=~"$namespace"})', "Current allowed disruptions. Zero may be intentional and needs workload context.", "short", "warm"),
             table("Ready EndpointSlice endpoints", 'sum by (cluster, namespace, service) (kube_endpointslice_endpoints{cluster=~"$cluster",namespace=~"$namespace",ready="true"})', "Ready service endpoints by cluster, namespace and service.", "short", "warm"),
             gauge("Container CPU request coverage", '100 * count(kube_pod_container_resource_requests{cluster=~"$cluster",namespace=~"$namespace",resource="cpu",unit="core"} > 0) / clamp_min(count(kube_pod_container_info{cluster=~"$cluster",namespace=~"$namespace"}), 1)', "Share of observed regular containers with a positive CPU request.", "percent", "free", "60s", 24),
@@ -314,9 +317,18 @@ DASHBOARDS = [
                 ('sum by (cluster, node, device) (rate(node_network_transmit_bytes_total{cluster=~"$cluster",node=~"$node",device!~"lo|veth.*|flannel.*|cni.*"}[$__rate_interval]))', "transmit {{node}} {{device}}"),
             ], "Host interface traffic excluding common virtual interfaces.", "Bps", "15s"),
             table("Network errors and drops", 'sum by (cluster, node, device) (rate(node_network_receive_errs_total{cluster=~"$cluster",node=~"$node"}[$__rate_interval]) + rate(node_network_transmit_errs_total{cluster=~"$cluster",node=~"$node"}[$__rate_interval]) + rate(node_network_receive_drop_total{cluster=~"$cluster",node=~"$node"}[$__rate_interval]) + rate(node_network_transmit_drop_total{cluster=~"$cluster",node=~"$node"}[$__rate_interval]))', "Per-second host interface errors and drops. Small nonzero rates are warnings.", "ops", "warning_rate", "15s"),
+            chart("Host filesystems: used, available and capacity", [
+                ('max by (cluster, node, mountpoint, device) (node_filesystem_size_bytes{cluster=~"$cluster",node=~"$node",fstype!~"tmpfs|overlay"} - node_filesystem_avail_bytes{cluster=~"$cluster",node=~"$node",fstype!~"tmpfs|overlay"})', "used {{cluster}} {{node}} {{mountpoint}}"),
+                ('max by (cluster, node, mountpoint, device) (node_filesystem_avail_bytes{cluster=~"$cluster",node=~"$node",fstype!~"tmpfs|overlay"})', "available {{cluster}} {{node}} {{mountpoint}}"),
+                ('max by (cluster, node, mountpoint, device) (node_filesystem_size_bytes{cluster=~"$cluster",node=~"$node",fstype!~"tmpfs|overlay"})', "capacity {{cluster}} {{node}} {{mountpoint}}"),
+            ], "Host mounts comparable to df -h. Used is capacity minus filesystem-available bytes. Temporary and overlay filesystems are excluded.", "bytes", "60s", 24),
             table("Filesystem utilization", '100 * (1 - max by (cluster, node, mountpoint, device) (node_filesystem_avail_bytes{cluster=~"$cluster",node=~"$node",fstype!~"tmpfs|overlay"}) / max by (cluster, node, mountpoint, device) (node_filesystem_size_bytes{cluster=~"$cluster",node=~"$node",fstype!~"tmpfs|overlay"}))', "Filesystem utilization by node and mountpoint. Read-only and device-error metrics remain separate evidence in Explore.", "percent", "percent"),
             table("Top Pods on selected nodes", 'topk(10, sum by (cluster, node, namespace, pod) (rate(container_cpu_usage_seconds_total{cluster=~"$cluster",node=~"$node",container!="",container!="POD"}[$__rate_interval])))', "Top Pod CPU consumers on the selected node scope.", "cores", "warm", "15s"),
             table("Temperatures and voltage alarms", 'max by (cluster, node, chip, sensor) (node_hwmon_temp_celsius{cluster=~"$cluster",node=~"$node"})', "Available temperature sensors. Voltage alarm metrics are hardware-dependent and should be checked in Explore when present.", "celsius"),
+            stat("Failed host services", 'sum(node_systemd_unit_state{cluster=~"$cluster",node=~"$node",state="failed"} == 1) or (0 * count(node_systemd_unit_state{cluster=~"$cluster",node=~"$node"}))', "Failed systemd units. Zero is emitted only while systemd collector telemetry is present.", threshold="critical", width=24),
+            table("Host reboot required", 'homelab_host_reboot_required{cluster=~"$cluster",node=~"$node"}', "Pending reboot flag from host maintenance collection.", threshold="warning"),
+            table("Maintenance telemetry age", 'time() - homelab_host_maintenance_last_run_unixtime{cluster=~"$cluster",node=~"$node"}', "Collector runs every five minutes. Growing age indicates stale maintenance telemetry.", "s"),
+            table("APT metadata update age", 'homelab_host_apt_update_stamp_age_seconds{cluster=~"$cluster",node=~"$node"} >= 0', "Age of the update-success stamp, not proof that security patches are installed. Missing stamps (-1) are excluded.", "s"),
         ],
     },
     {
@@ -345,6 +357,7 @@ DASHBOARDS = [
             table("Last termination reason", 'max by (cluster, namespace, pod, container, reason) (kube_pod_container_status_last_terminated_reason{cluster=~"$cluster",namespace=~"$namespace",pod=~"$pod"} == 1)', "Last observed reason, not a complete incident history. Interpret the reason label, because a recorded termination is not always a fault.", "short", "warm"),
             table("Pod owners and nodes", 'max by (cluster, namespace, pod, node, owner_kind, owner_name) (kube_pod_info{cluster=~"$cluster",namespace=~"$namespace",pod=~"$pod"} * on (cluster, namespace, pod) group_left(owner_kind, owner_name) kube_pod_owner{cluster=~"$cluster",namespace=~"$namespace",pod=~"$pod",owner_is_controller="true"})', "Current scheduling and owning controller identity.", "short"),
             table("Configured memory limits", 'sum by (cluster, namespace, pod, container) (kube_pod_container_resource_limits{cluster=~"$cluster",namespace=~"$namespace",pod=~"$pod",resource="memory",unit="byte"})', "Zero or absent means no configured limit and is not a usage ratio.", "bytes"),
+            table("Restart details in range", 'sum by (cluster, namespace, pod, container) (increase(kube_pod_container_status_restarts_total{cluster=~"$cluster",namespace=~"$namespace",pod=~"$pod"}[$__range])) > 0', "Containers whose restart counter increased in the selected range. This is the evidence behind the KPI above.", "short", "warning"),
         ],
     },
     {
@@ -355,8 +368,9 @@ DASHBOARDS = [
             stat("API 5xx ratio", 'sum(rate(apiserver_request_total{cluster=~"$cluster",code=~"5.."}[$__rate_interval])) / clamp_min(sum(rate(apiserver_request_total{cluster=~"$cluster"}[$__rate_interval])), 0.000001)', "Server-error share of API requests. Amber starts at 0.1%, red at 1%.", "percentunit", "error_ratio", "30s", 8),
             stat("etcd members without leader", 'count(etcd_server_has_leader{job="etcd",cluster=~"$cluster"}) - sum(etcd_server_has_leader{job="etcd",cluster=~"$cluster"})', "Native etcd members currently reporting no leader.", threshold="critical", width=8),
             stat("etcd leader changes", 'sum(increase(etcd_server_leader_changes_seen_total{job="etcd",cluster=~"$cluster"}[$__range]))', "Leader changes in the selected range. A nonzero value is a review signal, not automatically an outage.", threshold="warning", width=8),
-            stat("Failed etcd proposals", 'sum(increase(etcd_server_proposals_failed_total{job="etcd",cluster=~"$cluster"}[$__range]))', "Failed proposals in the selected range.", threshold="critical", width=12),
+            stat("Failed etcd proposals", 'sum(increase(etcd_server_proposals_failed_total{job="etcd",cluster=~"$cluster"}[$__range]))', "Consensus proposals that did not commit in the selected range. Brief control-plane or leader interruptions can increment this counter. It does not by itself prove data loss.", threshold="critical", width=12),
             stat("Pending etcd proposals", 'sum(etcd_server_proposals_pending{job="etcd",cluster=~"$cluster"})', "Current pending proposals across native etcd members. One to four is a warning, five or more is critical.", threshold="finding", width=12),
+            table("Failed etcd proposals by member", 'sum by (cluster, node) (increase(etcd_server_proposals_failed_total{job="etcd",cluster=~"$cluster"}[$__range])) > 0', "Members that observed failed proposals in the selected range. Correlate the timestamp with leader changes, API errors and node networking.", "short", "critical"),
             chart("API request rate", [('sum by (cluster, verb) (rate(apiserver_request_total{cluster=~"$cluster"}[$__rate_interval]))', "{{cluster}} {{verb}}")], "API requests by verb.", "reqps", "30s"),
             chart("API request duration", [
                 ('histogram_quantile(0.95, sum by (cluster, le) (rate(apiserver_request_duration_seconds_bucket{cluster=~"$cluster"}[$__rate_interval])))', "coarse p95 {{cluster}}"),
@@ -435,9 +449,9 @@ DASHBOARDS = [
             ], "Longhorn engine read and write latency, converted from nanoseconds to seconds. This is volume I/O latency, not replica synchronization lag.", "s", "30s"),
             table("Longhorn volume state", 'max by (cluster, pvc_namespace, pvc, volume, state) (longhorn_volume_state{cluster=~"$cluster",pvc_namespace=~"$namespace",pvc=~"$pvc"} == 1)', "Active one-hot volume state. Interpret the textual state label, not the numeric one-hot value.", "short", "warm"),
             table("Longhorn node storage", '100 * max by (cluster, exported_node) (longhorn_node_storage_usage_bytes{cluster=~"$cluster"}) / clamp_min(max by (cluster, exported_node) (longhorn_node_storage_capacity_bytes{cluster=~"$cluster"}), 1)', "Physical Longhorn node storage utilization.", "percent", "percent"),
-            table("Storage controller reconcile errors", 'sum by (cluster, component, controller) (increase(controller_runtime_reconcile_errors_total{cluster=~"$cluster",component=~"longhorn.*|snapshot.*"}[$__range]))', "Controller errors in the selected range. Nonzero counts are review signals.", "short", "warning"),
+            table("Volumes needing attention", 'max by (cluster, pvc_namespace, pvc, volume, state) (longhorn_volume_robustness{cluster=~"$cluster",state!="healthy"} == 1)', "Current Longhorn volumes whose exported robustness state is not healthy. Empty means no current finding while Longhorn metrics are present.", "short", "critical"),
             table("Longhorn replica state", 'max by (cluster, volume, replica, state) (longhorn_replica_state{cluster=~"$cluster"} == 1)', "Active one-hot replica states. Interpret the state label rather than treating every value of one as healthy."),
-            table("Longhorn rebuild progress", 'max by (cluster, volume, replica) (longhorn_engine_rebuild_progress{cluster=~"$cluster"})', "Current replica rebuild percentage where a rebuild is active.", "percent", "percent"),
+            table("Replica modes needing attention", 'max by (cluster, volume, replica, mode) (longhorn_engine_replica_mode{cluster=~"$cluster",mode!="RW"} == 1)', "Replica modes other than read-write. The deployed Longhorn exporter does not expose rebuild percentage, so WO and ERR modes are the available rebuild/failure evidence.", "short", "critical"),
             table("Longhorn snapshot overview", 'topk(25, longhorn_snapshot_actual_size_bytes{cluster=~"$cluster"} * on(cluster, volume) group_left(pvc_namespace, pvc) (max by (cluster, volume, pvc_namespace, pvc) (longhorn_volume_capacity_bytes{cluster=~"$cluster",pvc_namespace=~"$namespace",pvc=~"$pvc"}) > bool 0))', "Largest current Longhorn snapshots by actual size, enriched with PVC namespace and name.", "bytes"),
             table("Last Longhorn backup age", '(time() - max by (cluster, pvc_namespace, pvc, volume) (longhorn_volume_last_backup_at{cluster=~"$cluster",pvc_namespace=~"$namespace",pvc=~"$pvc"} > 0)) / 3600', "Hours since the last exported Longhorn volume backup timestamp. Volumes without a backup timestamp remain absent.", "h", "warm"),
             mapped_table("Longhorn backup state", 'max by (cluster, volume, backup, recurring_job) (longhorn_backup_state{cluster=~"$cluster"})', "Backup state codes exported by Longhorn. Completed is healthy history; Error requires review.", {0: "New", 1: "Pending", 2: "In progress", 3: "Completed", 4: "Error", 5: "Unknown"}),
@@ -472,7 +486,7 @@ DASHBOARDS = [
                 ('sum by (cluster, namespace, cnpg_cluster) (rate(cnpg_pg_stat_archiver_failed_count{cluster=~"$cluster",namespace=~"$namespace",cnpg_cluster=~"$cnpg_cluster"}[$__rate_interval]))', "failed {{cluster}} - {{cnpg_cluster}}"),
             ], "Archive outcomes from PostgreSQL primaries.", "ops", "60s"),
             table("Backup evidence", '(time() - max by (cluster, namespace, cnpg_cluster) (cnpg_resource_backup_last_success_timestamp_seconds{cluster=~"$cluster",namespace=~"$namespace",cnpg_cluster=~"$cnpg_cluster"})) / 3600', "Hours since each cluster's latest successful backup. Historical failed objects are not counted as failures today.", "h"),
-            table("Collector errors in range", 'sum by (cluster, namespace, cnpg_cluster, cnpg_instance) (increase(cnpg_collector_collection_errors_total{cluster=~"$cluster",namespace=~"$namespace",cnpg_cluster=~"$cnpg_cluster"}[$__range]))', "SQL collection errors during the selected range. Nonzero counts are review signals.", "short", "warning"),
+            table("Collector error state in range", 'max by (cluster, namespace, cnpg_cluster, cnpg_instance) (max_over_time(cnpg_last_error{cluster=~"$cluster",namespace=~"$namespace",cnpg_cluster=~"$cnpg_cluster"}[$__range]))', "One means at least one scrape in the selected range reported that the preceding PostgreSQL collection ended with an error. Zero means observed collections were healthy.", "short", "warning"),
             gauge("Database cache hit ratio", '100 * sum by (cluster, namespace, cnpg_cluster, datname) (rate(cnpg_pg_stat_database_blks_hit{cluster=~"$cluster",namespace=~"$namespace",cnpg_cluster=~"$cnpg_cluster",datname!=""}[$__rate_interval])) / clamp_min(sum by (cluster, namespace, cnpg_cluster, datname) (rate(cnpg_pg_stat_database_blks_hit{cluster=~"$cluster",namespace=~"$namespace",cnpg_cluster=~"$cnpg_cluster",datname!=""}[$__rate_interval])) + sum by (cluster, namespace, cnpg_cluster, datname) (rate(cnpg_pg_stat_database_blks_read{cluster=~"$cluster",namespace=~"$namespace",cnpg_cluster=~"$cnpg_cluster",datname!=""}[$__rate_interval])), 0.000001)', "PostgreSQL shared-buffer cache hit percentage by database, calculated from block-hit and block-read counter rates.", "percent", "free", "60s", 12, "{{cluster}} - {{cnpg_cluster}} - {{datname}}"),
             chart("Temporary data written", [('sum by (cluster, namespace, cnpg_cluster, datname) (rate(cnpg_pg_stat_database_temp_bytes{cluster=~"$cluster",namespace=~"$namespace",cnpg_cluster=~"$cnpg_cluster"}[$__rate_interval]))', "{{cluster}} - {{cnpg_cluster}} - {{datname}}")], "Temporary bytes generated per second.", "Bps", "60s"),
             table("Latest failed backup age", '(time() - max by (cluster, namespace, cnpg_cluster) (cnpg_resource_backup_last_failure_timestamp_seconds{cluster=~"$cluster",namespace=~"$namespace",cnpg_cluster=~"$cnpg_cluster"})) / 3600', "Hours since the latest failed backup, shown separately from the latest success.", "h", "warm"),
@@ -515,7 +529,7 @@ DASHBOARDS = [
             stat("Targets down", 'count(up{cluster=~"$cluster",job=~"$job"}) - sum(up{cluster=~"$cluster",job=~"$job"})', "Selected targets currently down.", threshold="critical"),
             stat("Remote Write sample age", 'clamp_min(time() - max(prometheus_remote_storage_queue_highest_sent_timestamp_seconds{cluster=~"$cluster"}), 0)', "Age of the newest transmitted sample.", "s", "age", "15s"),
             stat("Remote Write pending samples", 'sum(prometheus_remote_storage_samples_pending{cluster=~"$cluster"})', "Current in-flight samples across selected clusters. Short sawtooth growth is normal while batches fill. Investigate sustained growth together with rising sample age, retries or failures.", threshold="warm", interval="15s"),
-            stat("VictoriaMetrics read-only", 'max(vm_storage_is_read_only)', "Central storage read-only status.", threshold="critical"),
+            stat("VictoriaMetrics read-only", 'max(vm_storage_is_read_only{job="victoriametrics"})', "Central storage read-only status, excluding application HistoryDB.", threshold="critical"),
             chart("Remote Write queue depth", [('sum by (cluster) (prometheus_remote_storage_samples_pending{cluster=~"$cluster"})', "pending {{cluster}}")], "Per-cluster samples waiting to be batched and sent. Regular rises and drops are normal. A continuously rising line with increasing sample age or retries indicates backlog.", "short", "15s"),
             chart("Target scrape duration", [('max by (cluster, job) (scrape_duration_seconds{cluster=~"$cluster",job=~"$job"})', "{{cluster}} {{job}}")], "Worst current scrape duration by cluster and job.", "s", "30s"),
             chart("Remote Write flow", [
@@ -524,25 +538,25 @@ DASHBOARDS = [
             ], "Alloy queue ingestion, transmission, retry and failure rates.", "ops", "15s"),
             chart("Remote Write shards", [('sum by (cluster, __name__) ({__name__=~"prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max",cluster=~"$cluster"})', "{{__name__}} {{cluster}}")], "Queue shard scaling.", "short", "15s"),
             chart("VictoriaMetrics ingestion", [
-                ('sum(rate(vm_rows_inserted_total[$__rate_interval]))', "inserted rows"),
-                ('sum(rate(vm_slow_row_inserts_total[$__rate_interval]))', "slow-path rows"),
-                ('sum(rate(vm_rows_invalid_total[$__rate_interval]))', "invalid rows"),
+                ('sum(rate(vm_rows_inserted_total{job="victoriametrics"}[$__rate_interval]))', "inserted rows"),
+                ('sum(rate(vm_slow_row_inserts_total{job="victoriametrics"}[$__rate_interval]))', "slow-path rows"),
+                ('sum(rate(vm_rows_invalid_total{job="victoriametrics"}[$__rate_interval]))', "invalid rows"),
             ], "Row ingestion, slow-path and invalid rates. Slow is not failed.", "ops", "30s"),
             chart("VictoriaMetrics disk", [
                 (VM_PVC_USED, "PVC used"),
-                ('max(vm_data_size_bytes)', "data size"),
+                ('sum(vm_data_size_bytes{job="victoriametrics"})', "data size"),
                 (VM_WRITE_STOP, "write-stop threshold"),
                 (VM_PVC_CAPACITY, "PVC capacity"),
             ], "All series use the used-capacity scale. VictoriaMetrics stops accepting writes when PVC usage reaches the write-stop threshold, calculated as observed PVC capacity minus its required free-space reserve. Data size excludes filesystem and WAL overhead, so PVC used is authoritative.", "bytes", "60s"),
             chart("VictoriaMetrics queries", [
-                ('sum by (__name__) (rate({__name__=~"vm_http_requests_total|vm_http_request_errors_total|vm_slow_queries_total"}[$__rate_interval]))', "{{__name__}}"),
+                ('sum by (__name__) (rate({__name__=~"vm_http_requests_total|vm_http_request_errors_total|vm_slow_queries_total",job="victoriametrics"}[$__rate_interval]))', "{{__name__}}"),
             ], "Backend request, error and slow-query rates.", "reqps", "30s"),
             table("Target health by cluster and job", 'count by (cluster, job) (up{cluster=~"$cluster",job=~"$job"}) - sum by (cluster, job) (up{cluster=~"$cluster",job=~"$job"})', "Zero is healthy for observed targets. A vanished cluster needs an external expected inventory.", "short", "critical"),
             table("vmauth request errors", 'sum by (path) (rate(vmauth_http_request_errors_total[$__rate_interval])) + sum by (path) (rate(vmauth_user_request_errors_total[$__rate_interval]))', "Authentication/proxy request error rate without exposing users or credentials. Small nonzero rates are warnings.", "reqps", "warning_rate", "30s"),
         ],
     },
     {
-        "file": "100-daily.json", "uid": "mon-daily", "title": "Daily Review", "from": "now-1d/d", "to": "now/d", "refresh": "",
+        "file": "100-daily.json", "uid": "mon-daily", "title": "Daily Review", "from": "now-24h", "refresh": "",
         "purpose": "Review the previous completed day. Values describe observed samples and counter changes, not an application SLO or event archive.",
         "vars": [],
         "panels": [
@@ -554,7 +568,7 @@ DASHBOARDS = [
             table("Pod restart increases", 'topk(20, sum by (cluster, namespace, pod, container) (increase(kube_pod_container_status_restarts_total{cluster=~"$cluster"}[$__range])))', "Largest restart increases in the selected period.", "short", "finding"),
             table("API errors", 'sum by (cluster, code, verb, resource) (increase(apiserver_request_total{cluster=~"$cluster",code=~"4..|5.."}[$__range]))', "API error responses during the selected period. Small counts are warnings because expected client errors can occur.", "short", "finding"),
             table("DNS and ingress errors", 'label_replace(sum by (cluster, rcode) (increase(coredns_dns_responses_total{cluster=~"$cluster",rcode!="NOERROR"}[$__range])), "source", "CoreDNS", "", "") or label_replace(sum by (cluster, code) (increase(traefik_service_requests_total{cluster=~"$cluster",code=~"4..|5.."}[$__range])), "source", "Traefik", "", "")', "DNS non-NOERROR and ingress 4xx/5xx counts as separate findings. Small counts are warnings.", "short", "finding"),
-            table("Storage findings", 'max by (cluster, pvc_namespace, pvc, volume, robustness) (longhorn_volume_robustness{cluster=~"$cluster",robustness=~"degraded|faulted"} == 1)', "Current end-of-period Longhorn findings. This is not a reconstructed incident history.", "short", "critical"),
+            stat("Storage findings", 'sum(longhorn_volume_robustness{cluster=~"$cluster",state!="healthy"} == 1) or (0 * count(longhorn_volume_robustness{cluster=~"$cluster"}))', "Current Longhorn volumes whose robustness state is not healthy. Zero is valid only while Longhorn telemetry is present.", threshold="critical", width=24),
             table("PostgreSQL backup freshness", '(time() - max by (cluster, namespace, cnpg_cluster) (cnpg_resource_backup_last_success_timestamp_seconds{cluster=~"$cluster"})) / 3600', "End-of-period age of latest successful CNPG backup. Old failed objects are not daily failures.", "h"),
             table("Longhorn backup freshness", '(time() - max by (cluster, pvc_namespace, pvc, volume) (longhorn_volume_last_backup_at{cluster=~"$cluster"} > 0)) / 3600', "Hours since the latest exported Longhorn volume backup. Volumes without a backup timestamp remain absent rather than appearing extremely old.", "h"),
             table("Longhorn snapshot overview", 'topk(25, max by (cluster, volume, snapshot, user_created) (longhorn_snapshot_actual_size_bytes{cluster=~"$cluster"}))', "Largest current Longhorn snapshots by actual size. System snapshots can exist even when they were not created manually.", "bytes"),
@@ -563,17 +577,17 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "110-capacity.json", "uid": "mon-capacity", "title": "Capacity and Reliability", "from": "now-7d", "refresh": "",
+        "file": "110-capacity.json", "uid": "mon-capacity", "title": "Capacity and Reliability", "from": "now-1h", "refresh": "15s",
         "purpose": "Review 7/30/90-day trends. Forecasting requires at least seven days of sufficiently complete data and is intentionally conservative.",
         "vars": [variable("namespace", "kube_namespace_status_phase", "namespace", 'cluster=~"$cluster"')],
         "panels": [
             stat("Observed history in range", 'time() - min(min_over_time(timestamp(up{cluster=~"$cluster"})[$__range:1h]))', "Age of the oldest observed sample inside the selected range, sampled hourly. Retention does not guarantee complete coverage.", "s", "warm", "60s"),
-            stat("Metrics backend used", 'max(vm_data_size_bytes)', "Current VictoriaMetrics data size.", "bytes", "warm", "60s"),
-            stat("Metrics backend free", 'max(vm_free_disk_space_bytes)', "Current free backend filesystem bytes.", "bytes", "warm", "60s"),
+            stat("Metrics backend used", 'sum(vm_data_size_bytes{job="victoriametrics"})', "Central VictoriaMetrics data size, excluding HistoryDB.", "bytes", "warm", "60s"),
+            stat("Metrics backend free", 'max(vm_free_disk_space_bytes{job="victoriametrics"})', "Current free central backend filesystem bytes.", "bytes", "warm", "60s"),
             stat("PVCs above 85%", 'count(100 * max by (cluster, namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes{job="kubelet",cluster=~"$cluster",namespace=~"$namespace"}) / max by (cluster, namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes{job="kubelet",cluster=~"$cluster",namespace=~"$namespace"}) > 85)', "Current logical filesystems above 85%. This is a capacity warning, not automatically an outage.", threshold="warning", interval="60s"),
             stat("CPU request coverage", '100 * count(kube_pod_container_resource_requests{cluster=~"$cluster",namespace=~"$namespace",resource="cpu",unit="core"} > 0) / clamp_min(count(kube_pod_container_info{cluster=~"$cluster",namespace=~"$namespace"}), 1)', "Share of regular containers with positive CPU requests.", "percent", "free", "60s"),
             stat("Memory limit coverage", '100 * count(kube_pod_container_resource_limits{cluster=~"$cluster",namespace=~"$namespace",resource="memory",unit="byte"} > 0) / clamp_min(count(kube_pod_container_info{cluster=~"$cluster",namespace=~"$namespace"}), 1)', "Share of regular containers with positive memory limits.", "percent", "free", "60s"),
-            stat("Estimated free space in 30 days", 'predict_linear(vm_free_disk_space_bytes[7d], 2592000)', "Linear estimate from the latest seven days. Treat N/A or nonpositive trends as insufficient evidence, not a capacity promise.", "bytes", "warm", "60s"),
+            stat("Estimated free space in 30 days", 'predict_linear(vm_free_disk_space_bytes{job="victoriametrics"}[7d], 2592000)', "Linear estimate from the latest seven days. Treat N/A or nonpositive trends as insufficient evidence, not a capacity promise.", "bytes", "warm", "60s"),
             chart("Node CPU utilization", [('100 * (1 - avg by (cluster, node) (rate(node_cpu_seconds_total{job="node-exporter",cluster=~"$cluster",mode="idle"}[$__rate_interval])))', "{{cluster}} {{node}}")], "Long-window CPU trend. Use panel statistics for peaks, not visual guesswork.", "percent", "60s"),
             chart("Node memory utilization", [('100 * (1 - node_memory_MemAvailable_bytes{job="node-exporter",cluster=~"$cluster"} / node_memory_MemTotal_bytes{job="node-exporter",cluster=~"$cluster"})', "{{cluster}} {{node}}")], "Available-memory based utilization.", "percent", "60s"),
             chart("Namespace CPU", [('topk(10, sum by (cluster, namespace) (rate(container_cpu_usage_seconds_total{cluster=~"$cluster",namespace=~"$namespace",container!="",container!="POD"}[$__rate_interval])))', "{{cluster}} {{namespace}}")], "Top namespaces by CPU rate.", "cores", "60s"),
@@ -582,18 +596,22 @@ DASHBOARDS = [
             chart("Longhorn physical allocation", [('sum by (cluster) (longhorn_volume_actual_size_bytes{cluster=~"$cluster"})', "{{cluster}}")], "Physical volume allocation, separate from PVC logical usage and backup storage.", "bytes", "60s"),
             chart("Monitoring Metrics Storage", [
                 (VM_PVC_USED, "PVC used"),
-                ('max(vm_data_size_bytes)', "data size"),
+                ('sum(vm_data_size_bytes{job="victoriametrics"})', "data size"),
                 (VM_WRITE_STOP, "write-stop threshold"),
                 (VM_PVC_CAPACITY, "PVC capacity"),
             ], "All series use the used-capacity scale. VictoriaMetrics stops accepting writes when PVC usage reaches the write-stop threshold, calculated as observed PVC capacity minus its required free-space reserve. Data size excludes filesystem and WAL overhead, so PVC used is authoritative.", "bytes", "60s"),
             chart("Metrics ingestion and series activity", [
-                ('sum(rate(vm_rows_inserted_total[$__rate_interval]))', "inserted rows"),
-                ('sum(rate(vm_timeseries_precreated_total[$__rate_interval]))', "new series"),
-                ('sum(rate(vm_timeseries_repopulated_total[$__rate_interval]))', "repopulated series"),
+                ('sum(rate(vm_rows_inserted_total{job="victoriametrics"}[$__rate_interval]))', "inserted rows"),
+                ('sum(rate(vm_timeseries_precreated_total{job="victoriametrics"}[$__rate_interval]))', "new series"),
+                ('sum(rate(vm_timeseries_repopulated_total{job="victoriametrics"}[$__rate_interval]))', "repopulated series"),
             ], "Rows ingested per second and the rate at which time series are newly created or repopulated.", "ops", "60s"),
         ],
     },
 ]
+
+# PostgreSQL is built from the same specification by the application-dashboard
+# generator, so it is provisioned once under Monitoring Applications.
+PROVISIONED_DASHBOARDS = [spec for spec in DASHBOARDS if spec["uid"] != "mon-postgres"]
 
 
 DRILLDOWNS = {
@@ -711,7 +729,7 @@ def build(spec):
 
 def main():
     OUTPUT.mkdir(parents=True, exist_ok=True)
-    for spec in DASHBOARDS:
+    for spec in PROVISIONED_DASHBOARDS:
         path = OUTPUT / spec["file"]
         path.write_text(json.dumps(build(spec), indent=2, sort_keys=False) + "\n")
         print(path.relative_to(ROOT))

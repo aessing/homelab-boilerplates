@@ -158,7 +158,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -232,7 +232,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -310,7 +310,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -384,7 +384,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -1236,21 +1236,14 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Desired minus current HPA replicas. N/A when no HPA metrics are exported.",
+      "description": "Total desired minus current HPA replicas. A verified zero also covers namespaces with no configured HPA. N/A remains possible when namespace inventory is missing.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "decimals": 2,
+          "custom": {},
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -1271,29 +1264,27 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 4,
         "w": 24,
         "x": 0,
         "y": 64
       },
       "id": 15,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
-          "show": false
+          "fields": "",
+          "values": false
         },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
-          }
-        ]
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "targets": [
         {
@@ -1302,17 +1293,17 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster, namespace, horizontalpodautoscaler) (clamp_min(kube_horizontalpodautoscaler_status_desired_replicas{cluster=~\"$cluster\",namespace=~\"$namespace\"} - kube_horizontalpodautoscaler_status_current_replicas{cluster=~\"$cluster\",namespace=~\"$namespace\"}, 0))",
-          "format": "table",
+          "expr": "sum(clamp_min(kube_horizontalpodautoscaler_status_desired_replicas{cluster=~\"$cluster\",namespace=~\"$namespace\"} - kube_horizontalpodautoscaler_status_current_replicas{cluster=~\"$cluster\",namespace=~\"$namespace\"}, 0)) or (0 * count(kube_namespace_status_phase{cluster=~\"$cluster\",namespace=~\"$namespace\",phase=\"Active\"}))",
+          "format": "time_series",
           "instant": true,
-          "interval": "60s",
+          "interval": "30s",
           "legendFormat": "",
           "range": false,
           "refId": "A"
         }
       ],
       "title": "HPA replica gap",
-      "type": "table"
+      "type": "stat"
     },
     {
       "datasource": {
@@ -1361,7 +1352,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 68
       },
       "id": 16,
       "options": {
@@ -1448,7 +1439,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 80
+        "y": 76
       },
       "id": 17,
       "options": {
@@ -1528,7 +1519,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 88
+        "y": 84
       },
       "id": 18,
       "options": {

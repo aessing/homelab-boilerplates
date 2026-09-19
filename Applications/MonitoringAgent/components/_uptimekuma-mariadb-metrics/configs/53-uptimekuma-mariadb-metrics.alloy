@@ -1,0 +1,25 @@
+local.file "uptimekuma_mariadb_dsn" {
+  filename  = "/var/run/secrets/monitoring-agent-uptimekuma-database/dsn"
+  is_secret = true
+}
+
+prometheus.exporter.mysql "uptimekuma_mariadb" {
+  data_source_name    = local.file.uptimekuma_mariadb_dsn.content
+  // These collectors require global MariaDB privileges that the application
+  // account deliberately does not receive.
+  disable_collectors = [
+    "info_schema.tables",
+    "info_schema.innodb_cmp",
+    "info_schema.innodb_cmpmem",
+    "slave_status",
+  ]
+  log_slow_filter    = true
+}
+
+prometheus.scrape "uptimekuma_mariadb" {
+  targets         = prometheus.exporter.mysql.uptimekuma_mariadb.targets
+  job_name        = "uptimekuma-mariadb"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}

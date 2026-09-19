@@ -12,6 +12,9 @@ resources:
   - ./resources/network-policy-traefik-to-application.yaml
   - ./resources/network-policy-traefik-to-editor.yaml
   - ./resources/network-policy-traefik-to-historydb.yaml
+  - ./resources/network-policy-monitoring-agent-to-historydb.yaml
+  - ./resources/network-policy-monitoring-agent-to-mqtt-metrics.yaml
+  - ./resources/network-policy-monitoring-agent-to-application.yaml
   - ./resources/resource-quota.yaml
 
 components:

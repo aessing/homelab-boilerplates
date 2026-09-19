@@ -6,3 +6,11 @@ metadata:
 imageTag:
   name: nginxinc/nginx-unprivileged
   newTag: 1.31.6
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: nginx-metrics-imagetransformer
+imageTag:
+  name: nginx/nginx-prometheus-exporter
+  newTag: 1.5.3

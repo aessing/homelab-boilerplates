@@ -86,6 +86,18 @@ spec:
               mountPath: /var/lib/alloy
             - name: tmp
               mountPath: /tmp
+            - name: grafana-metrics
+              mountPath: /var/run/secrets/monitoring-agent-grafana-metrics
+              readOnly: true
+            - name: grafana-haengine
+              mountPath: /var/run/secrets/monitoring-agent-grafana-haengine
+              readOnly: true
+            - name: uptimekuma-database
+              mountPath: /var/run/secrets/monitoring-agent-uptimekuma-database
+              readOnly: true
+            - name: homeassistant-prometheus
+              mountPath: /var/run/secrets/monitoring-agent-homeassistant-prometheus
+              readOnly: true
       volumes:
         - name: config
           projected:
@@ -101,6 +113,24 @@ spec:
               - configMap:
                   name: alloy-logs-telemetry
                   optional: true
+              - configMap:
+                  name: alloy-application-metrics
+                  optional: true
+              - configMap:
+                  name: alloy-grafana-metrics
+                  optional: true
+              - configMap:
+                  name: alloy-grafana-backend-metrics
+                  optional: true
+              - configMap:
+                  name: alloy-uptimekuma-mariadb-metrics
+                  optional: true
+              - configMap:
+                  name: alloy-uptimekuma-metrics
+                  optional: true
+              - configMap:
+                  name: alloy-homeassistant-core-metrics
+                  optional: true
         - name: remote-write-token
           secret:
             secretName: monitoring-agent-remote-write
@@ -109,6 +139,36 @@ spec:
                 path: token
         - name: tmp
           emptyDir: {}
+        - name: grafana-metrics
+          secret:
+            secretName: monitoring-agent-grafana-metrics
+            optional: true
+            items:
+              - key: username
+                path: username
+              - key: password
+                path: password
+        - name: grafana-haengine
+          secret:
+            secretName: monitoring-agent-grafana-haengine
+            optional: true
+            items:
+              - key: authkey
+                path: authkey
+        - name: uptimekuma-database
+          secret:
+            secretName: monitoring-agent-uptimekuma-database
+            optional: true
+            items:
+              - key: dsn
+                path: dsn
+        - name: homeassistant-prometheus
+          secret:
+            secretName: monitoring-agent-homeassistant-prometheus
+            optional: true
+            items:
+              - key: token
+                path: token
   volumeClaimTemplates:
     - metadata:
         name: alloy-data

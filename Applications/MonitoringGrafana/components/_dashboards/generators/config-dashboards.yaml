@@ -29,7 +29,6 @@ files:
   - 40-k3s-etcd.json=./dashboards/40-k3s-etcd.json
   - 50-network.json=./dashboards/50-network.json
   - 60-storage.json=./dashboards/60-storage.json
-  - 70-postgres.json=./dashboards/70-postgres.json
 ---
 apiVersion: builtin
 kind: ConfigMapGenerator
@@ -58,3 +57,65 @@ options:
 files:
   - log-explorer.json=./log-dashboards/log-explorer.json
   - log-pipeline-health.json=./log-dashboards/log-pipeline-health.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-applications-core
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - applications-overview.json=./application-dashboards/applications-overview.json
+  - uptime-kuma.json=./application-dashboards/uptime-kuma.json
+  - authentik.json=./application-dashboards/authentik.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-applications-services
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - grafana.json=./application-dashboards/grafana.json
+  - home-assistant.json=./application-dashboards/home-assistant.json
+  - homecdn.json=./application-dashboards/homecdn.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-applications-network
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - timeserver.json=./application-dashboards/timeserver.json
+  - uptime-kuma-monitors.json=./application-dashboards/uptime-kuma-monitors.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-applications-backends
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - loki.json=./application-dashboards/loki.json
+  - victoriametrics.json=./application-dashboards/victoriametrics.json
+  - postgresql.json=./application-dashboards/postgresql.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-root
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - operations-center.json=./root-dashboards/operations-center.json

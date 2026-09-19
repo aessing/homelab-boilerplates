@@ -1,0 +1,47 @@
+// Grafana protects /metrics with a dedicated, least-privilege credential.
+local.file "grafana_metrics_password" {
+  filename  = "/var/run/secrets/monitoring-agent-grafana-metrics/password"
+  is_secret = true
+}
+
+discovery.kubernetes "grafana_pods" {
+  role = "pod"
+}
+
+discovery.relabel "grafana" {
+  targets = discovery.kubernetes.grafana_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase", "__meta_kubernetes_namespace", "__meta_kubernetes_pod_label_app_kubernetes_io_component", "__meta_kubernetes_pod_container_port_name"]
+    regex         = "Running;grafana;application;grafana"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+}
+
+prometheus.scrape "grafana" {
+  targets         = discovery.relabel.grafana.output
+  job_name        = "grafana"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+
+  basic_auth {
+    username = "metrics"
+    password = local.file.grafana_metrics_password.content
+  }
+}

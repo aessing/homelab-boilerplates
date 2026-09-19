@@ -1,0 +1,156 @@
+// Application metrics that are available without application credentials.
+// Grafana is separate because its metrics endpoint is deliberately protected.
+
+discovery.kubernetes "application_metric_pods" {
+  role = "pod"
+}
+
+discovery.relabel "authentik" {
+  targets = discovery.kubernetes.application_metric_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase", "__meta_kubernetes_namespace", "__meta_kubernetes_pod_label_app_kubernetes_io_name", "__meta_kubernetes_pod_label_app_kubernetes_io_component", "__meta_kubernetes_pod_container_port_name"]
+    regex         = "Running;authentik;authentik;(server|worker);metrics"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+    target_label  = "authentik_component"
+  }
+}
+
+prometheus.scrape "authentik" {
+  targets         = discovery.relabel.authentik.output
+  job_name        = "authentik"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}
+
+discovery.relabel "authentik_outposts" {
+  targets = discovery.kubernetes.application_metric_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase", "__meta_kubernetes_namespace", "__meta_kubernetes_pod_label_app_kubernetes_io_managed_by"]
+    regex         = "Running;authentik-outpost;goauthentik.io"
+    action        = "keep"
+  }
+
+  // Proxy outposts listen on 9300 without declaring a Kubernetes container port.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_ip"]
+    regex         = "(.+)"
+    replacement   = "$1:9300"
+    target_label  = "__address__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_goauthentik_io_outpost_type"]
+    target_label  = "authentik_outpost_type"
+  }
+}
+
+prometheus.scrape "authentik_outposts" {
+  targets         = discovery.relabel.authentik_outposts.output
+  job_name        = "authentik-outpost"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}
+
+discovery.relabel "historydb" {
+  targets = discovery.kubernetes.application_metric_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase", "__meta_kubernetes_namespace", "__meta_kubernetes_pod_label_app_kubernetes_io_component", "__meta_kubernetes_pod_container_port_name"]
+    regex         = "Running;homeassistant;historydb;http"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+}
+
+prometheus.scrape "historydb" {
+  targets         = discovery.relabel.historydb.output
+  job_name        = "home-assistant-historydb"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}
+
+discovery.relabel "grafana_renderer" {
+  targets = discovery.kubernetes.application_metric_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase", "__meta_kubernetes_namespace", "__meta_kubernetes_pod_label_app_kubernetes_io_component", "__meta_kubernetes_pod_container_port_name"]
+    regex         = "Running;grafana;renderer;metrics"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+}
+
+prometheus.scrape "grafana_renderer" {
+  targets         = discovery.relabel.grafana_renderer.output
+  job_name        = "grafana-renderer"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}

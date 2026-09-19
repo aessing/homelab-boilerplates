@@ -158,7 +158,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -232,7 +232,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -306,7 +306,7 @@
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -1114,7 +1114,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Controller errors in the selected range. Nonzero counts are review signals.",
+      "description": "Current Longhorn volumes whose exported robustness state is not healthy. Empty means no current finding while Longhorn metrics are present.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1139,19 +1139,12 @@
                 "value": null
               },
               {
-                "color": "#FFB357",
+                "color": "red",
                 "value": 1
               }
             ]
           },
-          "unit": "short",
-          "links": [
-            {
-              "targetBlank": false,
-              "title": "Open controller diagnostics",
-              "url": "/d/mon-platform?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-component=${__data.fields.component}"
-            }
-          ]
+          "unit": "short"
         },
         "overrides": []
       },
@@ -1187,7 +1180,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster, component, controller) (increase(controller_runtime_reconcile_errors_total{cluster=~\"$cluster\",component=~\"longhorn.*|snapshot.*\"}[$__range]))",
+          "expr": "max by (cluster, pvc_namespace, pvc, volume, state) (longhorn_volume_robustness{cluster=~\"$cluster\",state!=\"healthy\"} == 1)",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -1196,7 +1189,7 @@
           "refId": "A"
         }
       ],
-      "title": "Storage controller reconcile errors",
+      "title": "Volumes needing attention",
       "type": "table"
     },
     {
@@ -1291,7 +1284,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Current replica rebuild percentage where a rebuild is active.",
+      "description": "Replica modes other than read-write. The deployed Longhorn exporter does not expose rebuild percentage, so WO and ERR modes are the available rebuild/failure evidence.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1316,16 +1309,12 @@
                 "value": null
               },
               {
-                "color": "#FFB357",
-                "value": 75
-              },
-              {
                 "color": "red",
-                "value": 90
+                "value": 1
               }
             ]
           },
-          "unit": "percent"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -1361,7 +1350,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster, volume, replica) (longhorn_engine_rebuild_progress{cluster=~\"$cluster\"})",
+          "expr": "max by (cluster, volume, replica, mode) (longhorn_engine_replica_mode{cluster=~\"$cluster\",mode!=\"RW\"} == 1)",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -1370,7 +1359,7 @@
           "refId": "A"
         }
       ],
-      "title": "Longhorn rebuild progress",
+      "title": "Replica modes needing attention",
       "type": "table"
     },
     {

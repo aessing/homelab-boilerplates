@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: alloy-grafana-metrics
+    behavior: create
+    options:
+      labels:
+        app.kubernetes.io/component: alloy
+      annotations:
+        reloader.stakater.com/match: 'false'
+    files:
+      - 51-grafana-metrics.alloy=./configs/51-grafana-metrics.alloy
