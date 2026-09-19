@@ -1,0 +1,16 @@
+apiVersion: 1
+datasources:
+  - name: Monitoring Logs
+    uid: monitoring-logs
+    type: loki
+    access: proxy
+    url: https://logs.example.com
+    basicAuth: true
+    basicAuthUser: $LOKI_USERNAME
+    secureJsonData:
+      basicAuthPassword: $LOKI_PASSWORD
+    jsonData:
+      tlsSkipVerify: false
+      maxLines: 1000
+    editable: false
+    isDefault: false

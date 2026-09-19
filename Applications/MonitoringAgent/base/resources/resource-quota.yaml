@@ -6,6 +6,6 @@ metadata:
 spec:
   hard:
     pods: 10
-    persistentvolumeclaims: 1
-    limits.cpu: '1.2'
-    limits.memory: 1Gi
+    persistentvolumeclaims: 2
+    limits.cpu: '2'
+    limits.memory: 2Gi

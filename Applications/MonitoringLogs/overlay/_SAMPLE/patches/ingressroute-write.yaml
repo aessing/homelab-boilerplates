@@ -1,0 +1,4 @@
+---
+- op: replace
+  path: /spec/routes/0/match
+  value: Host(`logs.example.com`) && Path(`/loki/api/v1/push`) && Method(`POST`)

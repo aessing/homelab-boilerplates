@@ -20,11 +20,17 @@ components:
   - ../../components/_central-telemetry
   - ../../components/_cnpg-state
   - ../../components/_etcd
+  - ../../components/_logs
+  - ../../components/_logs-events
+  - ../../components/_logs-telemetry
 
 generators:
   - ./generators/config-alloy-environment.yaml
   - ./generators/secret-monitoring-agent-remote-write.yaml
   - ./generators/secret-monitoring-agent-telemetry.yaml
+  - ./generators/config-alloy-logs-environment.yaml
+  - ./generators/secret-monitoring-agent-logs.yaml
+  - ./generators/secret-monitoring-agent-logs-telemetry.yaml
 
 patches:
   - path: ./patches/network-policy-alloy-egress.yaml
@@ -39,12 +45,18 @@ patches:
       version: v1
       kind: NetworkPolicy
       name: kube-state-metrics-kubernetes-api-egress
+  - path: ./patches/network-policy-alloy-logs-egress.yaml
+    target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: alloy-logs-egress
   - path: ./patches/pvc.yaml
     target:
       group: apps
       version: v1
       kind: StatefulSet
-      name: alloy
+      name: alloy-metrics
   - path: ./patches/resource-quota.yaml
     target:
       version: v1

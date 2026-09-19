@@ -1,9 +1,10 @@
 # MonitoringAgent
 
 Per-cluster metrics collection with Grafana Alloy, node-exporter and
-kube-state-metrics. Alloy pushes samples over HTTPS to
-[MonitoringMetrics](../MonitoringMetrics/README.md). All components are
-self-hosted and use open-source software.
+kube-state-metrics, plus an optional dedicated log Alloy DaemonSet. Metrics
+are pushed over HTTPS to [MonitoringMetrics](../MonitoringMetrics/README.md).
+Logs and Kubernetes Events are pushed to [MonitoringLogs](../MonitoringLogs/README.md).
+All components are self-hosted and use open-source software.
 
 ## Contents
 
@@ -15,6 +16,8 @@ components/
   _kube-state-metrics/        Object metrics Deployment, RBAC and Service
   _central-telemetry/         Optional backend self-monitoring
   _etcd/                      Optional native K3s etcd metrics
+  _logs/                      Per-node Pod, journal and selected host log collection
+  _logs-events/               Cluster-wide Kubernetes Event collection
 overlay/
   _SAMPLE/                    Complete example for the central cluster
     configs/alloy.env         Cluster identity, URLs and scrape intervals
@@ -47,6 +50,8 @@ The unused telemetry placeholder file is not rendered into a Secret.
 | Optional native K3s etcd | 30s | Leader and quorum health, proposals, database size, peer traffic and storage latency |
 | CloudNativePG instances | 60s | Per-instance PostgreSQL, replication, WAL, connection and database metrics |
 | Optional CNPG resource state | 60s | Desired/ready instances, cluster conditions, backup phases, schedules and Barman recovery-window timestamps |
+| Log Alloy, per node | Continuous | All Kubernetes container stdout/stderr, systemd journal, selected K3s/containerd and host maintenance logs |
+| Log Alloy Events, once per cluster | Continuous | Kubernetes Events as structured JSON log records |
 
 Each scrape also generates target-health metrics such as `up`.
 The server-side writer identity selects the trusted `cluster` label.
@@ -57,8 +62,10 @@ metrics available. Other applications still require explicit opt-in. Multus
 functional probes and UniFi remain separate coverage items because they require
 additional endpoint or probe setup. Detailed SMART collection is deliberately
 omitted for storage connected through USB adapters without SMART passthrough.
-Logs, events as a historical stream, traces, dashboards and alerts are not
-provided.
+Log collection excludes traces, SQL statements, query payloads, application
+data files and arbitrary private application log files. Application-specific
+file logs are added only after a separate review. Dashboards and alerts are not
+provided by this application.
 
 K3s shares its metrics registry between embedded Kubernetes components.
 The registry is shared **per process/node**, not across the whole cluster.
@@ -97,6 +104,8 @@ four coarse controller-reconcile boundaries (`0.1`, `1`, `5` and `+Inf`).
 - A CNI enforcing NetworkPolicies.
 - A ready MonitoringMetrics HTTPS endpoint with a trusted certificate and a
   dedicated writer identity for this cluster.
+- When enabling logs, a ready MonitoringLogs HTTPS endpoint with a trusted
+  certificate and a dedicated writer token for this cluster.
 - Longhorn with the expandable `longhorn-retain` StorageClass, or an equivalent
   class configured by an overlay patch.
 - Kubelet certificates valid for the node addresses used by discovery.
@@ -131,6 +140,7 @@ umask 077
 cp -r overlay/_SAMPLE overlay/my-environment
 chmod 600 overlay/my-environment/secrets/secret-monitoring-agent-remote-write.env
 chmod 600 overlay/my-environment/secrets/secret-monitoring-agent-telemetry.env
+chmod 600 overlay/my-environment/secrets/secret-monitoring-agent-logs.env
 ```
 
 Use an overlay name that does not start with an underscore so it stays ignored
@@ -149,6 +159,17 @@ token=<matching-central-writer-token>
 
 Do not generate an unrelated token on the agent side. Each cluster gets a
 different writer identity. Never reuse the Grafana reader password.
+
+When log collection is enabled, replace the placeholder in
+`secrets/secret-monitoring-agent-logs.env` with the matching MonitoringLogs
+writer token and set its endpoint in `configs/alloy-logs.env`:
+
+```dotenv
+LOKI_WRITE_URL=https://logs.example.com/loki/api/v1/push
+```
+
+The Metrics and Logs writer tokens are distinct. Do not use a Loki query-reader
+credential or a Metrics Remote Write token for log ingestion.
 
 The sample enables central backend telemetry. Enable it on only one collector,
 normally in the backend's cluster. Set
@@ -179,8 +200,10 @@ then update workload references and trigger an Alloy rollout.
 | File | Configuration |
 | --- | --- |
 | `configs/alloy.env` | Unique cluster name, Remote Write URL, telemetry hostname, 15/30/60 intervals |
+| `configs/alloy-logs.env` | Loki push URL for the dedicated log collector |
 | `patches/network-policy-alloy-egress.yaml` | API Service IP, API node IPs, kubelet/exporter node IPs and backend ingress IP |
 | `patches/network-policy-kubernetes-api-egress.yaml` | API Service and API node IPs |
+| `patches/network-policy-alloy-logs-egress.yaml` | API Service, API node IPs on 6443, Loki ingress IP and local Traefik Pods on 8443 |
 | `patches/pvc.yaml` | Initial Alloy WAL size, default 2 GiB |
 | `patches/resource-quota.yaml` | Pod and PVC quotas, extend resource quotas if needed |
 | `transformers/images.yaml` | Pinned image versions |
@@ -212,11 +235,15 @@ Confirm the intended context, then deploy:
 ```sh
 set -o pipefail
 kustomize build overlay/my-environment | kubectl apply -f -
-kubectl -n monitoring-agent rollout status statefulset/alloy
+kubectl -n monitoring-agent rollout status statefulset/alloy-metrics
 kubectl -n monitoring-agent rollout status deployment/kube-state-metrics
 kubectl -n monitoring-agent rollout status daemonset/node-exporter
+kubectl -n monitoring-agent rollout status daemonset/alloy-logs
 kubectl -n monitoring-agent get pods,pvc
 ```
+
+Keep exactly one metrics collector per cluster and preserve its WAL PVC during
+updates. Verify that no legacy collector scrapes the same targets before deployment.
 
 Apply the repository's Longhorn and CSI Snapshot Controller changes before the
 agent. They provide the Longhorn metrics ingress rule and enable the snapshot
@@ -244,6 +271,9 @@ and Remote Write errors. Through the authenticated Grafana datasource, verify:
   `etcd_server_is_leader == 1` series per cluster.
 - Pending and failed etcd proposals, database size versus quota, peer latency
   and WAL/backend commit latency.
+- In Grafana's **Monitoring Logs** datasource, run `{cluster="<cluster>"}` and
+  confirm Pod logs, journal records and Kubernetes Events arrive with the
+  expected `cluster`, `node` and `source` labels.
 
 An Alloy readiness success does not prove that all scrapes or Remote Write
 requests succeed. Deploy one cluster first and check coverage before expanding.
@@ -273,6 +303,9 @@ requests succeed. Deploy one cluster first and check coverage before expanding.
 | Alloy | Explicitly opted-in application Pods | TCP port named `metrics` |
 | Alloy | Central Traefik ingress IP | TCP 443 |
 | Central-cluster Alloy | Local Traefik Pods after DNAT | TCP 8443 |
+| Log Alloy, per node | Kubernetes API Service | TCP 443 |
+| Log Alloy, per node | Central Loki Traefik ingress IP | TCP 443 |
+| Metrics Alloy | Local Log Alloy metrics endpoint | TCP 12345 |
 | Non-host-network agent Pods | CoreDNS Pods | UDP/TCP 53 |
 
 Ports and policy processing depend on the actual Service targets and CNI.
@@ -330,10 +363,12 @@ cardinality before opting in.
 Endpoints requiring HTTPS, authentication or a different path need an explicit
 Alloy scrape configuration. ServiceMonitor/PodMonitor CRDs are not consumed by
 this configuration. UniFi can be added through a local exporter later.
-The future log collector is separate and is not deployed here.
+The log collector is separate from metric Alloy. Its DaemonSet runs once per
+node and owns only log tailing. The singleton metrics Alloy collects Kubernetes
+Events, which avoids duplicate Events from every node.
 
-See the [infrastructure coverage record](../../docs/plans/monitoring-infrastructure-coverage.md)
-for implemented jobs, remaining gaps, endpoint security and acceptance criteria.
+The coverage and network tables above describe the implemented sources and
+their prerequisites. Scrape health does not prove end-to-end service availability.
 
 ## Resources and Retention
 
@@ -376,6 +411,7 @@ metrics. Prefer those over deprecated CNPG collector backup timestamps.
 | Alloy, once per cluster | 0 / 500m | 0 / 512Mi |
 | kube-state-metrics, once per cluster | 0 / 200m | 0 / 128Mi |
 | node-exporter, per node | 0 / 100m | 0 / 64Mi |
+| Log Alloy, per node | 0 / 250m | 0 / 256Mi |
 
 CPU and memory requests are explicitly zero, so these containers reserve no
 scheduling capacity. Omitting requests while keeping limits would make Kubernetes
@@ -384,8 +420,9 @@ under node pressure. PVC storage requests remain unchanged. Limits cap usage and
 cause throttling or OOM restarts. These are starting budgets, not measured
 capacity guarantees. Observe a representative workload and backlog recovery
 before reducing them further. Adjust namespace quotas along with any increases.
-The agent namespace permits 1.2 CPU of limits to allow the kube-state-metrics
-rollout's temporary additional 200m container. This quota does not reserve CPU.
+The agent namespace permits 2 CPU and 2 GiB of limits. This covers all three
+components on a three-node cluster and a temporary kube-state-metrics rollout.
+This quota does not reserve CPU or memory.
 
 The Remote Write queue is capped at four shards to reduce memory overhead.
 The 2 GiB WAL survives Pod replacement and can retain unsent samples for up to
@@ -413,21 +450,62 @@ does not reduce collector CPU or memory consumption.
 - **Remote Write 401/403:** Check the central writer identity and token match.
 - **Remote Write backlog:** Check backend disk space, connectivity and queue
   metrics before increasing shards or memory.
+- **Log Agent not ready:** Check that `/var/log/pods`, `/var/log/journal`,
+  `/run/log/journal` and the K3s containerd directory exist on the affected
+  node, then check the dedicated Loki token and HTTPS route.
 - **Pending PVC:** Check Longhorn capacity, StorageClass and PVC events.
 
 Preserve the WAL PVC during rollout troubleshooting. Redact infrastructure
 details and credentials before sharing logs.
 
+## Log Collection Security
+
+The Log Alloy DaemonSet runs as UID 0 only because Linux journal and CRI log
+files commonly require root-level read access. It is not privileged, has no
+host network or host PID namespace, drops all Linux capabilities, uses a
+read-only root filesystem and mounts only the required host log paths as
+read-only. Its only writable host path is `/var/lib/alloy-logs`, which stores
+tail positions. The WAL has a separate disk-backed 512 MiB `emptyDir`, and the
+container has a 768 MiB ephemeral-storage limit with zero request. Kubernetes
+evicts a Pod that exceeds these limits after detecting usage, so this is not an
+instantaneous filesystem quota. Positions survive Pod replacement, but unsent
+WAL data does not. The one-hour segment retention also bounds outage recovery.
+Monitor node disk pressure and dropped-entry counters. It does not mount host root, other workloads' Secrets,
+application data directories or audit logs.
+
+The collector tails every Kubernetes Pod's standard CRI log, but only a fixed
+list of host-maintenance files under `/var/log`. It does not blindly glob all
+host files. Journal and runtime-journal directories are required host paths and
+are mounted as existing directories, so a misconfigured node fails visibly
+instead of the DaemonSet creating log directories on that host.
+
+Newly discovered log files are read from the beginning within a one-hour
+discovery window, including short-lived and init-container output. PostgreSQL
+records are rebuilt from an allowlist of severity, SQLSTATE and logger fields.
+Their free text is deliberately omitted because even error messages can contain
+SQL and application data. Known query/payload records are dropped before WAL
+ingestion and credential patterns are redacted. These rules cannot guarantee
+that arbitrary application text contains no personal information.
+
+Enable `_logs-telemetry` only in the backend cluster, along with its Secret
+generator. Its token must match MonitoringLogs' `TELEMETRY_TOKEN`, and
+`LOKI_TELEMETRY_HOST` is configured in `configs/alloy-logs.env`. Both backend
+scrapes use authenticated HTTPS, never a direct unauthenticated Loki port.
+
 ## Repository Validation
 
-With Python 3, PyYAML and Kustomize installed, run from the repository root:
+With Python 3, kubectl and Kustomize installed, run from the repository root:
 
 ```sh
 python3 -m unittest discover -s tests/monitoring -v
 MONITORING_PRIVATE_OVERLAYS=1 python3 -m unittest discover -s tests/monitoring -v
+MONITORING_ALLOY_RUNTIME=1 python3 -m unittest discover -s tests/monitoring -p test_logs.py -v
 ```
 
 The first command checks public samples. The second also checks local overlays.
+The third requires Podman and the pinned Alloy image and executes isolated
+synthetic log fixtures, including privacy filtering, CRI fragments, file rotation
+and persistent-position restart. It does not access live cluster logs.
 The tests cover references, probes, network ports, rollout memory quota,
 placeholder token alignment and consistent agent overlay layouts. They do not
 connect to Kubernetes. Validate the Alloy configuration separately with the

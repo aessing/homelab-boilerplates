@@ -7,6 +7,8 @@ metadata:
     app.kubernetes.io/component: 'database'
 spec:
   instances: 0
+  # Keep CNPG lifecycle, backup and failover diagnostics in structured stdout logs.
+  logLevel: info
   imageCatalogRef:
     apiGroup: postgresql.cnpg.io
     kind: ClusterImageCatalog
@@ -37,6 +39,12 @@ spec:
     parameters:
       shared_buffers: 0MB
       password_encryption: scram-sha-256
+      # Preserve actionable database diagnostics without recording general SQL.
+      log_min_messages: warning
+      log_min_error_statement: error
+      log_error_verbosity: default
+      log_statement: none
+      log_min_duration_statement: "-1"
     pg_hba:
       - "hostnossl all all all reject"
       - "hostssl all all all scram-sha-256"

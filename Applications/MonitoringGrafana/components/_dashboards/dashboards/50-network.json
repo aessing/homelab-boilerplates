@@ -1201,7 +1201,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Scrape health for discovered networking components.",
+      "description": "Worst observed scrape health in each group. Missing targets remain unknown.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1274,7 +1274,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster, job, component) (up{cluster=~\"$cluster\",job=~\"kubernetes-infrastructure|metallb|kube-vip\"})",
+          "expr": "min by (cluster, job, component) (up{cluster=~\"$cluster\",job=~\"kubernetes-infrastructure|metallb|kube-vip\"})",
           "format": "table",
           "instant": true,
           "interval": "60s",

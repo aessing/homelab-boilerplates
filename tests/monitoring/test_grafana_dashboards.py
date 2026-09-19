@@ -260,6 +260,18 @@ class GrafanaDashboards(unittest.TestCase):
         self.assertNotIn("VictoriaMetrics growth", capacity_titles)
         self.assertNotIn("Ingestion and churn", capacity_titles)
 
+        for dashboard_name, title in (
+            ("90-pipeline.json", "VictoriaMetrics disk"),
+            ("110-capacity.json", "Monitoring Metrics Storage"),
+        ):
+            storage = panel(self.dashboards[dashboard_name], title)
+            legends = [target["legendFormat"] for target in storage["targets"]]
+            expressions = [target["expr"] for target in storage["targets"]]
+            self.assertEqual(legends, ["PVC used", "data size", "write-stop threshold", "PVC capacity"])
+            self.assertIn("kubelet_volume_stats_capacity_bytes", expressions[2])
+            self.assertIn("vm_free_disk_space_limit_bytes", expressions[2])
+            self.assertIn("kubelet_volume_stats_used_bytes", expressions[0])
+
         daily_titles = {item["title"] for item in self.dashboards["100-daily.json"]["panels"]}
         self.assertIn("PostgreSQL backup freshness", daily_titles)
         self.assertIn("Longhorn backup freshness", daily_titles)
@@ -361,7 +373,7 @@ class GrafanaDashboards(unittest.TestCase):
             self.assertLess(path.stat().st_size, 200 * 1024, path.name)
         docs = render(ROOT / "Applications" / "Grafana" / "overlay" / "_SAMPLE")
         configmaps = [doc for doc in docs if doc["kind"] == "ConfigMap" and doc["metadata"]["name"].startswith("grafana-monitoring-dashboard")]
-        self.assertEqual(len(configmaps), 4)
+        self.assertEqual(len(configmaps), 5)
         for configmap in configmaps:
             total = sum(len(value.encode()) for value in configmap.get("data", {}).values())
             self.assertLess(total, 1024 * 1024)

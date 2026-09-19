@@ -179,6 +179,53 @@ prometheus.scrape "alloy_self" {
   forward_to      = [prometheus.remote_write.central.receiver]
 }
 
+discovery.kubernetes "alloy_logs_pods" {
+  role = "pod"
+
+  selectors {
+    role  = "pod"
+    label = "app.kubernetes.io/name=monitoring-agent,app.kubernetes.io/component=alloy-logs"
+  }
+
+  namespaces {
+    own_namespace = true
+  }
+}
+
+discovery.relabel "alloy_logs" {
+  targets = discovery.kubernetes.alloy_logs_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Running"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    regex         = "http"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "instance"
+  }
+}
+
+prometheus.scrape "alloy_logs" {
+  targets         = discovery.relabel.alloy_logs.output
+  job_name        = "alloy-logs"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}
+
 discovery.kubernetes "application_pods" {
   role = "pod"
 

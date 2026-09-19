@@ -1,0 +1,24 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: monitoring-logs-write
+  labels:
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`logs.example.com`) && Path(`/loki/api/v1/push`) && Method(`POST`)
+      middlewares:
+        - name: chain-default
+          namespace: traefik-system
+      services:
+        - name: vmauth
+          port: 8427
+          passHostHeader: true
+  tls:
+    secretName: monitoring-logs-tls

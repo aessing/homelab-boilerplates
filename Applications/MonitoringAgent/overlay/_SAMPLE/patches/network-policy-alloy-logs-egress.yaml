@@ -1,0 +1,36 @@
+---
+- op: replace
+  path: /spec/egress/0/to
+  value:
+    - ipBlock:
+        cidr: 192.0.2.100/32
+
+- op: replace
+  path: /spec/egress/1/to
+  value:
+    - ipBlock:
+        cidr: 192.0.2.11/32
+
+- op: replace
+  path: /spec/egress/2/to
+  value:
+    - ipBlock:
+        cidr: 192.0.2.11/32
+    - ipBlock:
+        cidr: 192.0.2.12/32
+    - ipBlock:
+        cidr: 192.0.2.13/32
+
+- op: add
+  path: /spec/egress/-
+  value:
+    to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: traefik-system
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: traefik
+    ports:
+      - protocol: TCP
+        port: 8443

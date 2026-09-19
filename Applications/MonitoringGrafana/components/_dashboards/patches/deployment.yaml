@@ -16,7 +16,13 @@ spec:
             - name: monitoring-dashboards
               mountPath: /var/lib/grafana/monitoring-dashboards
               readOnly: true
+            - name: monitoring-log-dashboards
+              mountPath: /var/lib/grafana/monitoring-log-dashboards
+              readOnly: true
       volumes:
+        - name: monitoring-log-dashboards
+          configMap:
+            name: grafana-monitoring-dashboards-logs
         - name: monitoring-dashboard-provider
           configMap:
             name: grafana-monitoring-dashboard-provider

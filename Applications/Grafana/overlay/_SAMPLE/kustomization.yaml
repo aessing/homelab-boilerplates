@@ -20,17 +20,20 @@ resources:
 components:
   - ../../components/_home-assistant-historydb-datasource
   - ../../components/_monitoring-metrics-datasource
+  - ../../components/_monitoring-logs-datasource
   - ../../../MonitoringGrafana/components/_dashboards
 
 generators:
   - ./generators/config-home-assistant-historydb-datasource.yaml
   - ./generators/config-monitoring-metrics-datasource.yaml
+  - ./generators/config-monitoring-logs-datasource.yaml
   - ./generators/secret-grafana-admin.yaml
   - ./generators/secret-grafana-database-user.yaml
   - ./generators/secret-grafana-haengine-auth.yaml
   - ./generators/secret-grafana-home-assistant-historydb-datasource.yaml
   - ./generators/secret-grafana-metrics.yaml
   - ./generators/secret-grafana-monitoring-datasource.yaml
+  - ./generators/secret-grafana-monitoring-logs-datasource.yaml
   - ./generators/secret-grafana-renderer-auth.yaml
   - ./generators/secret-grafana-secretkey.yaml
   - ./generators/secret-grafana-smtp.yaml

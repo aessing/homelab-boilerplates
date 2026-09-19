@@ -55,7 +55,7 @@ class MonitoringManifests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.builds = {}
-        for app in ["MonitoringAgent", "MonitoringMetrics"]:
+        for app in ["MonitoringAgent", "MonitoringMetrics", "MonitoringLogs"]:
             for overlay in sorted((APPS / app / "overlay").iterdir()):
                 if not overlay.is_dir() or not (overlay / "kustomization.yaml").exists():
                     continue
@@ -180,7 +180,8 @@ class MonitoringManifests(unittest.TestCase):
                     if d["kind"] == "Deployment":
                         count += 1
                     for c in d["spec"]["template"]["spec"]["containers"]:
-                        self.assertEqual(c["resources"]["requests"], {"cpu": "0", "memory": "0"})
+                        for resource in ("cpu", "memory"):
+                            self.assertEqual(c["resources"]["requests"][resource], "0")
                         for category in totals:
                             totals[category] += count * bytes_quantity(c["resources"][category]["memory"])
                 for category in totals:

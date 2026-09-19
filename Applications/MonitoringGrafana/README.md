@@ -24,6 +24,30 @@ The package does not deploy another Grafana instance. Provisioning creates the
 Monitoring Metrics folder and assigns all twelve dashboards to it. Dashboards never
 need to be imported individually into the root dashboard list.
 
+Two additional dashboards are provisioned into **Monitoring Logs**, folder UID
+`monitoring-logs`, from `components/_dashboards/log-dashboards/`:
+
+| Dashboard | Purpose | Datasources |
+| --- | --- | --- |
+| Log Explorer | Filtered Pod logs, host/K3s journal and Kubernetes Events, with volume and keyword trends | Monitoring Logs |
+| Log Pipeline Health | Collector coverage, delivery retries/drops, deliberate exclusions, central Loki health, retention and storage | Monitoring Metrics |
+
+Enable Grafana's `_monitoring-logs-datasource` component and configure its query
+reader Secret before using the explorer. Enable MonitoringAgent's central
+`_logs-telemetry` component so backend health panels have data. Rebuild the log
+JSON with `python3 Applications/MonitoringGrafana/scripts/build_log_dashboards.py`.
+The existing dashboard component installs both folders automatically. Each new
+dashboard refreshes every 30 seconds and opens a one-hour window. Log panels are
+full width, wrap text, and cap each query at 500 lines. Filters and time ranges
+are URL-backed. Grafana handles narrow-screen stacking and panel inspection.
+
+Errors and warnings in the explorer are keyword heuristics, not a guarantee of
+complete severity classification. Empty log results can mean a quiet source.
+N/A in health panels means absent telemetry, never a healthy zero. The last-log
+timestamp and oldest metric-sample age make the different freshness signals
+explicit. The shared central backend panels intentionally ignore the agent
+cluster filter. No live tail WebSocket or scheduled email/PDF reports are enabled.
+
 ## Installation
 
 ### 1. Check prerequisites
@@ -64,7 +88,7 @@ in the existing private Secret inputs. Do not insert credentials into dashboard
 JSON or share links.
 
 Check whether a folder with UID `monitoring-infrastructure` or dashboards with
-UIDs from the implementation plan already exist. Reuse the suite's own folder
+UIDs from the supplied dashboard JSON already exist. Reuse the suite's own folder
 when updating. Resolve unrelated UID conflicts before provisioning, which can
 overwrite dashboards sharing the same UID.
 
@@ -216,7 +240,8 @@ are not part of this Grafana OSS package.
 
 ## Updating
 
-Edit `scripts/build_dashboards.py`, regenerate the canonical JSON and run the
+Edit `scripts/build_dashboards.py` or `scripts/build_log_dashboards.py`,
+regenerate the corresponding canonical JSON and run the
 tests. Validate, render and review the Grafana overlay, then repeat the deployment
 and verification steps. Keep dashboard/panel UIDs stable so links continue
 working. File provisioning is the source of truth, so UI changes cannot be saved
@@ -240,11 +265,38 @@ Private render files contain credentials. Remove only the exact temporary
 directory created for this installation after the rollback copies are no
 longer needed. Do not commit or upload those files.
 
+## Troubleshooting and Query Semantics
+
+Start with Overview and check sample age and unavailable targets. If collection
+is stale, inspect Collection and Metrics Backend before interpreting downstream
+panels. Select a cluster and preserve the incident time range when moving to
+the relevant workload, node, network, storage, database or controller dashboard.
+For log investigations, use Log Explorer and Log Pipeline Health.
+
+- `N/A` means missing, stale, unsupported or out-of-scope data, not healthy zero.
+  Observed cluster counts do not establish an expected cluster inventory.
+- Queries preserve `cluster` and resource identity. Certificate namespaces use
+  `exported_namespace`, Longhorn PVCs use `pvc_namespace` and `pvc`, and CNPG
+  instances use `cnpg_cluster` and `cnpg_instance` alongside `namespace`.
+- Native etcd queries use `job="etcd"` and retain each member's `node`.
+- Rate queries use `$__rate_interval`. Fast, normal and slow collection defaults
+  are 15, 30 and 60 seconds. Dashboard query steps do not downsample stored data
+  or change backend retention.
+- Counters use `rate` or `increase`. Histogram quantiles aggregate by `le` and
+  reflect the retained bucket boundaries, so reduced histograms are coarse.
+- Backup timestamps describe backup state, not successful restore tests.
+  USB hardware may not expose SMART values. Multus, DHCP and complete service
+  availability require separate functional checks.
+- Compare logical PVC usage and Longhorn physical allocation separately.
+  Capacity projections can change with retention, compaction and workload changes.
+- Deliberate log exclusions are intentional filtering. Delivery drops and
+  retries describe transport behavior and require separate investigation.
+
+If a panel has no data, clear narrow filters, check recent source samples and
+compare its exact query in Explore. Keep unsupported metrics at `N/A`.
+
 ## References
 
-- [Implementation and query-design plan](../../docs/plans/grafana-monitoring-dashboards.md)
-- [Metric and label contract](../../docs/monitoring-dashboard-metrics.md)
-- [Operational dashboard runbook](../../docs/monitoring-dashboard-runbook.md)
 - [Grafana application and datasource](../Grafana/README.md)
 - [Grafana file provisioning](https://grafana.com/docs/grafana/latest/administration/provisioning/)
 - [Native gradient options](https://grafana.com/docs/grafana/latest/visualizations/panels-visualizations/visualizations/time-series/)

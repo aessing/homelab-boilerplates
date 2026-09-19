@@ -1,0 +1,240 @@
+logging {
+  level  = "info"
+  format = "json"
+}
+
+local.file "logs_token" {
+  filename  = "/var/run/secrets/monitoring-agent-logs/token"
+  is_secret = true
+}
+
+loki.write "central" {
+  endpoint {
+    url = sys.env("LOKI_WRITE_URL")
+
+    authorization {
+      type        = "Bearer"
+      credentials = local.file.logs_token.content
+    }
+
+    tls_config {
+      min_version = "TLS12"
+    }
+  }
+
+  // The component directory has a separate 512Mi emptyDir. Positions remain
+  // on the host, but unsent WAL data does not survive Pod replacement.
+  wal {
+    enabled            = true
+    max_segment_age    = "1h"
+    min_read_frequency = "250ms"
+    max_read_frequency = "1s"
+    drain_timeout      = "30s"
+  }
+}
+
+loki.secretfilter "redact" {
+  forward_to  = [loki.write.central.receiver]
+  redact_with = "[REDACTED]"
+}
+
+discovery.kubernetes "pods" {
+  role = "pod"
+  selectors {
+    role  = "pod"
+    field = "spec.nodeName=" + sys.env("NODE_NAME")
+  }
+}
+
+discovery.relabel "pod_logs" {
+  targets = discovery.kubernetes.pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    regex         = sys.env("NODE_NAME")
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "(Pending|Running|Succeeded|Failed)"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_controller_name"]
+    regex         = "(.+)"
+    target_label  = "workload"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_cnpg_io_cluster"]
+    regex         = ".+"
+    replacement   = "postgresql"
+    target_label  = "database"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_uid"]
+    target_label  = "pod_uid"
+  }
+
+  rule {
+    replacement   = sys.env("CLUSTER_NAME")
+    target_label  = "cluster"
+  }
+
+  rule {
+    replacement   = sys.env("NODE_NAME")
+    target_label  = "node"
+  }
+
+  rule {
+    replacement   = "pod"
+    target_label  = "source"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+    separator     = "/"
+    replacement   = "/var/log/pods/*$1/*.log"
+    target_label  = "__path__"
+  }
+}
+
+local.file_match "pod_logs" {
+  path_targets      = discovery.relabel.pod_logs.output
+  sync_period       = "10s"
+  ignore_older_than = "1h"
+}
+
+loki.process "pod_logs" {
+  forward_to = [loki.secretfilter.redact.receiver]
+
+  stage.cri {
+    max_partial_lines = 100
+  }
+
+  stage.decolorize {}
+
+  // Database diagnostics may embed failed statements even with log_statement=none.
+  // Rebuild an allowlisted record instead of trying to redact arbitrary SQL data.
+  stage.match {
+    selector = "{database=\"postgresql\"}"
+    stage.json {
+      expressions = {
+        severity = "record.error_severity || level",
+        sqlstate = "record.sql_state_code",
+        logger   = "logger",
+      }
+    }
+    stage.template {
+      source   = "safe_database_record"
+      template = "{\"message\":\"PostgreSQL diagnostic; free text omitted for data minimization\",\"level\":{{ printf \"%q\" (or .severity \"unknown\") }},\"sqlstate\":{{ printf \"%q\" (or .sqlstate \"\") }},\"logger\":{{ printf \"%q\" (or .logger \"postgresql\") }}}"
+    }
+    stage.output {
+      source = "safe_database_record"
+    }
+  }
+
+  // Discard known data-bearing records before they reach the WAL. Arbitrary
+  // application text cannot be guaranteed free of personal information.
+  stage.drop {
+    expression = "(?i)(\"(statement|internal_query|query|parameters|payload|request_body|response_body|requestBody|responseBody)\"\\s*:|\\b(SELECT\\s+.+\\s+FROM|INSERT\\s+INTO|UPDATE\\s+\\S+\\s+SET|DELETE\\s+FROM)\\b|\\b(STATEMENT|QUERY|PARAMETERS|PAYLOAD):)"
+    drop_counter_reason = "excluded_payload_or_query"
+  }
+
+  stage.replace {
+    expression = "(?i)Bearer\\s+([A-Za-z0-9._~+/-]+=*)"
+    replace    = "[REDACTED]"
+  }
+  stage.replace {
+    expression = "(?i)(?:password|passwd|token|secret|api_key)[\"']?\\s*[:=]\\s*[\"']?([^\\s\"',}]+)"
+    replace    = "[REDACTED]"
+  }
+
+  // Known combined and structured HTTP access logs are outside collection scope.
+  stage.drop {
+    expression          = "(?i)(^[^ ]+ - .* \"(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) |\"(RequestMethod|http_method|request_method)\"\\s*:)"
+    drop_counter_reason = "access_log"
+  }
+
+  // filename includes the Pod UID. Remove it before indexing. Pod identity is
+  // still available in the packed record. Node/container/stream separate sources.
+  stage.label_drop {
+    values = ["filename", "database"]
+  }
+
+  // Keep Pod identity queryable without creating high-cardinality Loki labels.
+  stage.pack {
+    labels           = ["pod", "pod_uid"]
+    ingest_timestamp = false
+  }
+}
+
+loki.source.file "pod_logs" {
+  targets    = local.file_match.pod_logs.targets
+  forward_to = [loki.process.pod_logs.receiver]
+  tail_from_end = false
+}
+
+loki.relabel "journal" {
+  forward_to = []
+
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    target_label  = "unit"
+  }
+}
+
+loki.source.journal "host" {
+  max_age       = "1h"
+  relabel_rules = loki.relabel.journal.rules
+  labels = {
+    cluster = sys.env("CLUSTER_NAME"),
+    node    = sys.env("NODE_NAME"),
+    source  = "journal",
+  }
+  forward_to = [loki.secretfilter.redact.receiver]
+}
+
+loki.source.file "host_files" {
+  targets = [
+    {"__path__" = "/var/log/{sudo.log,ufw.log,rkhunter.log,apt/history.log,apt/term.log,unattended-upgrades/*.log}", "cluster" = sys.env("CLUSTER_NAME"), "node" = sys.env("NODE_NAME"), "source" = "host-file"},
+  ]
+  forward_to    = [loki.secretfilter.redact.receiver]
+  tail_from_end = false
+  file_match {
+    enabled            = true
+    ignore_older_than  = "1h"
+    sync_period        = "30s"
+  }
+}
+
+loki.source.file "containerd" {
+  targets = [
+    {"__path__" = "/var/lib/rancher/k3s/agent/containerd/containerd.log", "cluster" = sys.env("CLUSTER_NAME"), "node" = sys.env("NODE_NAME"), "source" = "containerd"},
+  ]
+  forward_to    = [loki.secretfilter.redact.receiver]
+  tail_from_end = false
+  file_match {
+    enabled            = true
+    ignore_older_than  = "1h"
+    sync_period        = "30s"
+  }
+}

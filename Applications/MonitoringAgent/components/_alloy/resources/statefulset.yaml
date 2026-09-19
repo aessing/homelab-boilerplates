@@ -2,11 +2,11 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: alloy
+  name: alloy-metrics
   labels:
     app.kubernetes.io/component: alloy
 spec:
-  serviceName: alloy
+  serviceName: alloy-metrics
   replicas: 0
   revisionHistoryLimit: 3
   selector:
@@ -32,11 +32,12 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: alloy
+        - name: alloy-metrics
           image: grafana/alloy:0.0.0
           imagePullPolicy: IfNotPresent
           args:
             - run
+            - --stability.level=public-preview
             - --server.http.listen-addr=0.0.0.0:12345
             - --storage.path=/var/lib/alloy/data
             - /etc/alloy/config
@@ -93,6 +94,12 @@ spec:
                   name: alloy-config
               - configMap:
                   name: alloy-central-telemetry
+                  optional: true
+              - configMap:
+                  name: alloy-logs-events-config
+                  optional: true
+              - configMap:
+                  name: alloy-logs-telemetry
                   optional: true
         - name: remote-write-token
           secret:

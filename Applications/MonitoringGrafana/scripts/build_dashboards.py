@@ -10,6 +10,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "components" / "_dashboards" / "dashboards"
 DATASOURCE = {"type": "prometheus", "uid": "monitoring-metrics"}
+VM_PVC_LABELS = 'namespace="monitoring-metrics",persistentvolumeclaim=~"victoriametrics-data-victoriametrics-.*"'
+VM_PVC_CAPACITY = f'max(kubelet_volume_stats_capacity_bytes{{{VM_PVC_LABELS}}})'
+VM_PVC_USED = f'max(kubelet_volume_stats_used_bytes{{{VM_PVC_LABELS}}})'
+VM_WRITE_STOP = f'{VM_PVC_CAPACITY} - max(vm_free_disk_space_limit_bytes)'
+
+
 def query(expr, legend="", interval="30s", instant=False, fmt="time_series"):
     return {
         "datasource": DATASOURCE,
@@ -396,7 +402,7 @@ DASHBOARDS = [
                 ('sum by (cluster) (rate(metallb_layer2_gratuitous_sent{cluster=~"$cluster"}[$__rate_interval]))', "gratuitous {{cluster}}"),
             ], "L2 counters are exported over HTTP inside the cluster.", "ops", "60s"),
             table("MetalLB pool allocation", '100 * max by (cluster, pool) (metallb_allocator_addresses_in_use_total{cluster=~"$cluster"}) / clamp_min(max by (cluster, pool) (metallb_allocator_addresses_total{cluster=~"$cluster"}), 1)', "Address-pool utilization by cluster and pool.", "percent", "percent"),
-            table("Ingress and network target health", 'max by (cluster, job, component) (up{cluster=~"$cluster",job=~"kubernetes-infrastructure|metallb|kube-vip"})', "Scrape health for discovered networking components.", "short", "ready"),
+            table("Ingress and network target health", 'min by (cluster, job, component) (up{cluster=~"$cluster",job=~"kubernetes-infrastructure|metallb|kube-vip"})', "Worst observed scrape health in each group. Missing targets remain unknown.", "short", "ready"),
         ],
     },
     {
@@ -523,10 +529,11 @@ DASHBOARDS = [
                 ('sum(rate(vm_rows_invalid_total[$__rate_interval]))', "invalid rows"),
             ], "Row ingestion, slow-path and invalid rates. Slow is not failed.", "ops", "30s"),
             chart("VictoriaMetrics disk", [
+                (VM_PVC_USED, "PVC used"),
                 ('max(vm_data_size_bytes)', "data size"),
-                ('max(vm_free_disk_space_bytes)', "free"),
-                ('max(vm_free_disk_space_limit_bytes)', "write-stop reserve"),
-            ], "Backend data size, free bytes and configured reserve.", "bytes", "60s"),
+                (VM_WRITE_STOP, "write-stop threshold"),
+                (VM_PVC_CAPACITY, "PVC capacity"),
+            ], "All series use the used-capacity scale. VictoriaMetrics stops accepting writes when PVC usage reaches the write-stop threshold, calculated as observed PVC capacity minus its required free-space reserve. Data size excludes filesystem and WAL overhead, so PVC used is authoritative.", "bytes", "60s"),
             chart("VictoriaMetrics queries", [
                 ('sum by (__name__) (rate({__name__=~"vm_http_requests_total|vm_http_request_errors_total|vm_slow_queries_total"}[$__rate_interval]))', "{{__name__}}"),
             ], "Backend request, error and slow-query rates.", "reqps", "30s"),
@@ -574,10 +581,11 @@ DASHBOARDS = [
             chart("PVC logical usage", [('max by (cluster, namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes{job="kubelet",cluster=~"$cluster",namespace=~"$namespace"})', "{{cluster}} {{namespace}} {{persistentvolumeclaim}}")], "Logical filesystem growth. Compaction and expansion can invalidate linear extrapolation.", "bytes", "60s"),
             chart("Longhorn physical allocation", [('sum by (cluster) (longhorn_volume_actual_size_bytes{cluster=~"$cluster"})', "{{cluster}}")], "Physical volume allocation, separate from PVC logical usage and backup storage.", "bytes", "60s"),
             chart("Monitoring Metrics Storage", [
+                (VM_PVC_USED, "PVC used"),
                 ('max(vm_data_size_bytes)', "data size"),
-                ('max(vm_free_disk_space_bytes)', "free"),
-                ('max(vm_free_disk_space_limit_bytes)', "write-stop reserve"),
-            ], "Storage used by the central Monitoring Metrics database, available disk space and the configured write-stop reserve.", "bytes", "60s"),
+                (VM_WRITE_STOP, "write-stop threshold"),
+                (VM_PVC_CAPACITY, "PVC capacity"),
+            ], "All series use the used-capacity scale. VictoriaMetrics stops accepting writes when PVC usage reaches the write-stop threshold, calculated as observed PVC capacity minus its required free-space reserve. Data size excludes filesystem and WAL overhead, so PVC used is authoritative.", "bytes", "60s"),
             chart("Metrics ingestion and series activity", [
                 ('sum(rate(vm_rows_inserted_total[$__rate_interval]))', "inserted rows"),
                 ('sum(rate(vm_timeseries_precreated_total[$__rate_interval]))', "new series"),

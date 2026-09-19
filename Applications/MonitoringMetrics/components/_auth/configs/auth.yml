@@ -1,17 +1,15 @@
 users:
   - name: sample-cluster-writer
     bearer_token: "%{WRITER_SAMPLE_TOKEN}"
-    headers:
-      - "Authorization:"
     url_map:
       - src_paths:
           - "/api/v1/write"
+        headers:
+          - "Authorization:"
         url_prefix: "http://victoriametrics:8428/?extra_label=cluster=sample-cluster"
   - name: grafana-reader
     username: "%{GRAFANA_USERNAME}"
     password: "%{GRAFANA_PASSWORD}"
-    headers:
-      - "Authorization:"
     url_map:
       - src_paths:
           - "/api/v1/query"
@@ -21,17 +19,21 @@ users:
           - "/api/v1/label/[^/]+/values"
           - "/api/v1/metadata"
           - "/api/v1/status/buildinfo"
+        headers:
+          - "Authorization:"
         url_prefix: "http://victoriametrics:8428/"
   - name: management-telemetry-reader
     bearer_token: "%{TELEMETRY_TOKEN}"
-    headers:
-      - "Authorization:"
     url_map:
       - src_paths:
           - "/telemetry/victoriametrics/metrics"
         drop_src_path_prefix_parts: 2
+        headers:
+          - "Authorization:"
         url_prefix: "http://victoriametrics:8428/"
       - src_paths:
           - "/telemetry/vmauth/metrics"
         drop_src_path_prefix_parts: 2
+        headers:
+          - "Authorization:"
         url_prefix: "http://127.0.0.1:8426/"

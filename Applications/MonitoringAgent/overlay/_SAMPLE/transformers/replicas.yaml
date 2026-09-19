@@ -4,7 +4,7 @@ kind: ReplicaCountTransformer
 metadata:
   name: alloy-replica-transformer
 replica:
-  name: alloy
+  name: alloy-metrics
   count: 1
 fieldSpecs:
   - path: spec/replicas

@@ -8,6 +8,9 @@ resources:
   - ./resources/network-policy-allow-dns-egress.yaml
   - ./resources/network-policy-alloy-internal-egress.yaml
   - ./resources/network-policy-alloy-to-exporters.yaml
+  - ./resources/network-policy-alloy-to-alloy-logs.yaml
+  - ./resources/network-policy-alloy-to-alloy-logs-egress.yaml
+  - ./resources/network-policy-alloy-logs-egress.yaml
   - ./resources/network-policy-kube-state-metrics-kubernetes-api-egress.yaml
   - ./resources/resource-quota.yaml
 

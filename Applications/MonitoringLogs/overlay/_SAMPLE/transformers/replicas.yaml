@@ -1,0 +1,25 @@
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: loki-replica-transformer
+replica:
+  name: loki
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: true
+    kind: StatefulSet
+
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: vmauth-replica-transformer
+replica:
+  name: vmauth
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: true
+    kind: Deployment

@@ -46,3 +46,15 @@ files:
   - 90-pipeline.json=./dashboards/90-pipeline.json
   - 100-daily.json=./dashboards/100-daily.json
   - 110-capacity.json=./dashboards/110-capacity.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-logs
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - log-explorer.json=./log-dashboards/log-explorer.json
+  - log-pipeline-health.json=./log-dashboards/log-pipeline-health.json

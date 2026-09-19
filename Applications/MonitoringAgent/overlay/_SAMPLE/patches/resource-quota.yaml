@@ -5,4 +5,4 @@
 
 - op: replace
   path: /spec/hard/persistentvolumeclaims
-  value: 1
+  value: 2

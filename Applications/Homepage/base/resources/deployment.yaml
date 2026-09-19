@@ -59,6 +59,8 @@ spec:
               value: '1000'
             - name: PGID
               value: '1000'
+            - name: LOG_TARGETS
+              value: stdout
           ports:
             - name: http
               containerPort: 3000
@@ -127,11 +129,7 @@ spec:
             - mountPath: /app/config/widgets.yaml
               name: homepage-config-vol
               subPath: widgets.yaml
-            - mountPath: /app/config/logs
-              name: logs
       volumes:
         - name: homepage-config-vol
           configMap:
             name: homepage-config
-        - name: logs
-          emptyDir: {}

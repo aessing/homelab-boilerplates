@@ -1329,7 +1329,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Storage used by the central Monitoring Metrics database, available disk space and the configured write-stop reserve.",
+      "description": "All series use the used-capacity scale. VictoriaMetrics stops accepting writes when PVC usage reaches the write-stop threshold, calculated as observed PVC capacity minus its required free-space reserve. Data size excludes filesystem and WAL overhead, so PVC used is authoritative.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1418,11 +1418,11 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max(vm_data_size_bytes)",
+          "expr": "max(kubelet_volume_stats_used_bytes{namespace=\"monitoring-metrics\",persistentvolumeclaim=~\"victoriametrics-data-victoriametrics-.*\"})",
           "format": "time_series",
           "instant": false,
           "interval": "60s",
-          "legendFormat": "data size",
+          "legendFormat": "PVC used",
           "range": true,
           "refId": "A"
         },
@@ -1432,11 +1432,11 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max(vm_free_disk_space_bytes)",
+          "expr": "max(vm_data_size_bytes)",
           "format": "time_series",
           "instant": false,
           "interval": "60s",
-          "legendFormat": "free",
+          "legendFormat": "data size",
           "range": true,
           "refId": "B"
         },
@@ -1446,13 +1446,27 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max(vm_free_disk_space_limit_bytes)",
+          "expr": "max(kubelet_volume_stats_capacity_bytes{namespace=\"monitoring-metrics\",persistentvolumeclaim=~\"victoriametrics-data-victoriametrics-.*\"}) - max(vm_free_disk_space_limit_bytes)",
           "format": "time_series",
           "instant": false,
           "interval": "60s",
-          "legendFormat": "write-stop reserve",
+          "legendFormat": "write-stop threshold",
           "range": true,
           "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max(kubelet_volume_stats_capacity_bytes{namespace=\"monitoring-metrics\",persistentvolumeclaim=~\"victoriametrics-data-victoriametrics-.*\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "60s",
+          "legendFormat": "PVC capacity",
+          "range": true,
+          "refId": "D"
         }
       ],
       "title": "Monitoring Metrics Storage",

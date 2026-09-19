@@ -1,0 +1,34 @@
+local.file "logs_telemetry_token" {
+  filename  = "/var/run/secrets/monitoring-agent-logs-telemetry/token"
+  is_secret = true
+}
+
+prometheus.scrape "logs_backend" {
+  targets = [
+    {
+      "__address__"      = sys.env("LOKI_TELEMETRY_HOST"),
+      "__scheme__"       = "https",
+      "__metrics_path__" = "/telemetry/loki/metrics",
+      "job"              = "loki",
+      "instance"         = "loki",
+    },
+    {
+      "__address__"      = sys.env("LOKI_TELEMETRY_HOST"),
+      "__scheme__"       = "https",
+      "__metrics_path__" = "/telemetry/vmauth/metrics",
+      "job"              = "logs-vmauth",
+      "instance"         = "logs-vmauth",
+    },
+  ]
+  job_name        = "logs-backend"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+  authorization {
+    type        = "Bearer"
+    credentials = local.file.logs_telemetry_token.content
+  }
+  tls_config {
+    min_version = "TLS12"
+  }
+}
