@@ -16,8 +16,9 @@ validated and provisioned through the existing Grafana deployment.
 - Visuals: stable multi-series colors for readable charts, blue
   quantitative accents, clear independent status colors, and compact dashboard
   headers without a Grafana logo.
-- Navigation: a tag-based Monitoring dropdown plus context-preserving table
-  drill-downs for cluster, namespace, Pod, node, PVC, job and database scope.
+- Navigation: a tag-based **Monitoring dashboards** dropdown, a second dropdown
+  limited to the current category, and context-preserving table drill-downs for
+  cluster, namespace, Pod, node, PVC, job and database scope.
 - Edition: Grafana OSS. No Enterprise license or external panel plugin required.
 
 The package does not deploy another Grafana instance. Provisioning creates the
@@ -65,7 +66,8 @@ Home Assistant's availability metric includes both `unavailable` and `unknown`
 states. The dashboard labels this explicitly. Containers without a memory limit
 show **No limit configured**, not a fabricated utilization percentage.
 
-Each application dashboard refreshes once a minute. Tables and logs use full
+All dashboards refresh once a minute. Their default window is one hour, except
+Daily Review, which opens the previous 24 hours. Tables and logs use full
 width. Cluster filters persist in the URL. The overview adds a namespace filter,
 and Uptime Kuma adds monitor ID and rolling-window filters. The log search field
 filters displayed log lines, not the volume charts. Each log view is capped at
@@ -93,7 +95,7 @@ reader Secret before using the explorer. Enable MonitoringAgent's central
 `_logs-telemetry` component so backend health panels have data. Rebuild the log
 JSON with `python3 Applications/MonitoringGrafana/scripts/build_log_dashboards.py`.
 The existing dashboard component installs both folders automatically. Each new
-dashboard refreshes every 30 seconds and opens a one-hour window. Log panels are
+dashboard refreshes every minute and opens a one-hour window. Log panels are
 full width, wrap text, and cap each query at 500 lines. Filters and time ranges
 are URL-backed. Grafana handles narrow-screen stacking and panel inspection.
 
@@ -303,7 +305,8 @@ viewport.
 ### 8. Use the report views
 
 Daily Review defaults to the rolling previous 24 hours.
-All other dashboards default to the previous hour, with longer ranges available.
+All other dashboards default to the previous hour. Every dashboard refreshes
+once a minute, with longer ranges and slower refresh intervals available.
 Choose an absolute interval when sharing a reproducible historical report.
 
 Use authorized dashboard links and **Inspect > Data > Download CSV** for panel

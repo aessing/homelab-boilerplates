@@ -26,13 +26,26 @@
       "icon": "external link",
       "includeVars": true,
       "keepTime": true,
+      "targetBlank": false,
+      "type": "dashboards",
       "tags": [
         "monitoring"
       ],
-      "targetBlank": false,
       "title": "Monitoring dashboards",
-      "tooltip": "Open another monitoring dashboard",
-      "type": "dashboards"
+      "tooltip": "Open another monitoring dashboard"
+    },
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": false,
+      "type": "dashboards",
+      "tags": [
+        "applications"
+      ],
+      "title": "Application reports",
+      "tooltip": "Open another application report"
     }
   ],
   "liveNow": false,
@@ -1902,11 +1915,11 @@
   },
   "timepicker": {
     "refresh_intervals": [
-      "15s",
-      "30s",
       "1m",
       "5m",
-      "15m"
+      "15m",
+      "30m",
+      "1h"
     ],
     "time_options": [
       "1h",

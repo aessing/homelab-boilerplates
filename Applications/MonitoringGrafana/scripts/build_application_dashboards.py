@@ -60,7 +60,7 @@ def log_panels(namespace):
 def make(uid, title, namespace, panels, purpose, variables=None, freshness=None):
     variables = variables or []
     variables.append({"name": "search", "label": "Log contains", "type": "textbox", "query": "", "current": {"text": "", "value": ""}, "skipUrlSync": False})
-    dashboard = build({"uid": uid, "title": title, "purpose": purpose, "from": "now-1h", "refresh": "1m", "vars": variables, "panels": panels + runtime(namespace) + log_panels(namespace)})
+    dashboard = build({"uid": uid, "title": title, "purpose": purpose, "from": "now-1h", "refresh": "1m", "category_title": "Application", "category_tag": "applications", "vars": variables, "panels": panels + runtime(namespace) + log_panels(namespace)})
     dashboard["tags"] = ["monitoring", "applications", "metrics", "logs"]
     dashboard["templating"]["list"][0] = variable("cluster", "kube_pod_info", "cluster", f'namespace=~"{namespace}"')
     # Freshness belongs to the application scope, not unrelated cluster targets.
@@ -83,7 +83,7 @@ def unifi_logs(title, selector, description):
 def make_unifi(uid, title, panels, purpose, variables=None):
     variables = variables or []
     variables.append({"name": "search", "label": "Log contains", "type": "textbox", "query": "", "current": {"text": "", "value": ""}, "skipUrlSync": False})
-    dashboard = build({"uid": uid, "title": title, "purpose": purpose, "from": "now-6h", "refresh": "1m", "vars": variables, "panels": panels})
+    dashboard = build({"uid": uid, "title": title, "purpose": purpose, "from": "now-1h", "refresh": "1m", "category_title": "UniFi", "category_tag": "unifi", "vars": variables, "panels": panels})
     dashboard["tags"] = ["monitoring", "unifi", "metrics", "logs"]
     dashboard["templating"]["list"][0] = variable("cluster", "unpoller_controller_up", "cluster")
     freshness = dashboard["panels"][1]
@@ -303,6 +303,7 @@ def dashboards():
     values = metric("monitor_status", monitor_selector)
     monitor_dashboard = build({
         "uid": "mon-app-uptime-monitors", "title": "Uptime Kuma Monitors", "from": "now-1h", "refresh": "1m",
+        "category_title": "Application", "category_tag": "applications",
         "vars": [variable("monitor", "monitor_status", "monitor_id", C), variable("monitor_type", "monitor_status", "monitor_type", C), copy.deepcopy(window)],
         "purpose": "Control-room view of Kuma monitors, with sampled status history and rolling availability. Group monitors are separate from individual monitors. Prometheus does not expose the parent-child hierarchy, so nested groups cannot be reconstructed. Monitor type and ID filters apply throughout. Missing history is never painted green.",
         "panels": [*copy.deepcopy(outcomes[:4]),
@@ -392,6 +393,7 @@ def dashboards():
 def operations_center():
     spec = {
         "uid": "mon-operations-center", "title": "Operations Center", "from": "now-1h", "refresh": "1m", "vars": [],
+        "category_title": "Operations", "category_tag": "operations",
         "purpose": "Fleet operations at a glance. Read left to right: cluster readiness, active incidents, service history, capacity and telemetry delivery. Green means an observed healthy signal, not guaranteed total coverage. N/A means missing evidence. Use the links for focused diagnostics.",
         "panels": [
             stat("Observed clusters", 'count(count by (cluster) (kube_node_info{cluster=~"$cluster"}))', "Clusters reporting node inventory. Compare with your expected fleet, missing clusters are not automatically detected."),

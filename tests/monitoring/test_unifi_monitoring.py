@@ -156,8 +156,15 @@ class UniFiMonitoring(unittest.TestCase):
         for name, dashboard in dashboards.items():
             self.assertEqual((UNIFI_OUTPUT / name).read_text(), json.dumps(dashboard, indent=2) + "\n")
             self.assertFalse(dashboard["editable"])
+            self.assertEqual(dashboard["time"], {"from": "now-1h", "to": "now"})
+            self.assertEqual(dashboard["refresh"], "1m")
+            self.assertEqual([link["title"] for link in dashboard["links"]], ["Monitoring dashboards", "UniFi reports"])
+            self.assertEqual(dashboard["links"][1]["tags"], ["unifi"])
             self.assertEqual(dashboard["templating"]["list"][0]["name"], "cluster")
             self.assertIn("unifi", dashboard["tags"])
+            for panel in dashboard["panels"]:
+                if panel["type"] == "timeseries":
+                    self.assertEqual(panel["fieldConfig"]["defaults"]["color"]["mode"], "palette-classic-by-name")
             expressions = " ".join(target.get("expr", "") for panel in dashboard["panels"] for target in panel.get("targets", []))
             self.assertIn('cluster=~"$cluster"', expressions)
         grafana = render(ROOT / "Applications" / "Grafana" / "overlay" / "_SAMPLE")

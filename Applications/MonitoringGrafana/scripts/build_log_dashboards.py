@@ -59,7 +59,7 @@ def explorer():
             log_variable("container", '{cluster=~"$cluster",source="pod",namespace=~"$namespace",workload=~"$workload"}'),
             {"name": "search", "label": "Contains", "type": "textbox", "query": "", "current": {"text": "", "value": ""}, "skipUrlSync": False}]
     spec = {
-        "uid": "mon-log-explorer", "title": "Log Explorer", "from": "now-1h", "refresh": "30s", "vars": vars,
+        "uid": "mon-log-explorer", "title": "Log Explorer", "from": "now-1h", "refresh": "1m", "category_title": "Log", "category_tag": "logs", "vars": vars,
         "purpose": "Find operational incidents across clusters. The main views follow all filters. Dedicated Pod, Host and Event views use their own source and applicable filters. Quiet services may have no logs. SQL and data-bearing records are intentionally excluded. Each log view is capped at 500 lines, narrow the time range or use Explore for more.",
         "panels": [
             log_query(stat("Observed log clusters", "", "Clusters emitting selected logs, not an expected-inventory health check.", threshold="warm"), f'count(sum by (cluster) (count_over_time({SELECTOR}{FILTER}[$__range])))', instant=True),
@@ -87,7 +87,7 @@ def explorer():
 def pipeline():
     scoped = '{cluster=~"$cluster",job=~"alloy|alloy-logs"}'
     spec = {
-        "uid": "mon-log-pipeline", "title": "Log Pipeline Health", "from": "now-1h", "refresh": "30s", "vars": [],
+        "uid": "mon-log-pipeline", "title": "Log Pipeline Health", "from": "now-1h", "refresh": "1m", "category_title": "Log", "category_tag": "logs", "vars": [],
         "purpose": "Check collection, delivery and the central Loki backend. Agent panels follow the cluster filter. Central backend and storage panels show the shared backend across all clusters. N/A is missing telemetry. Host-local tail positions survive replacement, but the bounded 512 MiB WAL does not.",
         "panels": [
             stat("Log collectors not Ready", 'sum(kube_daemonset_status_desired_number_scheduled{cluster=~"$cluster",namespace="monitoring-agent",daemonset="alloy-logs"}) - sum(kube_daemonset_status_number_ready{cluster=~"$cluster",namespace="monitoring-agent",daemonset="alloy-logs"})', "Desired minus ready log collectors. Compare with per-cluster coverage below.", threshold="critical"),
@@ -116,8 +116,7 @@ def pipeline():
 
 
 def finalize(dashboard):
-    dashboard["tags"] = ["monitoring", "logs", "infrastructure"]
-    dashboard["timepicker"]["refresh_intervals"] = ["30s", "1m", "5m", "15m"]
+    dashboard["tags"] = ["monitoring", "logs"]
     return dashboard
 
 

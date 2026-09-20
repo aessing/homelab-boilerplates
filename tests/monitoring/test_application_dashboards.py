@@ -21,6 +21,9 @@ class ApplicationDashboards(unittest.TestCase):
                 self.assertEqual((OUTPUT / name).read_text(), json.dumps(d, indent=2) + '\n')
                 self.assertFalse(d['title'][0].isdigit())
                 self.assertEqual(d['refresh'], '1m')
+                self.assertEqual(d['time'], {'from': 'now-1h', 'to': 'now'})
+                self.assertEqual([link['title'] for link in d['links']], ['Monitoring dashboards', 'Application reports'])
+                self.assertEqual(d['links'][1]['tags'], ['applications'])
                 budget = 32 if name == 'postgresql.json' else 24
                 self.assertLessEqual(sum(len(p.get('targets', [])) for p in d['panels']), budget)
                 ids = [p['id'] for p in d['panels']]
@@ -90,6 +93,10 @@ class ApplicationDashboards(unittest.TestCase):
         d = operations_center()
         self.assertEqual((ROOT_OUTPUT / 'operations-center.json').read_text(), json.dumps(d, indent=2) + '\n')
         self.assertEqual(d['uid'], 'mon-operations-center')
+        self.assertEqual(d['time'], {'from': 'now-1h', 'to': 'now'})
+        self.assertEqual(d['refresh'], '1m')
+        self.assertEqual([link['title'] for link in d['links'][:2]], ['Monitoring dashboards', 'Operations reports'])
+        self.assertEqual(d['links'][1]['tags'], ['operations'])
         self.assertLessEqual(sum(len(p.get('targets', [])) for p in d['panels']), 26)
         docs = render(ROOT / 'Applications/Grafana/overlay/_SAMPLE')
         cm = next(d for d in docs if d['kind']=='ConfigMap' and d['metadata']['name'].startswith('grafana-monitoring-dashboards-root-'))
