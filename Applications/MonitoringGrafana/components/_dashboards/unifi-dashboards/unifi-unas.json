@@ -182,12 +182,8 @@
                 "value": null
               },
               {
-                "color": "#FFB357",
-                "value": 95
-              },
-              {
                 "color": "green",
-                "value": 99.5
+                "value": 1
               }
             ]
           },
@@ -692,7 +688,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Health score reported by UNAS.",
+      "description": "Health score reported by UNAS. The state label carries the appliance classification; the score remains quantitative rather than inventing local health thresholds.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -713,16 +709,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
+                "color": "#8AB8FF",
                 "value": null
               },
               {
-                "color": "#FFB357",
-                "value": 95
+                "color": "#5794F2",
+                "value": 50
               },
               {
-                "color": "green",
-                "value": 99.5
+                "color": "#1F60C4",
+                "value": 85
               }
             ]
           },

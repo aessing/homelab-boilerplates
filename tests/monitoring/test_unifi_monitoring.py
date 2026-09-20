@@ -197,6 +197,31 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertIn("unpoller_protect_sensor_is_opened", protect_panel_expressions["Open sensors"])
         self.assertIn("unpoller_protect_sensor_is_motion_detected", protect_panel_expressions["Motion sensors"])
 
+        overview_panels = {panel["title"]: panel for panel in dashboards["unifi-overview.json"]["panels"]}
+        for title in ("UnPoller target", "Controller collection", "UniFi Alloy target"):
+            self.assertEqual(
+                overview_panels[title]["fieldConfig"]["defaults"]["thresholds"]["steps"],
+                [{"color": "red", "value": None}, {"color": "green", "value": 1}],
+            )
+        unas = {panel["title"]: panel for panel in dashboards["unifi-unas.json"]["panels"]}
+        self.assertEqual(
+            unas["UNAS reachable"]["fieldConfig"]["defaults"]["thresholds"]["steps"],
+            [{"color": "red", "value": None}, {"color": "green", "value": 1}],
+        )
+        self.assertEqual(unas["Disk health"]["fieldConfig"]["defaults"]["thresholds"]["steps"][0]["color"], "#8AB8FF")
+        state = next(panel for panel in protect["panels"] if panel["title"] == "Protect device state")
+        mappings = state["fieldConfig"]["defaults"]["mappings"][0]["options"]
+        self.assertEqual(
+            {value: (mapping["text"], mapping["color"]) for value, mapping in mappings.items()},
+            {
+                "-1": ("Unknown", "#FFB357"),
+                "0": ("Disconnected", "red"),
+                "1": ("Connecting", "#FFB357"),
+                "2": ("Connected", "green"),
+            },
+        )
+        self.assertEqual(state["fieldConfig"]["defaults"]["custom"]["cellOptions"]["type"], "color-text")
+
         network_panel_expressions = {
             panel["title"]: " ".join(target.get("expr", "") for target in panel.get("targets", []))
             for panel in dashboards["unifi-network.json"]["panels"]

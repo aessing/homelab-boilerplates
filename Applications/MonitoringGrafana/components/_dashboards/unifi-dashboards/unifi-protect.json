@@ -316,7 +316,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "State values are 2 connected, 1 connecting, 0 disconnected and -1 unknown.",
+      "description": "Connection state reported by Protect. Unknown is explicit source data, not missing telemetry.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -325,28 +325,50 @@
           "custom": {
             "align": "auto",
             "cellOptions": {
-              "type": "auto"
+              "type": "color-text"
             },
             "filterable": true,
             "inspect": false
           },
           "decimals": 2,
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "-1": {
+                  "text": "Unknown",
+                  "color": "#FFB357"
+                },
+                "0": {
+                  "text": "Disconnected",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Connecting",
+                  "color": "#FFB357"
+                },
+                "2": {
+                  "text": "Connected",
+                  "color": "green"
+                }
+              },
+              "type": "value"
+            }
+          ],
           "noValue": "N/A",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
+                "color": "#8AB8FF",
                 "value": null
               },
               {
-                "color": "#FFB357",
-                "value": 95
+                "color": "#5794F2",
+                "value": 50
               },
               {
-                "color": "green",
-                "value": 99.5
+                "color": "#1F60C4",
+                "value": 85
               }
             ]
           },
