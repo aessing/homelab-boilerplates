@@ -44,7 +44,8 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertEqual(service["spec"]["type"], "LoadBalancer")
         self.assertEqual(service["spec"]["externalTrafficPolicy"], "Local")
         self.assertEqual(service["spec"]["loadBalancerIP"], "192.0.2.30")
-        self.assertEqual(service["metadata"]["annotations"]["metallb.io/loadBalancerIPs"], "192.0.2.30")
+        self.assertEqual(service["metadata"]["annotations"]["metallb.io/address-pool"], "default-pool")
+        self.assertNotIn("metallb.io/loadBalancerIPs", service["metadata"]["annotations"])
         self.assertEqual(service["spec"]["loadBalancerSourceRanges"], ["192.0.2.10/32", "192.0.2.20/32"])
         self.assertEqual({(p["protocol"], p["port"]) for p in service["spec"]["ports"]}, {("UDP", 1514), ("TCP", 1514)})
         self.assertNotIn("10.0.1.20", json.dumps(self.docs))
@@ -133,6 +134,14 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertEqual(env["FAST_SCRAPE_INTERVAL"], "15s")
         self.assertEqual(env["NORMAL_SCRAPE_INTERVAL"], "30s")
         self.assertEqual(env["SLOW_SCRAPE_INTERVAL"], "60s")
+        alloy = objects(docs)["StatefulSet", "alloy-metrics"]
+        config_volume = next(
+            volume for volume in alloy["spec"]["template"]["spec"]["volumes"]
+            if volume["name"] == "config"
+        )
+        source_names = [source["configMap"]["name"] for source in config_volume["projected"]["sources"]]
+        self.assertTrue(any(name.startswith("alloy-config-") for name in source_names))
+        self.assertTrue(any(name.startswith("alloy-unpoller-telemetry-") for name in source_names))
 
     def test_unifi_dashboards_are_reproducible_and_provisioned(self):
         dashboards = unifi_dashboards()
@@ -167,11 +176,20 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertIn("source,name,mac,security,band,ap_mac,radio,radio_name,oui", network)
         self.assertNotIn("band,channel", network)
 
-        panel_expressions = {
+        protect_panel_expressions = {
             panel["title"]: " ".join(target.get("expr", "") for target in panel.get("targets", []))
             for panel in protect["panels"]
         }
-        self.assertIn("unpoller_protect_sensor_is_opened", panel_expressions["Open sensors"])
-        self.assertIn("unpoller_protect_sensor_is_motion_detected", panel_expressions["Motion sensors"])
+        self.assertIn("unpoller_protect_sensor_is_opened", protect_panel_expressions["Open sensors"])
+        self.assertIn("unpoller_protect_sensor_is_motion_detected", protect_panel_expressions["Motion sensors"])
+
+        network_panel_expressions = {
+            panel["title"]: " ".join(target.get("expr", "") for target in panel.get("targets", []))
+            for panel in dashboards["unifi-network.json"]["panels"]
+        }
+        dpi = network_panel_expressions["DPI traffic by category"]
+        self.assertIn("unpoller_client_dpi_receive_bytes", dpi)
+        self.assertIn("unpoller_client_dpi_transmit_bytes", dpi)
+        self.assertNotIn("unpoller_site_dpi_", dpi)
 if __name__ == "__main__":
     unittest.main()

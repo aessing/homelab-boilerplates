@@ -873,7 +873,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "DPI byte counters by category.",
+      "description": "DPI byte counters by category, aggregated across clients and applications.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -962,7 +962,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster,site_name,category) (unpoller_site_dpi_receive_bytes{cluster=~\"$cluster\",site_name=~\"$site\"})",
+          "expr": "sum by (cluster,site_name,category) (unpoller_client_dpi_receive_bytes{cluster=~\"$cluster\",site_name=~\"$site\"})",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
@@ -976,7 +976,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster,site_name,category) (unpoller_site_dpi_transmit_bytes{cluster=~\"$cluster\",site_name=~\"$site\"})",
+          "expr": "sum by (cluster,site_name,category) (unpoller_client_dpi_transmit_bytes{cluster=~\"$cluster\",site_name=~\"$site\"})",
           "format": "time_series",
           "instant": false,
           "interval": "30s",

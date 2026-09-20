@@ -103,10 +103,10 @@ Im privaten ADMIN01-Overlay:
 metadata:
   annotations:
     metallb.io/address-pool: default-pool
-    metallb.io/loadBalancerIPs: 10.0.1.20
 spec:
   type: LoadBalancer
   externalTrafficPolicy: Local
+  loadBalancerIP: 10.0.1.20
 ```
 
 Am 20.09.2026 read-only live geprüft: `default-pool` enthält

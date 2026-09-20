@@ -7,7 +7,6 @@ metadata:
     app.kubernetes.io/component: collector
   annotations:
     metallb.io/address-pool: default-pool
-    metallb.io/loadBalancerIPs: 192.0.2.30
 spec:
   type: LoadBalancer
   externalTrafficPolicy: Local

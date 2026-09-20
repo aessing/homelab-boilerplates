@@ -63,11 +63,11 @@ v5.2.7 does not resolve a `file://` password for the UNAS input, so the
 Deployment injects `unas_password` from the same Kubernetes Secret as
 `UP_UNAS_DEFAULT_PASS`. The value stays out of the ConfigMap and command line.
 
-Set both `metallb.io/loadBalancerIPs` and `spec.loadBalancerIP` to `10.0.1.20`.
-The duplicate declaration is deliberate for compatibility with the current
-MetalLB conventions in this repository. Before deployment, verify that `.20`
-is still absent from Kubernetes Services and from external DHCP or static IP
-assignments.
+Set `spec.loadBalancerIP` to `10.0.1.20` and retain the
+`metallb.io/address-pool: default-pool` annotation. MetalLB 0.16 rejects a
+Service that combines `spec.loadBalancerIP` with `metallb.io/loadBalancerIPs`.
+Before deployment, verify that `.20` is still absent from Kubernetes Services
+and from external DHCP or static IP assignments.
 
 The sample enables both UDP and TCP because the UniFi UI exposes only address
 and port. After observing real traffic, remove the unused protocol from the
