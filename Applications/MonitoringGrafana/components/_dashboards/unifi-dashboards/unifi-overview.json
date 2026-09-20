@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Health and event intake for the dedicated ADMIN01 UniFi monitoring path.",
+  "description": "Health and event intake for the selected UniFi location.",
   "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -42,10 +42,10 @@
       "targetBlank": false,
       "type": "dashboards",
       "tags": [
-        "unifi"
+        "monitoring-unifi"
       ],
-      "title": "UniFi reports",
-      "tooltip": "Open another unifi report"
+      "title": "Monitoring UniFi",
+      "tooltip": "Open another dashboard in Monitoring UniFi"
     }
   ],
   "liveNow": false,
@@ -73,7 +73,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "Health and event intake for the dedicated ADMIN01 UniFi monitoring path.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
+        "content": "Health and event intake for the selected UniFi location.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
         "mode": "markdown"
       },
       "pluginVersion": "13.2.2",
@@ -147,7 +147,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max(clamp_min(time() - timestamp(unpoller_prometheus_cache_age_seconds{cluster=~\"$cluster\"}), 0))",
+          "expr": "max(clamp_min(time() - timestamp(unpoller_prometheus_cache_age_seconds{cluster=~\"$cluster\",location=~\"$location\"}), 0))",
           "format": "time_series",
           "instant": true,
           "interval": "15s",
@@ -221,7 +221,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "min(up{cluster=~\"$cluster\",job=\"unpoller\"})",
+          "expr": "min(up{cluster=~\"$cluster\",location=~\"$location\",job=\"unpoller\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -295,7 +295,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "min(unpoller_controller_up{cluster=~\"$cluster\"})",
+          "expr": "min(unpoller_controller_up{cluster=~\"$cluster\",location=~\"$location\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -326,16 +326,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
+                "color": "green",
                 "value": null
               },
               {
-                "color": "#5794F2",
-                "value": 50
+                "color": "#FFB357",
+                "value": 90
               },
               {
-                "color": "#1F60C4",
-                "value": 85
+                "color": "red",
+                "value": 180
               }
             ]
           },
@@ -373,7 +373,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max(unpoller_prometheus_cache_age_seconds{cluster=~\"$cluster\"})",
+          "expr": "max(unpoller_prometheus_cache_age_seconds{cluster=~\"$cluster\",location=~\"$location\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -447,7 +447,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(increase(unpoller_prometheus_refresh_failures_total{cluster=~\"$cluster\"}[$__range]))",
+          "expr": "sum(increase(unpoller_prometheus_refresh_failures_total{cluster=~\"$cluster\",location=~\"$location\"}[$__range]))",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -478,16 +478,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -525,7 +517,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "count(max without (tag) (unpoller_device_info{cluster=~\"$cluster\"}))",
+          "expr": "count(max without (tag) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\"}))",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -556,16 +548,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -603,7 +587,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(unpoller_protect_device_present{cluster=~\"$cluster\"})",
+          "expr": "sum(unpoller_protect_device_present{cluster=~\"$cluster\",location=~\"$location\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -634,16 +618,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -681,7 +657,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(unpoller_unas_device_present{cluster=~\"$cluster\"})",
+          "expr": "sum(unpoller_unas_device_present{cluster=~\"$cluster\",location=~\"$location\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -814,16 +790,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -861,8 +829,8 @@
             "uid": "monitoring-logs"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster,appliance) (rate({cluster=~\"$cluster\",source=\"unifi-siem\"}[$__auto]))",
-          "legendFormat": "{{cluster}} {{appliance}}",
+          "expr": "sum by (location,appliance) (rate({cluster=~\"$cluster\",location=~\"$location\",source=\"unifi-siem\"}[$__auto]))",
+          "legendFormat": "{{location}} {{appliance}}",
           "queryType": "range",
           "refId": "A",
           "maxLines": 500
@@ -918,16 +886,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -965,8 +925,8 @@
             "uid": "monitoring-logs"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster) (rate({cluster=~\"$cluster\",source=\"unpoller-api\"}[$__auto]))",
-          "legendFormat": "{{cluster}}",
+          "expr": "sum by (location) (rate({cluster=~\"$cluster\",location=~\"$location\",source=\"unpoller-api\"}[$__auto]))",
+          "legendFormat": "{{location}}",
           "queryType": "range",
           "refId": "A",
           "maxLines": 500
@@ -1003,7 +963,7 @@
             "uid": "monitoring-logs"
           },
           "editorMode": "code",
-          "expr": "{cluster=~\"$cluster\",source=~\"unifi-siem|unpoller-api\"} |= ${search:doublequote}",
+          "expr": "{cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\"} |= ${search:doublequote}",
           "queryType": "range",
           "maxLines": 500
         }
@@ -1026,6 +986,7 @@
   "schemaVersion": 41,
   "tags": [
     "monitoring",
+    "monitoring-unifi",
     "unifi",
     "metrics",
     "logs"
@@ -1043,9 +1004,38 @@
           "type": "prometheus",
           "uid": "monitoring-metrics"
         },
+        "definition": "label_values(unpoller_controller_up{cluster=~\"$cluster\"}, location)",
+        "description": "Filter by location",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Location",
+        "multi": true,
+        "name": "location",
+        "options": [],
+        "query": {
+          "query": "label_values(unpoller_controller_up{cluster=~\"$cluster\"}, location)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
         "definition": "label_values(unpoller_controller_up, cluster)",
         "description": "Filter by cluster",
-        "hide": 0,
+        "hide": 2,
         "includeAll": true,
         "label": "Cluster",
         "multi": true,

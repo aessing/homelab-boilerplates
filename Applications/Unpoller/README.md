@@ -52,7 +52,7 @@ Replace the documentation values in these files:
 | File | Required values |
 | --- | --- |
 | `configs/up.conf` | UDM and UNAS HTTPS addresses, local read-only account names and CA settings |
-| `configs/alloy.env` | Actual UDM and UNAS source IPs |
+| `configs/alloy.env` | Display location plus actual UDM and UNAS source IPs |
 | `secrets/secret-unpoller-credentials.env` | Network password, Protect API key and UNAS password |
 | `secrets/secret-alloy-unpoller-writers.env` | Dedicated Metrics and Logs writer tokens |
 | `patches/network-policy-unpoller.yaml` | Exact UDM and UNAS `/32` destinations |
@@ -107,9 +107,10 @@ network path.
 
 Create separate random tokens in the ignored MonitoringMetrics and
 MonitoringLogs overlays. Put the matching values in this application's private
-writer Secret. Metrics-vmauth forces `cluster=ADMIN01`. Logs receive the same
-cluster label in Alloy. Reader credentials and existing agent tokens must not be
-reused.
+writer Secret. Metrics-vmauth forces `cluster=ADMIN01`. The dedicated Alloy adds
+the human-readable `location` label to UnPoller metrics and both log inputs.
+Logs receive the same cluster label in Alloy. Reader credentials and existing
+agent tokens must not be reused.
 
 ## Validate without a cluster
 
@@ -137,7 +138,7 @@ approval:
 5. Enable SIEM categories in stages. Keep Network SIEM and API events separated
    by `source` while comparing overlap.
 6. Verify Network, Protect and UNAS metrics in VictoriaMetrics, then check the
-   four dashboards in Grafana's **Monitoring UniFi** folder.
+   seven dashboards in Grafana's **Monitoring UniFi** folder.
 7. Measure series count, Loki ingest volume, Alloy WAL occupancy, drops and API
    refresh failures before final resource sizing.
 

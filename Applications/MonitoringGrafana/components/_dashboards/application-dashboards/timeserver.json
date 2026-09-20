@@ -42,10 +42,10 @@
       "targetBlank": false,
       "type": "dashboards",
       "tags": [
-        "applications"
+        "monitoring-applications"
       ],
-      "title": "Application reports",
-      "tooltip": "Open another application report"
+      "title": "Monitoring Applications",
+      "tooltip": "Open another dashboard in Monitoring Applications"
     }
   ],
   "liveNow": false,
@@ -351,16 +351,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -459,16 +451,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -579,16 +563,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -699,16 +675,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -805,16 +773,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -911,16 +871,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1017,16 +969,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1331,16 +1275,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1435,16 +1371,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1543,6 +1471,7 @@
   "schemaVersion": 41,
   "tags": [
     "monitoring",
+    "monitoring-applications",
     "applications",
     "metrics",
     "logs"

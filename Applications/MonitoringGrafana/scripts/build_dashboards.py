@@ -55,7 +55,9 @@ def thresholds(kind="status"):
     elif kind == "ready":
         values = [(None, "red"), (1, "green")]
     else:
-        values = [(None, "#8AB8FF"), (50, "#5794F2"), (85, "#1F60C4")]
+        # Quantitative panels use one stable accent. Value-dependent colors are
+        # reserved for thresholds with an explicit health meaning.
+        values = [(None, "#5794F2")]
     return {"mode": "absolute", "steps": [{"color": color, "value": value} for value, color in values]}
 
 
@@ -233,7 +235,7 @@ def intro(text):
     }
 
 
-def dashboard_links(category_title, category_tag):
+def dashboard_links(category_title=None, category_tag=None):
     common = {
         "asDropdown": True,
         "icon": "external link",
@@ -242,20 +244,22 @@ def dashboard_links(category_title, category_tag):
         "targetBlank": False,
         "type": "dashboards",
     }
-    return [
+    result = [
         {
             **common,
             "tags": ["monitoring"],
             "title": "Monitoring dashboards",
             "tooltip": "Open another monitoring dashboard",
-        },
-        {
+        }
+    ]
+    if category_title and category_tag:
+        result.append({
             **common,
             "tags": [category_tag],
-            "title": f"{category_title} reports",
-            "tooltip": f"Open another {category_title.lower()} report",
-        },
-    ]
+            "title": category_title,
+            "tooltip": f"Open another dashboard in {category_title}",
+        })
+    return result
 
 
 FRESHNESS = lambda: stat(
@@ -699,8 +703,8 @@ def place(panels):
 
 def build(spec):
     cluster = variable("cluster", "up", "cluster")
-    category_title = spec.get("category_title", "Infrastructure")
-    category_tag = spec.get("category_tag", "infrastructure")
+    category_title = spec.get("category_title", "Monitoring Metrics")
+    category_tag = spec.get("category_tag", "monitoring-metrics")
     panels = [intro(spec["purpose"]), FRESHNESS(), *spec["panels"]]
     for panel_id, panel_data in enumerate(place(panels), start=1):
         panel_data["id"] = panel_id

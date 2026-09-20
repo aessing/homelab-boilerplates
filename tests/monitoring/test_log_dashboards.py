@@ -23,8 +23,8 @@ class LogDashboards(unittest.TestCase):
             self.assertFalse(dashboard["title"][0].isdigit())
             self.assertEqual(dashboard["refresh"], "1m")
             self.assertEqual(dashboard["time"], {"from": "now-1h", "to": "now"})
-            self.assertEqual([link["title"] for link in dashboard["links"]], ["Monitoring dashboards", "Log reports"])
-            self.assertEqual(dashboard["links"][1]["tags"], ["logs"])
+            self.assertEqual([link["title"] for link in dashboard["links"]], ["Monitoring dashboards", "Monitoring Logs"])
+            self.assertEqual(dashboard["links"][1]["tags"], ["monitoring-logs"])
             self.assertFalse(dashboard["editable"])
             self.assertLessEqual(sum(len(p.get("targets", [])) for p in dashboard["panels"]), 24)
             for i, panel in enumerate(dashboard["panels"]):

@@ -94,6 +94,9 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertIn('source       = "unifi-siem"', alloy)
         self.assertIn('source       = "unpoller-api"', alloy)
         self.assertIn('cluster      = "example-cluster"', alloy)
+        self.assertEqual(env["UNPOLLER_LOCATION"], "example-site")
+        self.assertIn('replacement  = sys.env("UNPOLLER_LOCATION")', alloy)
+        self.assertEqual(alloy.count('location     = sys.env("UNPOLLER_LOCATION")'), 2)
         self.assertIn("loki.secretfilter", alloy)
         self.assertNotIn("https://", alloy)
         writers = next(
@@ -152,28 +155,49 @@ class UniFiMonitoring(unittest.TestCase):
 
     def test_unifi_dashboards_are_reproducible_and_provisioned(self):
         dashboards = unifi_dashboards()
-        self.assertEqual(set(dashboards), {"unifi-overview.json", "unifi-network.json", "unifi-protect.json", "unifi-unas.json"})
+        self.assertEqual(set(dashboards), {
+            "unifi-overview.json", "unifi-network.json", "unifi-gateway.json",
+            "unifi-switches.json", "unifi-access-points.json", "unifi-protect.json",
+            "unifi-unas.json",
+        })
         for name, dashboard in dashboards.items():
             self.assertEqual((UNIFI_OUTPUT / name).read_text(), json.dumps(dashboard, indent=2) + "\n")
             self.assertFalse(dashboard["editable"])
             self.assertEqual(dashboard["time"], {"from": "now-1h", "to": "now"})
             self.assertEqual(dashboard["refresh"], "1m")
-            self.assertEqual([link["title"] for link in dashboard["links"]], ["Monitoring dashboards", "UniFi reports"])
-            self.assertEqual(dashboard["links"][1]["tags"], ["unifi"])
-            self.assertEqual(dashboard["templating"]["list"][0]["name"], "cluster")
+            self.assertEqual([link["title"] for link in dashboard["links"]], ["Monitoring dashboards", "Monitoring UniFi"])
+            self.assertEqual(dashboard["links"][1]["tags"], ["monitoring-unifi"])
+            self.assertEqual(dashboard["templating"]["list"][0]["name"], "location")
+            self.assertEqual(dashboard["templating"]["list"][1]["name"], "cluster")
+            self.assertEqual(dashboard["templating"]["list"][1]["hide"], 2)
             self.assertIn("unifi", dashboard["tags"])
-            for panel in dashboard["panels"]:
+            for index, panel in enumerate(dashboard["panels"]):
                 if panel["type"] == "timeseries":
                     self.assertEqual(panel["fieldConfig"]["defaults"]["color"]["mode"], "palette-classic-by-name")
+                position = panel["gridPos"]
+                for other in dashboard["panels"][index + 1:]:
+                    candidate = other["gridPos"]
+                    self.assertFalse(
+                        position["x"] < candidate["x"] + candidate["w"]
+                        and candidate["x"] < position["x"] + position["w"]
+                        and position["y"] < candidate["y"] + candidate["h"]
+                        and candidate["y"] < position["y"] + position["h"]
+                    )
             expressions = " ".join(target.get("expr", "") for panel in dashboard["panels"] for target in panel.get("targets", []))
             self.assertIn('cluster=~"$cluster"', expressions)
+            self.assertIn('location=~"$location"', expressions)
         grafana = render(ROOT / "Applications" / "Grafana" / "overlay" / "_SAMPLE")
         index = objects(grafana)
         configmaps = [d for d in grafana if d["kind"] == "ConfigMap" and d["metadata"]["name"].startswith("grafana-monitoring-dashboards-unifi-")]
+        self.assertEqual(len(configmaps), 3)
         self.assertEqual({name for cm in configmaps for name in cm["data"]}, set(dashboards))
+        for configmap in configmaps:
+            self.assertLess(len(json.dumps(configmap).encode()), 150 * 1024)
         deployment = index["Deployment", "grafana"]
         mount = next(m for m in deployment["spec"]["template"]["spec"]["containers"][0]["volumeMounts"] if m["name"] == "monitoring-unifi-dashboards")
         self.assertEqual(mount["mountPath"], "/var/lib/grafana/monitoring-unifi-dashboards")
+        volume = next(v for v in deployment["spec"]["template"]["spec"]["volumes"] if v["name"] == "monitoring-unifi-dashboards")
+        self.assertEqual(len(volume["projected"]["sources"]), 3)
         self.assertIn("folder: Monitoring UniFi", (GRAFANA / "components/_dashboards/configs/providers.yaml").read_text())
 
     def test_unifi_dashboard_queries_match_exported_metric_semantics(self):
@@ -194,8 +218,9 @@ class UniFiMonitoring(unittest.TestCase):
             panel["title"]: " ".join(target.get("expr", "") for target in panel.get("targets", []))
             for panel in protect["panels"]
         }
-        self.assertIn("unpoller_protect_sensor_is_opened", protect_panel_expressions["Open sensors"])
-        self.assertIn("unpoller_protect_sensor_is_motion_detected", protect_panel_expressions["Motion sensors"])
+        self.assertNotIn("unpoller_protect_sensor_", " ".join(protect_panel_expressions.values()))
+        self.assertIn("unpoller_client_receive_bytes_total", protect_panel_expressions["Camera network traffic"])
+        self.assertIn("count_over_time", protect_panel_expressions["Detection events"])
 
         overview_panels = {panel["title"]: panel for panel in dashboards["unifi-overview.json"]["panels"]}
         for title in ("UnPoller target", "Controller collection", "UniFi Alloy target"):
@@ -208,7 +233,11 @@ class UniFiMonitoring(unittest.TestCase):
             unas["UNAS reachable"]["fieldConfig"]["defaults"]["thresholds"]["steps"],
             [{"color": "red", "value": None}, {"color": "green", "value": 1}],
         )
-        self.assertEqual(unas["Disk health"]["fieldConfig"]["defaults"]["thresholds"]["steps"][0]["color"], "#8AB8FF")
+        self.assertEqual(unas["Disk health"]["fieldConfig"]["defaults"]["thresholds"]["steps"][0]["color"], "#5794F2")
+        self.assertEqual({unas[title]["gridPos"]["y"] for title in ("UNAS reachable", "CPU load", "Memory use", "Pool occupancy")}, {4})
+        disk_throughput = " ".join(target.get("expr", "") for target in unas["Disk throughput"]["targets"])
+        self.assertIn("unpoller_unas_disk_read_kbps", disk_throughput)
+        self.assertIn("unpoller_unas_disk_write_kbps", disk_throughput)
         state = next(panel for panel in protect["panels"] if panel["title"] == "Protect device state")
         mappings = state["fieldConfig"]["defaults"]["mappings"][0]["options"]
         self.assertEqual(
@@ -230,5 +259,19 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertIn("unpoller_client_dpi_receive_bytes", dpi)
         self.assertIn("unpoller_client_dpi_transmit_bytes", dpi)
         self.assertNotIn("unpoller_site_dpi_", dpi)
+        self.assertIn('type=~"usw|udm"', network_panel_expressions["Switching devices"])
+        network_panels = {panel["title"]: panel for panel in dashboards["unifi-network.json"]["panels"]}
+        for title in ("Switching devices", "Access points", "Stations", "Internet receive", "Internet transmit", "Switching throughput", "Observed network power"):
+            self.assertEqual(
+                network_panels[title]["fieldConfig"]["defaults"]["thresholds"]["steps"],
+                [{"color": "#5794F2", "value": None}],
+            )
+
+    def test_admin01_location_is_displayed_without_changing_cluster_identity(self):
+        env = (APP / "overlay" / "ADMIN01" / "configs" / "alloy.env").read_text()
+        alloy = (APP / "overlay" / "ADMIN01" / "configs" / "unpoller.alloy").read_text()
+        self.assertIn("UNPOLLER_LOCATION=Walpertskirchen", env)
+        self.assertIn('cluster      = "ADMIN01"', alloy)
+        self.assertEqual(alloy.count('location     = sys.env("UNPOLLER_LOCATION")'), 2)
 if __name__ == "__main__":
     unittest.main()

@@ -42,10 +42,10 @@
       "targetBlank": false,
       "type": "dashboards",
       "tags": [
-        "infrastructure"
+        "monitoring-metrics"
       ],
-      "title": "Infrastructure reports",
-      "tooltip": "Open another infrastructure report"
+      "title": "Monitoring Metrics",
+      "tooltip": "Open another dashboard in Monitoring Metrics"
     }
   ],
   "liveNow": false,
@@ -589,16 +589,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -709,16 +701,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -829,16 +813,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -935,16 +911,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1188,7 +1156,7 @@
   "tags": [
     "monitoring",
     "metrics",
-    "infrastructure"
+    "monitoring-metrics"
   ],
   "templating": {
     "list": [

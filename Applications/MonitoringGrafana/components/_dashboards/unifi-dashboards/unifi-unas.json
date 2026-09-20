@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "UNAS console, pools, RAID groups, disks, shares and direct SIEM records.",
+  "description": "UNAS console, pools, RAID, disk and network telemetry plus direct SIEM records. The current exporter and SIEM stream do not expose a reliable backup-status contract, so no backup status is inferred.",
   "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -42,10 +42,10 @@
       "targetBlank": false,
       "type": "dashboards",
       "tags": [
-        "unifi"
+        "monitoring-unifi"
       ],
-      "title": "UniFi reports",
-      "tooltip": "Open another unifi report"
+      "title": "Monitoring UniFi",
+      "tooltip": "Open another dashboard in Monitoring UniFi"
     }
   ],
   "liveNow": false,
@@ -73,7 +73,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "UNAS console, pools, RAID groups, disks, shares and direct SIEM records.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
+        "content": "UNAS console, pools, RAID, disk and network telemetry plus direct SIEM records. The current exporter and SIEM stream do not expose a reliable backup-status contract, so no backup status is inferred.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
         "mode": "markdown"
       },
       "pluginVersion": "13.2.2",
@@ -147,7 +147,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max(clamp_min(time() - timestamp(unpoller_prometheus_cache_age_seconds{cluster=~\"$cluster\"}), 0))",
+          "expr": "max(clamp_min(time() - timestamp(unpoller_prometheus_cache_age_seconds{cluster=~\"$cluster\",location=~\"$location\"}), 0))",
           "format": "time_series",
           "instant": true,
           "interval": "15s",
@@ -221,7 +221,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "min(unpoller_unas_device_present{cluster=~\"$cluster\"})",
+          "expr": "min(unpoller_unas_device_present{cluster=~\"$cluster\",location=~\"$location\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -270,25 +270,17 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 12,
+        "h": 4,
+        "w": 6,
         "x": 6,
         "y": 4
       },
       "id": 4,
       "options": {
-        "displayMode": "gradient",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "maxVizHeight": 300,
-        "minVizHeight": 16,
-        "minVizWidth": 8,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -296,10 +288,9 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "text": {},
-        "valueMode": "color"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "targets": [
         {
@@ -308,17 +299,17 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster,source,name) (unpoller_unas_cpu_load_percent{cluster=~\"$cluster\"})",
+          "expr": "max(unpoller_unas_cpu_load_percent{cluster=~\"$cluster\",location=~\"$location\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
-          "legendFormat": "{{cluster}} {{name}}",
+          "legendFormat": "",
           "range": false,
           "refId": "A"
         }
       ],
       "title": "CPU load",
-      "type": "bargauge"
+      "type": "stat"
     },
     {
       "datasource": {
@@ -357,25 +348,17 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 11
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
       },
       "id": 5,
       "options": {
-        "displayMode": "gradient",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "maxVizHeight": 300,
-        "minVizHeight": 16,
-        "minVizWidth": 8,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -383,10 +366,9 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "text": {},
-        "valueMode": "color"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "targets": [
         {
@@ -395,17 +377,17 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "100 * (1 - max by (cluster,source,name) (unpoller_unas_memory_available_bytes{cluster=~\"$cluster\"}) / max by (cluster,source,name) (unpoller_unas_memory_total_bytes{cluster=~\"$cluster\"}))",
+          "expr": "100 * (1 - max(unpoller_unas_memory_available_bytes{cluster=~\"$cluster\",location=~\"$location\"}) / max(unpoller_unas_memory_total_bytes{cluster=~\"$cluster\",location=~\"$location\"}))",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
-          "legendFormat": "{{cluster}} {{name}}",
+          "legendFormat": "",
           "range": false,
           "refId": "A"
         }
       ],
       "title": "Memory use",
-      "type": "bargauge"
+      "type": "stat"
     },
     {
       "datasource": {
@@ -444,25 +426,17 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 11
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
       },
       "id": 6,
       "options": {
-        "displayMode": "gradient",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "maxVizHeight": 300,
-        "minVizHeight": 16,
-        "minVizWidth": 8,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -470,10 +444,9 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "text": {},
-        "valueMode": "color"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "targets": [
         {
@@ -482,17 +455,437 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "100 * max by (cluster,source,name,pool_id,pool_type,status) (unpoller_unas_pool_usage_bytes{cluster=~\"$cluster\"}) / max by (cluster,source,name,pool_id,pool_type,status) (unpoller_unas_pool_capacity_bytes{cluster=~\"$cluster\"})",
+          "expr": "100 * max(unpoller_unas_pool_usage_bytes{cluster=~\"$cluster\",location=~\"$location\"}) / max(unpoller_unas_pool_capacity_bytes{cluster=~\"$cluster\",location=~\"$location\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
-          "legendFormat": "{{cluster}} {{name}} {{pool_id}}",
+          "legendFormat": "",
           "range": false,
           "refId": "A"
         }
       ],
       "title": "Pool occupancy",
-      "type": "bargauge"
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Per-disk read and write throughput reported by UNAS.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (name,slot_id) (unpoller_unas_disk_read_kbps{cluster=~\"$cluster\",location=~\"$location\"}) * 1000",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "read {{name}} slot {{slot_id}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (name,slot_id) (unpoller_unas_disk_write_kbps{cluster=~\"$cluster\",location=~\"$location\"}) * 1000",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "write {{name}} slot {{slot_id}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Disk throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Console network receive and transmit throughput reported by UNAS.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (name) (unpoller_unas_receive_kbps{cluster=~\"$cluster\",location=~\"$location\"}) * 1000",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "receive {{name}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (name) (unpoller_unas_transmit_kbps{cluster=~\"$cluster\",location=~\"$location\"}) * 1000",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "transmit {{name}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "UNAS network throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "UNAS CPU utilization over time.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (name) (unpoller_unas_cpu_load_percent{cluster=~\"$cluster\",location=~\"$location\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "CPU load trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "UNAS CPU temperature over time.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (name) (unpoller_unas_cpu_temperature_celsius{cluster=~\"$cluster\",location=~\"$location\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "CPU temperature",
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -537,9 +930,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 32
       },
-      "id": 7,
+      "id": 11,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -565,7 +958,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster,source,name,pool_id,raid_group_id,current_level,config_level) (unpoller_unas_raid_group_expected_protection{cluster=~\"$cluster\"} - unpoller_unas_raid_group_current_protection{cluster=~\"$cluster\"})",
+          "expr": "max by (location,source,name,pool_id,raid_group_id,current_level,config_level) (unpoller_unas_raid_group_expected_protection{cluster=~\"$cluster\",location=~\"$location\"} - unpoller_unas_raid_group_current_protection{cluster=~\"$cluster\",location=~\"$location\"})",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -624,16 +1017,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -645,9 +1030,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 26
+        "y": 40
       },
-      "id": 8,
+      "id": 12,
       "options": {
         "legend": {
           "calcs": [
@@ -671,11 +1056,11 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "unpoller_unas_raid_group_progress_percent{cluster=~\"$cluster\"}",
+          "expr": "unpoller_unas_raid_group_progress_percent{cluster=~\"$cluster\",location=~\"$location\"}",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "{{cluster}} {{name}} {{pool_id}} {{raid_group_id}}",
+          "legendFormat": "{{location}} {{name}} {{pool_id}} {{raid_group_id}}",
           "range": true,
           "refId": "A"
         }
@@ -709,16 +1094,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -730,9 +1107,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 48
       },
-      "id": 9,
+      "id": 13,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -758,7 +1135,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "min by (cluster,source,name,slot_id,pool_id,disk_type,state,model,serial) (unpoller_unas_disk_health_score{cluster=~\"$cluster\"})",
+          "expr": "min by (location,source,name,slot_id,pool_id,disk_type,state,model,serial) (unpoller_unas_disk_health_score{cluster=~\"$cluster\",location=~\"$location\"})",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -817,16 +1194,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -838,9 +1207,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 42
+        "y": 56
       },
-      "id": 10,
+      "id": 14,
       "options": {
         "legend": {
           "calcs": [
@@ -864,11 +1233,11 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "unpoller_unas_disk_temperature_celsius{cluster=~\"$cluster\"}",
+          "expr": "unpoller_unas_disk_temperature_celsius{cluster=~\"$cluster\",location=~\"$location\"}",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "{{cluster}} {{name}} slot {{slot_id}}",
+          "legendFormat": "{{location}} {{name}} slot {{slot_id}}",
           "range": true,
           "refId": "A"
         }
@@ -919,9 +1288,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 50
+        "y": 64
       },
-      "id": 11,
+      "id": 15,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -947,7 +1316,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster,source,name,slot_id,pool_id,model,serial) (unpoller_unas_disk_bad_sectors{cluster=~\"$cluster\"} + unpoller_unas_disk_uncorrectable_sectors{cluster=~\"$cluster\"} + unpoller_unas_disk_smart_read_errors{cluster=~\"$cluster\"})",
+          "expr": "max by (location,source,name,slot_id,pool_id,model,serial) (unpoller_unas_disk_bad_sectors{cluster=~\"$cluster\",location=~\"$location\"} + unpoller_unas_disk_uncorrectable_sectors{cluster=~\"$cluster\",location=~\"$location\"} + unpoller_unas_disk_smart_read_errors{cluster=~\"$cluster\",location=~\"$location\"})",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -957,6 +1326,85 @@
         }
       ],
       "title": "Disk media errors",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Drive power-on time reported by UNAS.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 72
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (location,source,name,slot_id,pool_id,model,serial) (unpoller_unas_disk_power_on_hours{cluster=~\"$cluster\",location=~\"$location\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Disk power-on hours",
       "type": "table"
     },
     {
@@ -971,7 +1419,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 58
+        "y": 80
       },
       "fieldConfig": {
         "defaults": {
@@ -987,7 +1435,7 @@
             "uid": "monitoring-logs"
           },
           "editorMode": "code",
-          "expr": "{cluster=~\"$cluster\",source=\"unifi-siem\",appliance=\"unas\"} |= ${search:doublequote}",
+          "expr": "{cluster=~\"$cluster\",location=~\"$location\",source=\"unifi-siem\",appliance=\"unas\"} |= ${search:doublequote}",
           "queryType": "range",
           "maxLines": 500
         }
@@ -1002,7 +1450,7 @@
         "dedupStrategy": "none",
         "sortOrder": "Descending"
       },
-      "id": 12
+      "id": 17
     }
   ],
   "preload": false,
@@ -1010,6 +1458,7 @@
   "schemaVersion": 41,
   "tags": [
     "monitoring",
+    "monitoring-unifi",
     "unifi",
     "metrics",
     "logs"
@@ -1027,9 +1476,38 @@
           "type": "prometheus",
           "uid": "monitoring-metrics"
         },
+        "definition": "label_values(unpoller_controller_up{cluster=~\"$cluster\"}, location)",
+        "description": "Filter by location",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Location",
+        "multi": true,
+        "name": "location",
+        "options": [],
+        "query": {
+          "query": "label_values(unpoller_controller_up{cluster=~\"$cluster\"}, location)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
         "definition": "label_values(unpoller_controller_up, cluster)",
         "description": "Filter by cluster",
-        "hide": 0,
+        "hide": 2,
         "includeAll": true,
         "label": "Cluster",
         "multi": true,

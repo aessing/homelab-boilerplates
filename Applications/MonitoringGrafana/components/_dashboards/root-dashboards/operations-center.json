@@ -35,19 +35,6 @@
       "tooltip": "Open another monitoring dashboard"
     },
     {
-      "asDropdown": true,
-      "icon": "external link",
-      "includeVars": true,
-      "keepTime": true,
-      "targetBlank": false,
-      "type": "dashboards",
-      "tags": [
-        "operations"
-      ],
-      "title": "Operations reports",
-      "tooltip": "Open another operations report"
-    },
-    {
       "type": "link",
       "title": "Applications",
       "url": "/d/mon-app-overview",
@@ -234,16 +221,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1030,16 +1009,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1124,16 +1095,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1227,16 +1190,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1521,16 +1476,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1627,16 +1574,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1817,16 +1756,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },

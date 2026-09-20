@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Central VictoriaMetrics service and auth-proxy workload logs. HistoryDB is explicitly excluded. Cluster selects the backend hosting cluster. Use Collection and Metrics Backend for per-cluster Alloy delivery queues.",
+  "description": "Gateway, primary WAN, LTE failover device and rolling traffic totals. LTE values are device telemetry, not carrier billing data.",
   "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -42,10 +42,10 @@
       "targetBlank": false,
       "type": "dashboards",
       "tags": [
-        "monitoring-applications"
+        "monitoring-unifi"
       ],
-      "title": "Monitoring Applications",
-      "tooltip": "Open another dashboard in Monitoring Applications"
+      "title": "Monitoring UniFi",
+      "tooltip": "Open another dashboard in Monitoring UniFi"
     }
   ],
   "liveNow": false,
@@ -73,7 +73,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "Central VictoriaMetrics service and auth-proxy workload logs. HistoryDB is explicitly excluded. Cluster selects the backend hosting cluster. Use Collection and Metrics Backend for per-cluster Alloy delivery queues.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
+        "content": "Gateway, primary WAN, LTE failover device and rolling traffic totals. LTE values are device telemetry, not carrier billing data.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
         "mode": "markdown"
       },
       "pluginVersion": "13.2.2",
@@ -86,7 +86,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Age of currently visible application telemetry. Disappeared targets cannot be detected by sample age alone. N/A means missing data.",
+      "description": "Age of the latest cached UnPoller sample. N/A means that the collector has not delivered this metric.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -147,7 +147,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max(clamp_min(time() - timestamp(kube_pod_info{cluster=~\"$cluster\",namespace=~\"monitoring-metrics\"}), 0))",
+          "expr": "max(clamp_min(time() - timestamp(unpoller_prometheus_cache_age_seconds{cluster=~\"$cluster\",location=~\"$location\"}), 0))",
           "format": "time_series",
           "instant": true,
           "interval": "15s",
@@ -156,7 +156,7 @@
           "refId": "A"
         }
       ],
-      "title": "Oldest application telemetry sample",
+      "title": "Oldest UniFi collector sample",
       "type": "stat"
     },
     {
@@ -164,30 +164,26 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Central metrics endpoint reachability.",
+      "description": "Current primary gateway WAN receive rate.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 0,
+          "decimals": 2,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
+                "color": "#5794F2",
                 "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
               }
             ]
           },
-          "unit": "short"
+          "unit": "Bps"
         },
         "overrides": []
       },
@@ -221,7 +217,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "min(up{cluster=~\"$cluster\",job=\"victoriametrics\"})",
+          "expr": "sum(unpoller_device_wan_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -230,7 +226,7 @@
           "refId": "A"
         }
       ],
-      "title": "Backend scrape healthy",
+      "title": "Internet receive",
       "type": "stat"
     },
     {
@@ -238,30 +234,26 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Read-only storage stops ingestion.",
+      "description": "Current primary gateway WAN transmit rate.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 0,
+          "decimals": 2,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "#5794F2",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
               }
             ]
           },
-          "unit": "short"
+          "unit": "Bps"
         },
         "overrides": []
       },
@@ -295,7 +287,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max(vm_storage_is_read_only{cluster=~\"$cluster\",job=\"victoriametrics\"})",
+          "expr": "sum(unpoller_device_wan_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -304,7 +296,7 @@
           "refId": "A"
         }
       ],
-      "title": "Storage read-only",
+      "title": "Internet transmit",
       "type": "stat"
     },
     {
@@ -312,26 +304,30 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Filesystem bytes available.",
+      "description": "Internet drop counter increases in the selected range.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 2,
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "#5794F2",
+                "color": "green",
                 "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -365,7 +361,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "min(vm_free_disk_space_bytes{cluster=~\"$cluster\",job=\"victoriametrics\"})",
+          "expr": "sum(increase(unpoller_site_intenet_drops_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}[$__range]))",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -374,7 +370,7 @@
           "refId": "A"
         }
       ],
-      "title": "Free disk",
+      "title": "Internet outages",
       "type": "stat"
     },
     {
@@ -382,7 +378,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Ingestion stops when free space drops below this reserve.",
+      "description": "Controller-reported WAN uptime percentage.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -396,12 +392,20 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#5794F2",
+                "color": "red",
                 "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99.5
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -435,7 +439,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max(vm_free_disk_space_limit_bytes{cluster=~\"$cluster\",job=\"victoriametrics\"})",
+          "expr": "max(unpoller_wan_uptime_percentage{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",wan_networkgroup=\"WAN\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -444,7 +448,7 @@
           "refId": "A"
         }
       ],
-      "title": "Free-space reserve",
+      "title": "Primary WAN uptime",
       "type": "stat"
     },
     {
@@ -452,433 +456,13 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Rows inserted",
+      "description": "Rolling 30-day gateway WAN receive bytes. This is not a calendar-month billing counter.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic-by-name"
+            "mode": "thresholds"
           },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "id": 7,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster) (rate(vm_rows_inserted_total{cluster=~\"$cluster\",job=\"victoriametrics\"}[$__rate_interval]))",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "{{cluster}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Rows inserted",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Invalid rows",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
-      },
-      "id": 8,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster) (rate(vm_rows_invalid_total{cluster=~\"$cluster\",job=\"victoriametrics\"}[$__rate_interval]))",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "{{cluster}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Invalid rows",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Query requests",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 16
-      },
-      "id": 9,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster) (rate(vm_http_requests_total{cluster=~\"$cluster\",job=\"victoriametrics\"}[$__rate_interval]))",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "{{cluster}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Query requests",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Query errors",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 16
-      },
-      "id": 10,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster) (rate(vm_http_request_errors_total{cluster=~\"$cluster\",job=\"victoriametrics\"}[$__rate_interval]))",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "{{cluster}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Query errors",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Filesystem usage including WAL and index overhead. Provisioned capacity is not data size. The write-stop threshold is provisioned capacity minus VictoriaMetrics' configured free-space reserve.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
+          "custom": {},
           "decimals": 2,
           "mappings": [],
           "noValue": "N/A",
@@ -892,6 +476,636 @@
             ]
           },
           "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(unpoller_device_wan_receive_bytes_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}[30d]))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Rolling 30d download",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Rolling 30-day gateway WAN transmit bytes. This is not a calendar-month billing counter.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(unpoller_device_wan_transmit_bytes_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}[30d]))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Rolling 30d upload",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Rolling 30-day gateway WAN traffic total.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(unpoller_device_wan_receive_bytes_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}[30d])) + sum(increase(unpoller_device_wan_transmit_bytes_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}[30d]))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Rolling 30d total",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Traffic observed on the LTE device over 30 days. This is device traffic, not a carrier billing counter.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 12
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum((increase(unpoller_device_receive_bytes_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"uap\"}[30d]) + increase(unpoller_device_transmit_bytes_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"uap\"}[30d])) * on (cluster,location,site_name,name) group_left() (max by (cluster,location,site_name,name) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",model=\"ULTEPEU\"})))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "LTE device traffic 30d",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Latest controller speed-test download result.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Mbits"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 12
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max(unpoller_device_speedtest_download{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Speed test download",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Latest controller speed-test upload result.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Mbits"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 12
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max(unpoller_device_speedtest_upload{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Speed test upload",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Latest WAN latency reported by the controller.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 12
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max(unpoller_site_latency_seconds{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "WAN latency",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Gateway WAN receive and transmit rate.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(unpoller_device_wan_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "receive",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(unpoller_device_wan_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "transmit",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Internet throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Current LTE device traffic. It does not prove cellular failover use or match carrier accounting.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Bps"
         },
         "overrides": []
       },
@@ -901,7 +1115,7 @@
         "x": 0,
         "y": 24
       },
-      "id": 11,
+      "id": 15,
       "options": {
         "legend": {
           "calcs": [
@@ -925,44 +1139,16 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster,persistentvolumeclaim) (kubelet_volume_stats_used_bytes{cluster=~\"$cluster\",namespace=\"monitoring-metrics\"})",
+          "expr": "sum(unpoller_device_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"uap\"} * on (cluster,location,site_name,name) group_left() (max by (cluster,location,site_name,name) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",model=\"ULTEPEU\"})))",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "used {{cluster}} {{persistentvolumeclaim}}",
+          "legendFormat": "LTE device",
           "range": true,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (cluster,persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes{cluster=~\"$cluster\",namespace=\"monitoring-metrics\"})",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "capacity {{cluster}} {{persistentvolumeclaim}}",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max(kubelet_volume_stats_capacity_bytes{cluster=~\"$cluster\",namespace=\"monitoring-metrics\"}) - max(vm_free_disk_space_limit_bytes{cluster=~\"$cluster\",job=\"victoriametrics\"})",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "write-stop threshold",
-          "range": true,
-          "refId": "C"
         }
       ],
-      "title": "Persistent storage",
+      "title": "LTE device throughput",
       "type": "timeseries"
     },
     {
@@ -970,217 +1156,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "CPU cores consumed by application containers and sidecars.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "cores"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 32
-      },
-      "id": 12,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster,pod,container) (rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\",namespace=~\"monitoring-metrics\",container!=\"\",container!=\"POD\"}[$__rate_interval]))",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "{{cluster}} {{pod}} {{container}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Container CPU",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Working set and configured limit. Containers without a limit have no limit series. The legend shows current and maximum values.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 32
-      },
-      "id": 13,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (cluster,pod,container) (container_memory_working_set_bytes{cluster=~\"$cluster\",namespace=~\"monitoring-metrics\",container!=\"\",container!=\"POD\"})",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "actual {{cluster}} {{pod}} {{container}}",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (cluster,pod,container) (kube_pod_container_resource_limits{cluster=~\"$cluster\",namespace=~\"monitoring-metrics\",resource=\"memory\",unit=\"byte\"})",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "limit {{cluster}} {{pod}} {{container}}",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "Container memory actual and limit",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Working set / configured limit. No limit configured means that no percentage can be calculated. It does not mean zero memory use. Consult the absolute memory chart.",
+      "description": "Controller-reported interface state. Disabled backup interfaces can legitimately be inactive.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1197,13 +1173,15 @@
           "decimals": 2,
           "mappings": [
             {
-              "type": "value",
               "options": {
-                "-1": {
-                  "text": "No limit configured",
-                  "color": "text"
+                "0": {
+                  "text": "Inactive or disabled"
+                },
+                "1": {
+                  "text": "Active"
                 }
-              }
+              },
+              "type": "value"
             }
           ],
           "noValue": "N/A",
@@ -1211,27 +1189,99 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (location,site_name,wan_interface,wan_networkgroup,state) (unpoller_wan_interface_state{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "WAN interfaces",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Controller-reported WAN uptime. Interfaces without a nonnegative availability value are omitted.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
                 "value": null
               },
               {
                 "color": "#FFB357",
-                "value": 75
+                "value": 95
               },
               {
-                "color": "red",
-                "value": 90
+                "color": "green",
+                "value": 99.5
               }
             ]
           },
-          "unit": "percent",
-          "links": [
-            {
-              "title": "Pod diagnostics",
-              "url": "/d/mon-pod?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.namespace}&var-pod=${__data.fields.pod}",
-              "targetBlank": false
-            }
-          ]
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -1241,7 +1291,86 @@
         "x": 0,
         "y": 40
       },
-      "id": 14,
+      "id": 17,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (location,site_name,wan_name,wan_networkgroup,wan_type) (unpoller_wan_uptime_percentage{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"} >= 0)",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "WAN availability",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Observed UDM and LTE modem firmware.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 18,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1267,7 +1396,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "(100 * max by (cluster,namespace,pod,container) (container_memory_working_set_bytes{cluster=~\"$cluster\",namespace=~\"monitoring-metrics\",container!=\"\",container!=\"POD\"}) / on (cluster,namespace,pod,container) (max by (cluster,namespace,pod,container) (kube_pod_container_resource_limits{cluster=~\"$cluster\",namespace=~\"monitoring-metrics\",resource=\"memory\",unit=\"byte\"}) > 0)) or (-1 * (max by (cluster,namespace,pod,container) (kube_pod_container_info{cluster=~\"$cluster\",namespace=~\"monitoring-metrics\"}) unless on (cluster,namespace,pod,container) (max by (cluster,namespace,pod,container) (kube_pod_container_resource_limits{cluster=~\"$cluster\",namespace=~\"monitoring-metrics\",resource=\"memory\",unit=\"byte\"}) > 0)))",
+          "expr": "max by (location,site_name,name,type,model,version) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"udm\"} or unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",model=\"ULTEPEU\"})",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -1276,7 +1405,7 @@
           "refId": "A"
         }
       ],
-      "title": "Memory limit utilization",
+      "title": "Gateway and LTE firmware",
       "type": "table"
     },
     {
@@ -1284,7 +1413,86 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Restarts across the selected time range. Zero does not prove application health.",
+      "description": "Controller-reported uptime for the gateway and LTE modem.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 56
+      },
+      "id": 19,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (location,site_name,name,type) (unpoller_device_uptime_seconds{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"udm\"} or (unpoller_device_uptime_seconds{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"uap\"} * on (cluster,location,site_name,name) group_left() (max by (cluster,location,site_name,name) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",model=\"ULTEPEU\"}))))",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Gateway and LTE uptime",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "One means UniFi reports an available update.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1314,14 +1522,7 @@
               }
             ]
           },
-          "unit": "short",
-          "links": [
-            {
-              "title": "Pod diagnostics",
-              "url": "/d/mon-pod?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.namespace}&var-pod=${__data.fields.pod}",
-              "targetBlank": false
-            }
-          ]
+          "unit": "short"
         },
         "overrides": []
       },
@@ -1329,9 +1530,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 64
       },
-      "id": 15,
+      "id": 20,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1357,7 +1558,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster,namespace,pod,container) (increase(kube_pod_container_status_restarts_total{cluster=~\"$cluster\",namespace=~\"monitoring-metrics\"}[$__range]))",
+          "expr": "max by (location,site_name,name,type) (unpoller_device_upgradable{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"udm\"} or (unpoller_device_upgradable{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"uap\"} * on (cluster,location,site_name,name) group_left() (max by (cluster,location,site_name,name) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",model=\"ULTEPEU\"}))))",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -1366,245 +1567,8 @@
           "refId": "A"
         }
       ],
-      "title": "Container restarts in range",
+      "title": "Gateway and LTE updates",
       "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "monitoring-logs"
-      },
-      "description": "Entries per second by workload. Quiet applications can return no data. No data means no matching log entries in this interval, not a demonstrated delivery failure. Widen the range and check Log Pipeline Health.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "No matching log entries",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "logs/s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 56
-      },
-      "id": 16,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "monitoring-logs"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster,workload) (rate({cluster=~\"$cluster\",source=\"pod\",namespace=~\"monitoring-metrics\"}[$__auto]))",
-          "legendFormat": "{{cluster}} {{workload}}",
-          "queryType": "range",
-          "refId": "A",
-          "maxLines": 500
-        }
-      ],
-      "title": "Application log volume",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "monitoring-logs"
-      },
-      "description": "Heuristic text matches, not structured severity. Inspect the records before diagnosing an incident. No data means no matching log entries in this interval, not a demonstrated delivery failure. Widen the range and check Log Pipeline Health.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "No matching log entries",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "logs/s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 56
-      },
-      "id": 17,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "monitoring-logs"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster,workload) (rate({cluster=~\"$cluster\",source=\"pod\",namespace=~\"monitoring-metrics\"} |~ \"(?i)error|fatal|panic|warn\" [$__auto]))",
-          "legendFormat": "{{cluster}} {{workload}}",
-          "queryType": "range",
-          "refId": "A",
-          "maxLines": 500
-        }
-      ],
-      "title": "Error and warning keyword matches",
-      "type": "timeseries"
-    },
-    {
-      "type": "logs",
-      "title": "Application logs",
-      "description": "Latest 500 sanitized lines in the selected range. Search applies here. Use Log Explorer for individual workload and container filters. No data means no matching log entries in this interval, not a demonstrated delivery failure. Widen the range and check Log Pipeline Health.",
-      "datasource": {
-        "type": "loki",
-        "uid": "monitoring-logs"
-      },
-      "gridPos": {
-        "h": 13,
-        "w": 24,
-        "x": 0,
-        "y": 64
-      },
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "No matching log entries"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "monitoring-logs"
-          },
-          "editorMode": "code",
-          "expr": "{cluster=~\"$cluster\",source=\"pod\",namespace=~\"monitoring-metrics\"} |= ${search:doublequote}",
-          "queryType": "range",
-          "maxLines": 500
-        }
-      ],
-      "options": {
-        "showTime": true,
-        "showLabels": false,
-        "showCommonLabels": false,
-        "wrapLogMessage": true,
-        "prettifyLogMessage": true,
-        "enableLogDetails": true,
-        "dedupStrategy": "none",
-        "sortOrder": "Descending"
-      },
-      "id": 18
     }
   ],
   "preload": false,
@@ -1612,8 +1576,8 @@
   "schemaVersion": 41,
   "tags": [
     "monitoring",
-    "monitoring-applications",
-    "applications",
+    "monitoring-unifi",
+    "unifi",
     "metrics",
     "logs"
   ],
@@ -1630,16 +1594,74 @@
           "type": "prometheus",
           "uid": "monitoring-metrics"
         },
-        "definition": "label_values(kube_pod_info{namespace=~\"monitoring-metrics\"}, cluster)",
-        "description": "Filter by cluster",
+        "definition": "label_values(unpoller_controller_up{cluster=~\"$cluster\"}, location)",
+        "description": "Filter by location",
         "hide": 0,
+        "includeAll": true,
+        "label": "Location",
+        "multi": true,
+        "name": "location",
+        "options": [],
+        "query": {
+          "query": "label_values(unpoller_controller_up{cluster=~\"$cluster\"}, location)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(unpoller_controller_up, cluster)",
+        "description": "Filter by cluster",
+        "hide": 2,
         "includeAll": true,
         "label": "Cluster",
         "multi": true,
         "name": "cluster",
         "options": [],
         "query": {
-          "query": "label_values(kube_pod_info{namespace=~\"monitoring-metrics\"}, cluster)",
+          "query": "label_values(unpoller_controller_up, cluster)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(unpoller_site_gateways{cluster=~\"$cluster\",location=~\"$location\"}, site_name)",
+        "description": "Filter by site",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Site",
+        "multi": true,
+        "name": "site",
+        "options": [],
+        "query": {
+          "query": "label_values(unpoller_site_gateways{cluster=~\"$cluster\",location=~\"$location\"}, site_name)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
@@ -1686,8 +1708,8 @@
     ]
   },
   "timezone": "browser",
-  "title": "Monitoring Metrics (VictoriaMetrics)",
-  "uid": "mon-app-victoriametrics",
+  "title": "UniFi Gateway and WAN",
+  "uid": "mon-unifi-gateway",
   "version": 1,
   "weekStart": "monday"
 }

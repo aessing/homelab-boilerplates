@@ -149,7 +149,9 @@ nicht gleichzeitig anderweitig vergeben werden.
   auf die ungeschützten Datenbank-Endpunkte.
 - Für diesen Baustein eigene Writer-Tokens pro Backend verwenden, getrennt von
   Reader- und bestehenden Agent-Credentials. Metrics-vmauth erzwingt
-  `cluster=ADMIN01`, Loki erhält dieses Label im Collector.
+  `cluster=ADMIN01`, Loki erhält dieses Label im Collector. Alloy ergänzt für
+  Metriken und Logs zusätzlich das anzeigefreundliche Label
+  `location=Walpertskirchen`. Die technische Clusteridentität bleibt unverändert.
 - Der bestehende interne vmauth-Port verwendet HTTP. Planungsentscheidung:
   HTTP nur innerhalb des Clusters, geschützt durch enge NetworkPolicies.
   Das ist keine Transportverschlüsselung. Externe API-Verbindungen bleiben HTTPS.
@@ -269,14 +271,22 @@ Namespace `unpoller`, bleiben aber getrennte Workloads. `_SAMPLE` enthält keine
 echten Adressen oder Zugangsdaten. Bestehende Generator-Hashes und Rollout-
 Konventionen beibehalten. Private Overlays niemals force-adden.
 
-Vier provisionierte Dashboards im neuen Ordner `Monitoring UniFi`:
+Sieben provisionierte Dashboards im neuen Ordner `Monitoring UniFi`:
 
 1. Overview: Quellen, Collector-/API-Gesundheit, Aktualität, verfügbare Geräte,
    wichtige Ereignisse und Pipelinezustand.
-2. Network: UDM, WAN/LTE, Switches/Ports/PoE, APs/WLAN, Clients, DPI, Nachbar-/
-   Rogue-APs und IDS-/Systemereignisse.
-3. Protect: verfügbare Recorder-/Kamera-Metriken und textbasierte Ereignisse.
-4. UNAS: Gerät, Pools, Laufwerke, Shares und tatsächlich verfügbare SIEM-Ereignisse.
+2. Network: Gesamtüberblick über WAN, Switching, APs, DPI, Rogue-APs und
+   IDS-/Systemereignisse, mit Geräte- und Portfilter.
+3. Gateway und WAN: UDM, WAN-Verfügbarkeit, Ausfälle, LTE-Gerät und rollierende
+   30-Tage-Trafficwerte.
+4. Switches: Ports, Durchsatz, Fehler, PoE, Ressourcen, Uptime und Firmware.
+5. Access Points: Stationen, Durchsatz, Funkkanäle, Auslastung, Retries, Uptime
+   und Firmware.
+6. Protect: Kamera- und NVR-Zustand, Kamera-Netzwerkverkehr und textbasierte
+   Erkennungsereignisse. Der Exporter liefert keinen NVR-internen Durchsatz.
+7. UNAS: Gerät, Pools, RAID, Laufwerke, Disk- und Netzwerkdurchsatz und
+   tatsächlich verfügbare SIEM-Ereignisse. Ein belastbarer Backupstatus wird
+   mangels Exportvertrag nicht abgeleitet.
 
 Vorhandene Datasource-UIDs `monitoring-metrics` und `monitoring-logs` nutzen.
 Deterministische Python-Builder und vorhandene Gestaltungs-/Testkonventionen

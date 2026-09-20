@@ -13,12 +13,14 @@ validated and provisioned through the existing Grafana deployment.
 - Grafana UI: `Dashboards > Monitoring Metrics`, folder UID `monitoring-infrastructure`.
 - Datasource: **Monitoring Metrics**, using the stable Prometheus-compatible
   `monitoring-metrics` UID.
-- Visuals: stable multi-series colors for readable charts, blue
-  quantitative accents, clear independent status colors, and compact dashboard
+- Visuals: stable multi-series colors for readable charts, one consistent blue
+  quantitative accent, clear independent status colors, and compact dashboard
   headers without a Grafana logo.
-- Navigation: a tag-based **Monitoring dashboards** dropdown, a second dropdown
-  limited to the current category, and context-preserving table drill-downs for
-  cluster, namespace, Pod, node, PVC, job and database scope.
+- Navigation: a tag-based **Monitoring dashboards** dropdown plus one uniquely
+  tagged category dropdown named **Monitoring Metrics**, **Monitoring
+  Applications**, **Monitoring Logs** or **Monitoring UniFi**. Operations Center
+  intentionally has no category dropdown. Table drill-downs preserve the active
+  time and variable context.
 - Edition: Grafana OSS. No Enterprise license or external panel plugin required.
 
 The package does not deploy another Grafana instance. Provisioning creates the
@@ -34,7 +36,7 @@ Monitoring Logs datasources, with no new collectors or Grafana plugins:
 | Applications Overview | Namespace-filtered readiness, scrape failures, CPU, memory, restarts and logs, including applications without native metrics |
 | Uptime Kuma | Application health, event loop, MariaDB, container resources and logs |
 | Uptime Kuma Monitors | Paginated status history, rolling availability, latency and certificate lifetime |
-| Authentik | Server, worker, outpost connectivity, request load and background tasks |
+| Authentik | Server, worker and outpost connectivity with running image version, request load and background tasks |
 | Grafana and Renderer | Requests, rendering queue, browser activity, Redis and memory pressure |
 | Home Assistant and MQTT | Entity availability, automation activity, broker connectivity, traffic and VictoriaMetrics HistoryDB |
 | HomeCDN | NGINX status, connections, requests, container resources and logs |
@@ -47,12 +49,21 @@ Monitoring Logs datasources, with no new collectors or Grafana plugins:
 folders. It summarizes cluster and node health, monitors, workloads, capacity,
 databases and telemetry delivery, with links to diagnostic dashboards.
 
-Four dashboards are provisioned into **Monitoring UniFi** (UID
-`monitoring-unifi`): UniFi Overview, Network, Protect and UNAS. They combine the
-existing Monitoring Metrics and Monitoring Logs datasources. Network includes
-DPI, switch ports, PoE, rogue AP and IDS or IPS views. Protect contains device
-and event metadata without media. UNAS covers console, pools, RAID, disks and
-direct SIEM records. The Operations Center links to UniFi Overview.
+Seven dashboards are provisioned into **Monitoring UniFi** (UID
+`monitoring-unifi`): UniFi Overview, Network, Gateway and WAN, Switches, Access
+Points, Protect and UNAS. They combine the existing Monitoring Metrics and
+Monitoring Logs datasources. A visible location label keeps the deployment name
+human-readable while the technical cluster identity remains available as a
+hidden URL-backed filter. Network includes DPI, selected switch ports, PoE,
+power, rogue AP and IDS or IPS views. Gateway and WAN includes current traffic,
+outages, LTE device telemetry and rolling 30-day totals. Rolling totals are not
+calendar-month or carrier billing counters. Switch and access-point dashboards
+add focused traffic, errors, radio, resource, uptime, firmware and update views.
+Protect contains camera state, network traffic and detection metadata without
+media. NVR disk/application throughput is not exported. UNAS covers console,
+pools, RAID, disk and network throughput plus direct SIEM records. The current
+UNAS exporter and SIEM contract do not provide a reliable backup status, so the
+dashboard does not infer one. The Operations Center links to UniFi Overview.
 
 Kuma group monitors and individual monitors have separate status-history panels.
 The exporter does not provide parent-child relationships, so this is not a nested

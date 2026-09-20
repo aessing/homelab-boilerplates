@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Protect device state and event metadata without thumbnails, snapshots, video or audio payloads.",
+  "description": "Protect camera state, actual CCTV network traffic and detection metadata. UnPoller does not export NVR disk or application throughput. No images, thumbnails, video or audio payloads are collected.",
   "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -42,10 +42,10 @@
       "targetBlank": false,
       "type": "dashboards",
       "tags": [
-        "unifi"
+        "monitoring-unifi"
       ],
-      "title": "UniFi reports",
-      "tooltip": "Open another unifi report"
+      "title": "Monitoring UniFi",
+      "tooltip": "Open another dashboard in Monitoring UniFi"
     }
   ],
   "liveNow": false,
@@ -73,7 +73,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "Protect device state and event metadata without thumbnails, snapshots, video or audio payloads.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
+        "content": "Protect camera state, actual CCTV network traffic and detection metadata. UnPoller does not export NVR disk or application throughput. No images, thumbnails, video or audio payloads are collected.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
         "mode": "markdown"
       },
       "pluginVersion": "13.2.2",
@@ -147,7 +147,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max(clamp_min(time() - timestamp(unpoller_prometheus_cache_age_seconds{cluster=~\"$cluster\"}), 0))",
+          "expr": "max(clamp_min(time() - timestamp(unpoller_prometheus_cache_age_seconds{cluster=~\"$cluster\",location=~\"$location\"}), 0))",
           "format": "time_series",
           "instant": true,
           "interval": "15s",
@@ -164,7 +164,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Protect devices returned by the controller.",
+      "description": "Protect cameras returned by the controller.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -178,16 +178,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -225,7 +217,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(unpoller_protect_device_present{cluster=~\"$cluster\"})",
+          "expr": "sum(unpoller_protect_device_present{cluster=~\"$cluster\",location=~\"$location\",name=~\"$camera\",model_key=\"camera\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -234,7 +226,7 @@
           "refId": "A"
         }
       ],
-      "title": "Protect devices",
+      "title": "Cameras",
       "type": "stat"
     },
     {
@@ -242,7 +234,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Devices explicitly reporting disconnected state.",
+      "description": "Cameras explicitly reporting disconnected state.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -299,7 +291,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "count(unpoller_protect_device_state{cluster=~\"$cluster\"} == 0)",
+          "expr": "sum(unpoller_protect_device_state{cluster=~\"$cluster\",location=~\"$location\",name=~\"$camera\",model_key=\"camera\"} == bool 0)",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -308,7 +300,145 @@
           "refId": "A"
         }
       ],
-      "title": "Disconnected devices",
+      "title": "Disconnected cameras",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Selected cameras with microphone enabled. Audio content is not collected.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(unpoller_protect_camera_mic_enabled{cluster=~\"$cluster\",location=~\"$location\",name=~\"$camera\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Microphones enabled",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "monitoring-logs"
+      },
+      "description": "Motion, smart-detection and smart-audio records in the selected range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "monitoring-logs"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\",unifi_application=\"UniFi Protect\"} |~ \"(?i)motion|smartDetect|smartAudio\" |~ \"${camera:regex}\" [$__range]))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A",
+          "maxLines": 500
+        }
+      ],
+      "title": "Detection events",
       "type": "stat"
     },
     {
@@ -359,16 +489,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -382,7 +504,7 @@
         "x": 0,
         "y": 8
       },
-      "id": 5,
+      "id": 7,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -408,7 +530,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster,source,name,type,model_key) (unpoller_protect_device_state{cluster=~\"$cluster\"})",
+          "expr": "max by (location,source,name,type,model_key) (unpoller_protect_device_state{cluster=~\"$cluster\",location=~\"$location\",name=~\"$camera\",model_key=\"camera\"})",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -425,19 +547,40 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Sensors explicitly reporting a low battery.",
+      "description": "Network traffic for CCTV clients whose UniFi Network name matches the selected Protect camera. This is not NVR disk or application throughput.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic-by-name"
           },
           "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
             },
-            "filterable": true,
-            "inspect": false
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "decimals": 2,
           "mappings": [],
@@ -446,16 +589,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "#5794F2",
                 "value": null
-              },
-              {
-                "color": "#FFB357",
-                "value": 1
               }
             ]
           },
-          "unit": "short"
+          "unit": "Bps"
         },
         "overrides": []
       },
@@ -464,220 +603,6 @@
         "w": 24,
         "x": 0,
         "y": 16
-      },
-      "id": 6,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
-          }
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (cluster,source,name,type,model_key) (unpoller_protect_sensor_battery_low{cluster=~\"$cluster\"} == 1)",
-          "format": "table",
-          "instant": true,
-          "interval": "60s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Low sensor batteries",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Battery percentage where supported.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
-                "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 24
-      },
-      "id": 7,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "unpoller_protect_sensor_battery_percent{cluster=~\"$cluster\"}",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "{{cluster}} {{name}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Sensor battery",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Temperature and humidity where supported.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
-                "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 24
       },
       "id": 8,
       "options": {
@@ -703,11 +628,11 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "unpoller_protect_sensor_temperature_celsius{cluster=~\"$cluster\"}",
+          "expr": "sum by (name) (rate(unpoller_client_receive_bytes_total{cluster=~\"$cluster\",location=~\"$location\",name=~\"$camera\",network=\"CCTV\"}[$__rate_interval]))",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "temperature {{name}}",
+          "legendFormat": "receive {{name}}",
           "range": true,
           "refId": "A"
         },
@@ -717,16 +642,112 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "unpoller_protect_sensor_humidity_percent{cluster=~\"$cluster\"}",
+          "expr": "sum by (name) (rate(unpoller_client_transmit_bytes_total{cluster=~\"$cluster\",location=~\"$location\",name=~\"$camera\",network=\"CCTV\"}[$__rate_interval]))",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "humidity {{name}}",
+          "legendFormat": "transmit {{name}}",
           "range": true,
           "refId": "B"
         }
       ],
-      "title": "Sensor environment",
+      "title": "Camera network traffic",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "monitoring-logs"
+      },
+      "description": "Protect motion, smart-detection and smart-audio event rate for the selected camera name.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "logs/s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "monitoring-logs"
+          },
+          "editorMode": "code",
+          "expr": "sum by (unifi_application) (rate({cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\",unifi_application=\"UniFi Protect\"} |~ \"(?i)motion|smartDetect|smartAudio\" |~ \"${camera:regex}\" [$__auto]))",
+          "legendFormat": "{{unifi_application}}",
+          "queryType": "range",
+          "refId": "A",
+          "maxLines": 500
+        }
+      ],
+      "title": "Protect event rate",
       "type": "timeseries"
     },
     {
@@ -734,7 +755,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Open-state metadata only. No image or audio content is collected.",
+      "description": "Latest Network identity and attachment metadata for matching CCTV clients.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -755,12 +776,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "#5794F2",
                 "value": null
-              },
-              {
-                "color": "#FFB357",
-                "value": 1
               }
             ]
           },
@@ -773,89 +790,6 @@
         "w": 24,
         "x": 0,
         "y": 32
-      },
-      "id": 9,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
-          }
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (cluster,source,name,type) (unpoller_protect_sensor_is_opened{cluster=~\"$cluster\"})",
-          "format": "table",
-          "instant": true,
-          "interval": "60s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Open sensors",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Motion-state metadata only. No image or audio content is collected.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#FFB357",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 40
       },
       "id": 10,
       "options": {
@@ -883,7 +817,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster,source,name,type) (unpoller_protect_sensor_is_motion_detected{cluster=~\"$cluster\"})",
+          "expr": "max by (location,name,ip,mac,sw_name,sw_port,ap_name,wired) (unpoller_client_receive_bytes_total{cluster=~\"$cluster\",location=~\"$location\",name=~\"$camera\",network=\"CCTV\"} >= bool 0)",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -892,13 +826,114 @@
           "refId": "A"
         }
       ],
-      "title": "Motion sensors",
+      "title": "Camera network attachment",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Connection state reported by Protect. Unknown is explicit source data, not missing telemetry.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-text"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [
+            {
+              "options": {
+                "-1": {
+                  "text": "Unknown",
+                  "color": "#FFB357"
+                },
+                "0": {
+                  "text": "Disconnected",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Connecting",
+                  "color": "#FFB357"
+                },
+                "2": {
+                  "text": "Connected",
+                  "color": "green"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (location,source,name,type,model_key) (unpoller_protect_device_state{cluster=~\"$cluster\",location=~\"$location\",model_key=\"nvr\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "NVR state",
       "type": "table"
     },
     {
       "type": "logs",
       "title": "Protect events",
-      "description": "Protect event metadata without thumbnails or images.",
+      "description": "Protect event metadata without thumbnails, snapshots, video or audio payloads.",
       "datasource": {
         "type": "loki",
         "uid": "monitoring-logs"
@@ -923,7 +958,7 @@
             "uid": "monitoring-logs"
           },
           "editorMode": "code",
-          "expr": "{cluster=~\"$cluster\",source=\"unpoller-api\"} |~ \"(?i)protect|camera|sensor|doorbell|nvr\" |= ${search:doublequote}",
+          "expr": "{cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\",unifi_application=\"UniFi Protect\"} |~ \"${camera:regex}\" |~ \"(?i)protect|camera|motion|smartDetect|smartAudio|doorbell|nvr\" |= ${search:doublequote}",
           "queryType": "range",
           "maxLines": 500
         }
@@ -938,7 +973,7 @@
         "dedupStrategy": "none",
         "sortOrder": "Descending"
       },
-      "id": 11
+      "id": 12
     }
   ],
   "preload": false,
@@ -946,6 +981,7 @@
   "schemaVersion": 41,
   "tags": [
     "monitoring",
+    "monitoring-unifi",
     "unifi",
     "metrics",
     "logs"
@@ -963,9 +999,38 @@
           "type": "prometheus",
           "uid": "monitoring-metrics"
         },
+        "definition": "label_values(unpoller_controller_up{cluster=~\"$cluster\"}, location)",
+        "description": "Filter by location",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Location",
+        "multi": true,
+        "name": "location",
+        "options": [],
+        "query": {
+          "query": "label_values(unpoller_controller_up{cluster=~\"$cluster\"}, location)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
         "definition": "label_values(unpoller_controller_up, cluster)",
         "description": "Filter by cluster",
-        "hide": 0,
+        "hide": 2,
         "includeAll": true,
         "label": "Cluster",
         "multi": true,
@@ -973,6 +1038,35 @@
         "options": [],
         "query": {
           "query": "label_values(unpoller_controller_up, cluster)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(unpoller_protect_device_present{cluster=~\"$cluster\",location=~\"$location\",model_key=\"camera\"}, name)",
+        "description": "Filter by camera",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Camera",
+        "multi": true,
+        "name": "camera",
+        "options": [],
+        "query": {
+          "query": "label_values(unpoller_protect_device_present{cluster=~\"$cluster\",location=~\"$location\",model_key=\"camera\"}, name)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,

@@ -47,8 +47,14 @@ spec:
           configMap:
             name: grafana-monitoring-dashboards-logs
         - name: monitoring-unifi-dashboards
-          configMap:
-            name: grafana-monitoring-dashboards-unifi
+          projected:
+            sources:
+              - configMap:
+                  name: grafana-monitoring-dashboards-unifi-core
+              - configMap:
+                  name: grafana-monitoring-dashboards-unifi-network
+              - configMap:
+                  name: grafana-monitoring-dashboards-unifi-services
         - name: monitoring-dashboard-provider
           configMap:
             name: grafana-monitoring-dashboard-provider

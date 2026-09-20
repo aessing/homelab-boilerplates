@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "NGINX serving activity and workload health. stub_status does not export HTTP response codes, bandwidth or cache-hit ratios. Logs and resource panels provide operational context.",
+  "description": "Switch capacity, traffic, PoE, port errors, resource use, uptime and firmware.",
   "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -42,10 +42,10 @@
       "targetBlank": false,
       "type": "dashboards",
       "tags": [
-        "monitoring-applications"
+        "monitoring-unifi"
       ],
-      "title": "Monitoring Applications",
-      "tooltip": "Open another dashboard in Monitoring Applications"
+      "title": "Monitoring UniFi",
+      "tooltip": "Open another dashboard in Monitoring UniFi"
     }
   ],
   "liveNow": false,
@@ -73,7 +73,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "NGINX serving activity and workload health. stub_status does not export HTTP response codes, bandwidth or cache-hit ratios. Logs and resource panels provide operational context.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
+        "content": "Switch capacity, traffic, PoE, port errors, resource use, uptime and firmware.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
         "mode": "markdown"
       },
       "pluginVersion": "13.2.2",
@@ -86,7 +86,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Age of currently visible application telemetry. Disappeared targets cannot be detected by sample age alone. N/A means missing data.",
+      "description": "Age of the latest cached UnPoller sample. N/A means that the collector has not delivered this metric.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -147,7 +147,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max(clamp_min(time() - timestamp(kube_pod_info{cluster=~\"$cluster\",namespace=~\"homecdn\"}), 0))",
+          "expr": "max(clamp_min(time() - timestamp(unpoller_prometheus_cache_age_seconds{cluster=~\"$cluster\",location=~\"$location\"}), 0))",
           "format": "time_series",
           "instant": true,
           "interval": "15s",
@@ -156,7 +156,7 @@
           "refId": "A"
         }
       ],
-      "title": "Oldest application telemetry sample",
+      "title": "Oldest UniFi collector sample",
       "type": "stat"
     },
     {
@@ -164,7 +164,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Exporter can collect stub_status.",
+      "description": "Standalone switches in the selected scope. The UDM integrated switch is summarized on UniFi Network.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -178,12 +178,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
+                "color": "#5794F2",
                 "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
               }
             ]
           },
@@ -193,7 +189,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 12,
+        "w": 6,
         "x": 0,
         "y": 4
       },
@@ -221,7 +217,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "min(nginx_up{cluster=~\"$cluster\"})",
+          "expr": "count(max without (tag) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",type=\"usw\"}))",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -230,7 +226,7 @@
           "refId": "A"
         }
       ],
-      "title": "NGINX reachable",
+      "title": "Selected switches",
       "type": "stat"
     },
     {
@@ -238,14 +234,14 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Current connections.",
+      "description": "Current receive plus transmit rate for selected switch ports.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 0,
+          "decimals": 2,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -257,14 +253,14 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "Bps"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 12,
-        "x": 12,
+        "w": 6,
+        "x": 6,
         "y": 4
       },
       "id": 4,
@@ -291,7 +287,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(nginx_connections_active{cluster=~\"$cluster\"})",
+          "expr": "sum(unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"}) + sum(unpoller_device_port_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -300,7 +296,7 @@
           "refId": "A"
         }
       ],
-      "title": "Active connections",
+      "title": "Switch throughput",
       "type": "stat"
     },
     {
@@ -308,41 +304,13 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Requests",
+      "description": "Current PoE output for selected switch ports.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic-by-name"
+            "mode": "thresholds"
           },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
+          "custom": {},
           "decimals": 2,
           "mappings": [],
           "noValue": "N/A",
@@ -355,32 +323,32 @@
               }
             ]
           },
-          "unit": "reqps"
+          "unit": "watt"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
       },
       "id": 5,
       "options": {
-        "legend": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
           "calcs": [
-            "lastNotNull",
-            "max"
+            "lastNotNull"
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "targets": [
         {
@@ -389,67 +357,43 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster) (rate(nginx_http_requests_total{cluster=~\"$cluster\"}[$__rate_interval]))",
+          "expr": "sum(unpoller_device_port_poe_watts{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"})",
           "format": "time_series",
-          "instant": false,
+          "instant": true,
           "interval": "30s",
-          "legendFormat": "{{cluster}}",
-          "range": true,
+          "legendFormat": "",
+          "range": false,
           "refId": "A"
         }
       ],
-      "title": "Requests",
-      "type": "timeseries"
+      "title": "PoE output",
+      "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Waiting connections",
+      "description": "Selected switches with an available firmware update.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic-by-name"
+            "mode": "thresholds"
           },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
+          "custom": {},
+          "decimals": 0,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "#5794F2",
+                "color": "green",
                 "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
               }
             ]
           },
@@ -458,27 +402,27 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
       },
       "id": 6,
       "options": {
-        "legend": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
           "calcs": [
-            "lastNotNull",
-            "max"
+            "lastNotNull"
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "targets": [
         {
@@ -487,24 +431,24 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster) (nginx_connections_waiting{cluster=~\"$cluster\"})",
+          "expr": "sum(unpoller_device_upgradable{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",type=\"usw\"})",
           "format": "time_series",
-          "instant": false,
+          "instant": true,
           "interval": "30s",
-          "legendFormat": "{{cluster}}",
-          "range": true,
+          "legendFormat": "",
+          "range": false,
           "refId": "A"
         }
       ],
-      "title": "Waiting connections",
-      "type": "timeseries"
+      "title": "Updates available",
+      "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Reading connections",
+      "description": "Per-port switch traffic.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -551,15 +495,15 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "Bps"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
-        "y": 16
+        "y": 8
       },
       "id": 7,
       "options": {
@@ -585,16 +529,30 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster) (nginx_connections_reading{cluster=~\"$cluster\"})",
+          "expr": "sum by (name,port_name) (unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"})",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "{{cluster}}",
+          "legendFormat": "receive {{name}} {{port_name}}",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (name,port_name) (unpoller_device_port_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "transmit {{name}} {{port_name}}",
+          "range": true,
+          "refId": "B"
         }
       ],
-      "title": "Reading connections",
+      "title": "Port throughput",
       "type": "timeseries"
     },
     {
@@ -602,7 +560,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Writing connections",
+      "description": "Current PoE draw compared with the controller-reported maximum power value.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -649,14 +607,14 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "watt"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
+        "w": 24,
+        "x": 0,
         "y": 16
       },
       "id": 8,
@@ -683,207 +641,11 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster) (nginx_connections_writing{cluster=~\"$cluster\"})",
+          "expr": "sum by (name) (unpoller_device_port_poe_watts{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\"})",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "{{cluster}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Writing connections",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "CPU cores consumed by application containers and sidecars.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "cores"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 24
-      },
-      "id": 9,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster,pod,container) (rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\",namespace=~\"homecdn\",container!=\"\",container!=\"POD\"}[$__rate_interval]))",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "{{cluster}} {{pod}} {{container}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Container CPU",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Working set and configured limit. Containers without a limit have no limit series. The legend shows current and maximum values.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 24
-      },
-      "id": 10,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (cluster,pod,container) (container_memory_working_set_bytes{cluster=~\"$cluster\",namespace=~\"homecdn\",container!=\"\",container!=\"POD\"})",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "actual {{cluster}} {{pod}} {{container}}",
+          "legendFormat": "PoE draw {{name}}",
           "range": true,
           "refId": "A"
         },
@@ -893,16 +655,16 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster,pod,container) (kube_pod_container_resource_limits{cluster=~\"$cluster\",namespace=~\"homecdn\",resource=\"memory\",unit=\"byte\"})",
+          "expr": "max by (name) (unpoller_device_max_power_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",type=\"usw\"})",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "limit {{cluster}} {{pod}} {{container}}",
+          "legendFormat": "reported budget {{name}}",
           "range": true,
           "refId": "B"
         }
       ],
-      "title": "Container memory actual and limit",
+      "title": "PoE draw and switch budget",
       "type": "timeseries"
     },
     {
@@ -910,111 +672,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Working set / configured limit. No limit configured means that no percentage can be calculated. It does not mean zero memory use. Consult the absolute memory chart.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "decimals": 2,
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "-1": {
-                  "text": "No limit configured",
-                  "color": "text"
-                }
-              }
-            }
-          ],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#FFB357",
-                "value": 75
-              },
-              {
-                "color": "red",
-                "value": 90
-              }
-            ]
-          },
-          "unit": "percent",
-          "links": [
-            {
-              "title": "Pod diagnostics",
-              "url": "/d/mon-pod?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.namespace}&var-pod=${__data.fields.pod}",
-              "targetBlank": false
-            }
-          ]
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 32
-      },
-      "id": 11,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
-          }
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "(100 * max by (cluster,namespace,pod,container) (container_memory_working_set_bytes{cluster=~\"$cluster\",namespace=~\"homecdn\",container!=\"\",container!=\"POD\"}) / on (cluster,namespace,pod,container) (max by (cluster,namespace,pod,container) (kube_pod_container_resource_limits{cluster=~\"$cluster\",namespace=~\"homecdn\",resource=\"memory\",unit=\"byte\"}) > 0)) or (-1 * (max by (cluster,namespace,pod,container) (kube_pod_container_info{cluster=~\"$cluster\",namespace=~\"homecdn\"}) unless on (cluster,namespace,pod,container) (max by (cluster,namespace,pod,container) (kube_pod_container_resource_limits{cluster=~\"$cluster\",namespace=~\"homecdn\",resource=\"memory\",unit=\"byte\"}) > 0)))",
-          "format": "table",
-          "instant": true,
-          "interval": "60s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Memory limit utilization",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Restarts across the selected time range. Zero does not prove application health.",
+      "description": "Combined port errors and drops in the selected range.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1044,14 +702,186 @@
               }
             ]
           },
-          "unit": "short",
-          "links": [
-            {
-              "title": "Pod diagnostics",
-              "url": "/d/mon-pod?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.namespace}&var-pod=${__data.fields.pod}",
-              "targetBlank": false
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (location,site_name,name,port_name) (increase(unpoller_device_port_receive_errors_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"}[$__range]) + increase(unpoller_device_port_transmit_errors_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"}[$__range]) + increase(unpoller_device_port_receive_dropped_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"}[$__range]) + increase(unpoller_device_port_transmit_dropped_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"}[$__range]))",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Port errors and drops",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Negotiated port speed.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (location,site_name,name,port_name,port_num) (unpoller_device_port_port_speed_bps{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Port link speed",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Controller-reported switch CPU and memory utilization.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
             }
-          ]
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -1060,6 +890,97 @@
         "w": 24,
         "x": 0,
         "y": 40
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * max by (name) (unpoller_device_cpu_utilization_ratio{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",type=\"usw\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "CPU {{name}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * max by (name) (unpoller_device_memory_utilization_ratio{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",type=\"usw\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "memory {{name}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Switch CPU and memory",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Controller-reported switch uptime.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 48
       },
       "id": 12,
       "options": {
@@ -1087,7 +1008,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster,namespace,pod,container) (increase(kube_pod_container_status_restarts_total{cluster=~\"$cluster\",namespace=~\"homecdn\"}[$__range]))",
+          "expr": "max by (location,site_name,name) (unpoller_device_uptime_seconds{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",type=\"usw\"})",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -1096,52 +1017,31 @@
           "refId": "A"
         }
       ],
-      "title": "Container restarts in range",
+      "title": "Switch uptime",
       "type": "table"
     },
     {
       "datasource": {
-        "type": "loki",
-        "uid": "monitoring-logs"
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
       },
-      "description": "Entries per second by workload. Quiet applications can return no data. No data means no matching log entries in this interval, not a demonstrated delivery failure. Widen the range and check Log Pipeline Health.",
+      "description": "Observed switch model and firmware.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic-by-name"
+            "mode": "thresholds"
           },
           "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
             },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "filterable": true,
+            "inspect": false
           },
           "decimals": 2,
           "mappings": [],
-          "noValue": "No matching log entries",
+          "noValue": "N/A",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1151,190 +1051,136 @@
               }
             ]
           },
-          "unit": "logs/s"
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 48
-      },
-      "id": 13,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "monitoring-logs"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster,workload) (rate({cluster=~\"$cluster\",source=\"pod\",namespace=~\"homecdn\"}[$__auto]))",
-          "legendFormat": "{{cluster}} {{workload}}",
-          "queryType": "range",
-          "refId": "A",
-          "maxLines": 500
-        }
-      ],
-      "title": "Application log volume",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "monitoring-logs"
-      },
-      "description": "Heuristic text matches, not structured severity. Inspect the records before diagnosing an incident. No data means no matching log entries in this interval, not a demonstrated delivery failure. Widen the range and check Log Pipeline Health.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "No matching log entries",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "logs/s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 48
-      },
-      "id": 14,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "monitoring-logs"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster,workload) (rate({cluster=~\"$cluster\",source=\"pod\",namespace=~\"homecdn\"} |~ \"(?i)error|fatal|panic|warn\" [$__auto]))",
-          "legendFormat": "{{cluster}} {{workload}}",
-          "queryType": "range",
-          "refId": "A",
-          "maxLines": 500
-        }
-      ],
-      "title": "Error and warning keyword matches",
-      "type": "timeseries"
-    },
-    {
-      "type": "logs",
-      "title": "Application logs",
-      "description": "Latest 500 sanitized lines in the selected range. Search applies here. Use Log Explorer for individual workload and container filters. No data means no matching log entries in this interval, not a demonstrated delivery failure. Widen the range and check Log Pipeline Health.",
-      "datasource": {
-        "type": "loki",
-        "uid": "monitoring-logs"
-      },
-      "gridPos": {
-        "h": 13,
         "w": 24,
         "x": 0,
         "y": 56
       },
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "No matching log entries"
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "overrides": []
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
       },
       "targets": [
         {
-          "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "monitoring-logs"
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "{cluster=~\"$cluster\",source=\"pod\",namespace=~\"homecdn\"} |= ${search:doublequote}",
-          "queryType": "range",
-          "maxLines": 500
+          "expr": "max by (location,site_name,name,model,version) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",type=\"usw\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
         }
       ],
-      "options": {
-        "showTime": true,
-        "showLabels": false,
-        "showCommonLabels": false,
-        "wrapLogMessage": true,
-        "prettifyLogMessage": true,
-        "enableLogDetails": true,
-        "dedupStrategy": "none",
-        "sortOrder": "Descending"
+      "title": "Switch firmware",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
       },
-      "id": 15
+      "description": "One means UniFi reports an available update.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 64
+      },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (location,site_name,name) (unpoller_device_upgradable{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",type=\"usw\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Switch updates",
+      "type": "table"
     }
   ],
   "preload": false,
@@ -1342,8 +1188,8 @@
   "schemaVersion": 41,
   "tags": [
     "monitoring",
-    "monitoring-applications",
-    "applications",
+    "monitoring-unifi",
+    "unifi",
     "metrics",
     "logs"
   ],
@@ -1360,16 +1206,132 @@
           "type": "prometheus",
           "uid": "monitoring-metrics"
         },
-        "definition": "label_values(kube_pod_info{namespace=~\"homecdn\"}, cluster)",
-        "description": "Filter by cluster",
+        "definition": "label_values(unpoller_controller_up{cluster=~\"$cluster\"}, location)",
+        "description": "Filter by location",
         "hide": 0,
+        "includeAll": true,
+        "label": "Location",
+        "multi": true,
+        "name": "location",
+        "options": [],
+        "query": {
+          "query": "label_values(unpoller_controller_up{cluster=~\"$cluster\"}, location)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(unpoller_controller_up, cluster)",
+        "description": "Filter by cluster",
+        "hide": 2,
         "includeAll": true,
         "label": "Cluster",
         "multi": true,
         "name": "cluster",
         "options": [],
         "query": {
-          "query": "label_values(kube_pod_info{namespace=~\"homecdn\"}, cluster)",
+          "query": "label_values(unpoller_controller_up, cluster)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",type=\"usw\"}, site_name)",
+        "description": "Filter by site",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Site",
+        "multi": true,
+        "name": "site",
+        "options": [],
+        "query": {
+          "query": "label_values(unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",type=\"usw\"}, site_name)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"usw\"}, name)",
+        "description": "Filter by switch",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Switch",
+        "multi": true,
+        "name": "switch",
+        "options": [],
+        "query": {
+          "query": "label_values(unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"usw\"}, name)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\"}, port_name)",
+        "description": "Filter by port",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Port",
+        "multi": true,
+        "name": "port",
+        "options": [],
+        "query": {
+          "query": "label_values(unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\"}, port_name)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
@@ -1416,8 +1378,8 @@
     ]
   },
   "timezone": "browser",
-  "title": "HomeCDN",
-  "uid": "mon-app-services",
+  "title": "UniFi Switches",
+  "uid": "mon-unifi-switches",
   "version": 1,
   "weekStart": "monday"
 }

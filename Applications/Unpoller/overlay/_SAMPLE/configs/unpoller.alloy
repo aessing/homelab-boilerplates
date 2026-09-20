@@ -36,7 +36,16 @@ prometheus.scrape "unpoller" {
   job_name        = "unpoller"
   scrape_interval = "60s"
   scrape_timeout  = "20s"
-  forward_to      = [prometheus.remote_write.central.receiver]
+  forward_to      = [prometheus.relabel.unpoller.receiver]
+}
+
+prometheus.relabel "unpoller" {
+  forward_to = [prometheus.remote_write.central.receiver]
+
+  rule {
+    replacement  = sys.env("UNPOLLER_LOCATION")
+    target_label = "location"
+  }
 }
 
 loki.write "central" {
@@ -99,6 +108,7 @@ loki.process "syslog" {
   stage.static_labels {
     values = {
       cluster      = "example-cluster",
+      location     = sys.env("UNPOLLER_LOCATION"),
       service_name = "unifi-siem",
       source       = "unifi-siem",
     }
@@ -134,6 +144,7 @@ loki.process "unpoller_events" {
   stage.static_labels {
     values = {
       cluster      = "example-cluster",
+      location     = sys.env("UNPOLLER_LOCATION"),
       service_name = "unpoller",
       source       = "unpoller-api",
     }

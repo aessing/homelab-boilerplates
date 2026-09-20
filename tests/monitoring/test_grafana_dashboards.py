@@ -165,8 +165,8 @@ class GrafanaDashboards(unittest.TestCase):
                 all_dashboards, category = dashboard["links"]
                 self.assertEqual(all_dashboards["title"], "Monitoring dashboards")
                 self.assertEqual(all_dashboards["tags"], ["monitoring"])
-                self.assertEqual(category["title"], "Infrastructure reports")
-                self.assertEqual(category["tags"], ["infrastructure"])
+                self.assertEqual(category["title"], "Monitoring Metrics")
+                self.assertEqual(category["tags"], ["monitoring-metrics"])
                 for link in dashboard["links"]:
                     self.assertEqual(link["type"], "dashboards")
                     self.assertTrue(link["asDropdown"])
@@ -214,9 +214,9 @@ class GrafanaDashboards(unittest.TestCase):
                         self.assertFalse(panel["fieldConfig"]["defaults"]["custom"]["spanNulls"])
                     if panel["type"] == "table":
                         self.assertEqual(panel["gridPos"]["w"], 24)
-        self.assertIn("#8AB8FF", suite_text)
         self.assertIn("#5794F2", suite_text)
-        self.assertIn("#1F60C4", suite_text)
+        self.assertNotIn("#8AB8FF", suite_text)
+        self.assertNotIn("#1F60C4", suite_text)
         self.assertIn("#FFB357", suite_text)
         self.assertNotIn("#F2CC0C", suite_text)
         self.assertNotIn("#FF780A", suite_text)
@@ -381,10 +381,11 @@ class GrafanaDashboards(unittest.TestCase):
             self.assertLess(path.stat().st_size, 200 * 1024, path.name)
         docs = render(ROOT / "Applications" / "Grafana" / "overlay" / "_SAMPLE")
         configmaps = [doc for doc in docs if doc["kind"] == "ConfigMap" and doc["metadata"]["name"].startswith("grafana-monitoring-dashboard")]
-        self.assertEqual(len(configmaps), 11)
+        self.assertEqual(len(configmaps), 13)
         for configmap in configmaps:
             total = sum(len(value.encode()) for value in configmap.get("data", {}).values())
             self.assertLess(total, 1024 * 1024)
+            self.assertLess(len(json.dumps(configmap).encode()), 250 * 1024)
 
     def test_sample_render_mounts_all_dashboard_configmaps(self):
         docs = render(ROOT / "Applications" / "Grafana" / "overlay" / "_SAMPLE")

@@ -42,10 +42,10 @@
       "targetBlank": false,
       "type": "dashboards",
       "tags": [
-        "applications"
+        "monitoring-applications"
       ],
-      "title": "Application reports",
-      "tooltip": "Open another application report"
+      "title": "Monitoring Applications",
+      "tooltip": "Open another dashboard in Monitoring Applications"
     }
   ],
   "liveNow": false,
@@ -164,7 +164,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Scrape state for each observed process. Missing targets are not healthy zeros.",
+      "description": "Scrape state for each observed process. Version is derived from the running container image tag. Missing targets are not healthy zeros.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -237,7 +237,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "min by (cluster,namespace,job,pod,authentik_component) (up{cluster=~\"$cluster\",job=~\"authentik|authentik-outpost\"})",
+          "expr": "min by (cluster,namespace,job,pod,authentik_component) (up{cluster=~\"$cluster\",job=~\"authentik|authentik-outpost\"}) * on (cluster,namespace,pod) group_left(version) max by (cluster,namespace,pod,version) (label_replace(kube_pod_container_info{cluster=~\"$cluster\",namespace=~\"authentik|authentik-outpost\",container=~\"server|worker|proxy|ldap\"}, \"version\", \"$1\", \"image\", \".*:([^:]+)$\"))",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -296,16 +296,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -402,16 +394,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -508,16 +492,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -614,16 +590,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -803,16 +771,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -909,16 +869,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1223,16 +1175,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1327,16 +1271,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1435,6 +1371,7 @@
   "schemaVersion": 41,
   "tags": [
     "monitoring",
+    "monitoring-applications",
     "applications",
     "metrics",
     "logs"
