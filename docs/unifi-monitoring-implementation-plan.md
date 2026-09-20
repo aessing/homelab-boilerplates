@@ -22,7 +22,7 @@ Grafana-Installationen.
 | Ereignisse | SIEM-Syslog von UDM und UNAS sowie ergänzende API-Ereignisse einschließlich IDS-Details und Protect |
 | Bilder | Keine Thumbnails, Snapshots, Base64-Bilder, Video- oder Audioinhalte |
 | Nicht enthalten | Talk, Netconsole, IPFIX/NetFlow-Collector, Paketmitschnitte |
-| Syslog-Adresse | Fest `10.0.1.20` aus dem ADMIN01-MetalLB-Pool, kein DHCP |
+| Syslog-Adresse | `syslog-unifi.logs.home.essing.org`, fest auf `10.0.1.20` aus dem ADMIN01-MetalLB-Pool, kein DHCP |
 | Externe Kommunikationspartner | UDM und UNAS. Protect wird auf der UDM angenommen und muss dort verifiziert werden |
 | Interner Datenverkehr | Kubernetes-Services, kein Umweg über externe Ingress-Adressen |
 | Aufbewahrung | Bestehende Backend-Retention übernehmen, derzeit als 90 Tage dokumentiert |
@@ -47,8 +47,8 @@ UDM (Network + Protect) -- HTTPS API --\
 UNAS ------------------- HTTPS API --/      |
                                            | /metrics + ergänzende Loki-Push-Events
                                            v
-UDM  -- SIEM/Syslog --> 10.0.1.20 --> alloy-unpoller
-UNAS -- SIEM/Syslog --> 10.0.1.20 -->     |
+UDM  -- SIEM/Syslog --> syslog-unifi.logs.home.essing.org / 10.0.1.20 --> alloy-unpoller
+UNAS -- SIEM/Syslog --> syslog-unifi.logs.home.essing.org / 10.0.1.20 -->     |
                                          +-- Remote Write --> Metrics-vmauth --> VictoriaMetrics
                                          +-- Loki Push -----> Logs-vmauth ----> Loki
 
@@ -153,8 +153,11 @@ nicht gleichzeitig anderweitig vergeben werden.
   `cluster=ADMIN01`, Loki erhält dieses Label im Collector.
 - Der bestehende interne vmauth-Port verwendet HTTP. Planungsentscheidung:
   HTTP nur innerhalb des Clusters, geschützt durch enge NetworkPolicies.
-  Das ist keine Transportverschlüsselung. Externe API-Verbindungen bleiben HTTPS
-  mit Zertifikatsprüfung. Keine implizite Erweiterung um einen neuen TLS-Proxy.
+  Das ist keine Transportverschlüsselung. Externe API-Verbindungen bleiben HTTPS.
+  Im privaten ADMIN01-Overlay ist die Zertifikatsprüfung für UDM und UNAS bewusst
+  deaktiviert, weil deren selbstsignierte Zertifikate bei Updates wechseln können.
+  Die exakten `/32`-Egressziele und der interne Netzwerkpfad begrenzen das Risiko.
+  Keine implizite Erweiterung um einen neuen TLS-Proxy.
 - Bestehende Agent-Ausgänge anderer Pipelines und Cluster nicht nebenbei ändern.
 - UnPoller-Egress nur DNS, UDM/UNAS TCP 443 und interner Ereigniseingang.
 - Alloy-Egress nur DNS, UnPoller und die beiden vmauth-Services.
@@ -177,7 +180,8 @@ Versionen und gegebenenfalls Digests pinnen.
   konfigurieren. Modell und UniFi-OS-/Drive-Version konkret prüfen.
 - Höhere Rechte nur bei belegter Notwendigkeit dokumentieren, nicht vorsorglich
   einen allgemeinen Superadmin verwenden.
-- Zertifikatsprüfung einschalten, passende CA-Dateien bereitstellen.
+- Im öffentlichen Sample Zertifikatsprüfung einschalten. Die dokumentierte
+  ADMIN01-Ausnahme nicht auf andere Umgebungen übertragen.
 - SecretGenerator, read-only Secret-Mounts und unterstützte dateibasierte
   Credentials verwenden. Keine gerenderten privaten Secrets ausgeben oder committen.
 
@@ -287,7 +291,7 @@ Keine neuen Benachrichtigungskanäle oder vollständige Alerting-Plattform einf�
 - Aktuelle Repository-Regeln und relevante Monitoring-Konfigurationen lesen.
 - Sauberen Arbeitsstand prüfen, bestehende Änderungen erhalten. Für Implementierung
   Branch `codex/unifi-monitoring` verwenden, wenn noch kein geeigneter Arbeitsbranch besteht.
-- Modelle, UniFi-OS-/App-Versionen, UDM-/UNAS-Adressen, lokale Zugänge, Zertifikate
+- Modelle, UniFi-OS-/App-Versionen, UDM-/UNAS-Adressen und lokale Zugänge
   und SIEM-Möglichkeiten read-only erfassen, soweit verfügbar.
 - Quellen-/Capability-Matrix und konkrete Testfixtures ohne echte Geheimnisse erstellen.
 - Vor Deployment IP `.20` und Senderadressen erneut prüfen.

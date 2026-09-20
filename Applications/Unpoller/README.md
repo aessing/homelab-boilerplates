@@ -72,20 +72,24 @@ and no internet route. Source IP filtering is not cryptographic authentication.
 
 On the current UniFi interface, configure each capable console under
 **Integration > System Logging / SIEM**. Select **SIEM Server**, enable the
-required categories, then enter `10.0.1.20` and port `1514`. Start with Security
-and System, then add Monitoring, Internet and Power so volume and overlap can be
-measured. The vendor documents this export as CEF. UI names can move between
-UniFi OS releases, so record the actual UDM and UNAS versions during rollout.
-Do not enable Netconsole. Do not enable **Remote Device Logging** merely for
-this deployment. That support-log path is separate from the structured SIEM
-export. See [UniFi System Logs and SIEM Integration](https://help.ui.com/hc/en-us/articles/33349041044119-UniFi-System-Logs-SIEM-Integration).
+required categories, then enter `syslog-unifi.logs.home.essing.org` and port
+`1514`. The DNS record must resolve to the fixed LoadBalancer address
+`10.0.1.20` from both appliances. Start with Security and System, then add
+Monitoring, Internet and Power so volume and overlap can be measured. The
+vendor documents this export as CEF. UI names can move between UniFi OS
+releases, so record the actual UDM and UNAS versions during rollout. Do not
+enable Netconsole. Do not enable **Remote Device Logging** merely for this
+deployment. That support-log path is separate from the structured SIEM export.
+See [UniFi System Logs and SIEM Integration](https://help.ui.com/hc/en-us/articles/33349041044119-UniFi-System-Logs-SIEM-Integration).
 
 ### Certificates
 
-API certificate verification is enabled. Use certificates valid for the
-configured UDM and UNAS names or extend the private overlay with read-only CA
-Secret mounts supported by the selected UnPoller release. Do not disable
-verification as a permanent workaround.
+The public sample enables API certificate verification. The private ADMIN01
+overlay explicitly disables it for UDM and UNAS because the appliances use
+self-signed certificates that can rotate during updates. Connections remain
+HTTPS, but UnPoller does not authenticate the peer certificate. Compensating
+controls are the exact `/32` egress destinations and the restricted internal
+network path.
 
 ### Writer tokens
 
