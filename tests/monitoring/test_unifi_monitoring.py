@@ -58,6 +58,7 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertIn("protect_thumbnails = false", config)
         self.assertIn("verify_ssl = true", config)
         self.assertIn("http://alloy-unpoller:1515/loki/api/v1/push", config)
+        self.assertEqual(config.count('interval = "60s"'), 2)
         for forbidden in ("talk", "netconsole", "netflow", "ipfix", "snapshot", "base64"):
             self.assertNotIn(forbidden, config.lower())
         for secret in ("network_password", "protect_api_key", "unas_password"):
@@ -67,8 +68,8 @@ class UniFiMonitoring(unittest.TestCase):
     def test_alloy_uses_only_internal_write_paths_and_bounded_syslog(self):
         alloy = next(d["data"]["unpoller.alloy"] for d in self.docs if d["kind"] == "ConfigMap" and "unpoller.alloy" in d.get("data", {}))
         env = next(d["data"] for d in self.docs if d["kind"] == "ConfigMap" and "METRICS_WRITE_URL" in d.get("data", {}))
-        self.assertEqual(env["METRICS_WRITE_URL"], "http://vmauth.monitoring-metrics.svc:8427/api/v1/write")
-        self.assertEqual(env["LOKI_WRITE_URL"], "http://vmauth.monitoring-logs.svc:8427/loki/api/v1/push")
+        self.assertEqual(env["METRICS_WRITE_URL"], "http://vmauth.monitoring-metrics.svc.cluster.local:8427/api/v1/write")
+        self.assertEqual(env["LOKI_WRITE_URL"], "http://vmauth.monitoring-logs.svc.cluster.local:8427/loki/api/v1/push")
         self.assertIn('"__address__" = "unpoller:9130"', alloy)
         self.assertIn("max_message_length = 65536", alloy)
         self.assertIn("udp_queue_size     = 4096", alloy)
@@ -101,16 +102,21 @@ class UniFiMonitoring(unittest.TestCase):
             self.assertNotIn("UNIFI_ADMIN01_WRITER_TOKEN", auth)
             self.assertIn(path, auth)
             secret = next(d for d in docs if d["kind"] == "Secret")
-            self.assertIn("UNPOLLER_WRITER_TOKEN", secret["data"])
+            self.assertIn("WRITER_UNPOLLER_TOKEN", secret["data"])
             if app == "MonitoringMetrics":
                 self.assertIn("extra_label=cluster=example-cluster", auth)
 
     def test_existing_metrics_agent_scrapes_only_alloy_unpoller(self):
         docs = render(ROOT / "Applications" / "MonitoringAgent" / "overlay" / "_SAMPLE")
         config = next(d["data"] for d in docs if d["kind"] == "ConfigMap" and "65-unpoller-telemetry.alloy" in d.get("data", {}))["65-unpoller-telemetry.alloy"]
+        env = next(d["data"] for d in docs if d["kind"] == "ConfigMap" and "NORMAL_SCRAPE_INTERVAL" in d.get("data", {}))
         self.assertIn('"alloy-unpoller.unpoller.svc:12345"', config)
         self.assertNotIn("unpoller:9130", config)
         self.assertEqual(config.count('job_name        = "alloy-unpoller"'), 1)
+        self.assertIn('scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")', config)
+        self.assertEqual(env["FAST_SCRAPE_INTERVAL"], "15s")
+        self.assertEqual(env["NORMAL_SCRAPE_INTERVAL"], "30s")
+        self.assertEqual(env["SLOW_SCRAPE_INTERVAL"], "60s")
 
     def test_unifi_dashboards_are_reproducible_and_provisioned(self):
         dashboards = unifi_dashboards()

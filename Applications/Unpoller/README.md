@@ -5,9 +5,10 @@ Network, Protect and UNAS telemetry on ADMIN01. Metrics are written to the
 existing VictoriaMetrics path. UDM and UNAS SIEM records, plus supported API
 events, are written to the existing Loki path.
 
-The public `_SAMPLE` overlay is safe to render. It contains documentation IPs
-and placeholder credentials. Real addresses, CA material and secrets belong in
-a Git-ignored environment overlay.
+The public `_SAMPLE` overlay is safe to render. It uses the RFC 5737
+documentation-only range `192.0.2.0/24`, the generic Kubernetes DNS suffix
+`cluster.local` and placeholder credentials. Real addresses, the actual cluster
+DNS suffix, CA material and secrets belong in a Git-ignored environment overlay.
 
 ## Data coverage
 
@@ -97,8 +98,8 @@ reused.
 ## Validate without a cluster
 
 ```sh
-kustomize build overlay/admin01 > /tmp/unifi-admin01.yaml
-kubectl create --dry-run=client -f /tmp/unifi-admin01.yaml -o name
+kustomize build overlay/admin01 > /tmp/unpoller-admin01.yaml
+kubectl create --dry-run=client -f /tmp/unpoller-admin01.yaml -o name
 python3 -m unittest discover -s ../../tests/monitoring -v
 ```
 

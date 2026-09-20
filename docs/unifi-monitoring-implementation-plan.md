@@ -144,8 +144,8 @@ nicht gleichzeitig anderweitig vergeben werden.
 
 - Eigene ClusterIP-Services für UnPoller `/metrics`, Alloy-Eigenmetriken und
   den ausschließlich intern erreichbaren Loki-Push-Eingang.
-- Metrics-Ausgang über `vmauth.monitoring-metrics.svc:8427/api/v1/write`.
-- Logs-Ausgang über `vmauth.monitoring-logs.svc:8427/loki/api/v1/push`.
+- Metrics-Ausgang auf ADMIN01 über `vmauth.monitoring-metrics.svc.admin01.home.essing.org:8427/api/v1/write`.
+- Logs-Ausgang auf ADMIN01 über `vmauth.monitoring-logs.svc.admin01.home.essing.org:8427/loki/api/v1/push`.
 - Bestehende vmauth-Authentifizierung beibehalten, keine direkten Schreibzugriffe
   auf die ungeschützten Datenbank-Endpunkte.
 - Für diesen Baustein eigene Writer-Tokens pro Backend verwenden, getrennt von
@@ -215,7 +215,7 @@ Versionen und gegebenenfalls Digests pinnen.
   Testfixtures ausschließen. Keine Snapshot-/Stream-Endpunkte abrufen.
 - Betriebslogs von UnPoller und Alloy weiterhin durch vorhandenen Log-DaemonSet
   sammeln. Nicht zusätzlich über den Ereignispfad duplizieren.
-- Startintervall für API-Ereignisse: 120s. Syslog ereignisgetrieben.
+- Startintervall für API-Ereignisse: 60s gemäß der 15/30/60-Konvention. Syslog ist ereignisgetrieben.
 - Labels klein halten: `cluster`, `service_name`, `source`, Anwendung und wenige
   stabile Site-/Schweregrad-/Kategorie-Dimensionen. MACs, Client-IPs, SSIDs,
   Benutzernamen, Event-IDs und Freitext bleiben im Inhalt oder in Metadaten.

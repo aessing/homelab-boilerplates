@@ -1,6 +1,6 @@
 users:
   - name: unpoller-writer
-    bearer_token: "%{UNPOLLER_WRITER_TOKEN}"
+    bearer_token: "%{WRITER_UNPOLLER_TOKEN}"
     url_map:
       - src_paths:
           - "/loki/api/v1/push"
