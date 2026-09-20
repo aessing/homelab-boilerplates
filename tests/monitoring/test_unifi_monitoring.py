@@ -47,7 +47,10 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertEqual(service["metadata"]["annotations"]["metallb.io/address-pool"], "default-pool")
         self.assertNotIn("metallb.io/loadBalancerIPs", service["metadata"]["annotations"])
         self.assertEqual(service["spec"]["loadBalancerSourceRanges"], ["192.0.2.10/32", "192.0.2.20/32"])
-        self.assertEqual({(p["protocol"], p["port"]) for p in service["spec"]["ports"]}, {("UDP", 1514), ("TCP", 1514)})
+        self.assertEqual(
+            {(p["protocol"], p["port"], p["targetPort"]) for p in service["spec"]["ports"]},
+            {("UDP", 514, "syslog-udp"), ("TCP", 514, "syslog-tcp")},
+        )
         self.assertNotIn("10.0.1.20", json.dumps(self.docs))
         self.assertNotIn("ADMIN01", json.dumps(self.docs))
         self.assertNotIn("admin01", json.dumps(self.docs))
@@ -63,9 +66,13 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertEqual(config.count('interval = "60s"'), 2)
         for forbidden in ("talk", "netconsole", "netflow", "ipfix", "snapshot", "base64"):
             self.assertNotIn(forbidden, config.lower())
-        for secret in ("network_password", "protect_api_key"):
-            self.assertIn(f"file:///var/run/secrets/unpoller/{secret}", config)
+        self.assertIn("file:///var/run/secrets/unpoller/network_password", config)
+        self.assertIn("file:///var/run/secrets/unpoller/protect_api_key", config)
         self.assertNotIn("file:///var/run/secrets/unpoller/unas_password", config)
+        self.assertEqual(config.count("[[unifi.controller]]"), 2)
+        self.assertIn("# Use separate clients for Network and Protect.", config)
+        self.assertIn("disable_network = true", config)
+        self.assertIn("save_protect_devices = false", config)
         deployment = self.index["Deployment", "unpoller"]
         env = {entry["name"]: entry for entry in deployment["spec"]["template"]["spec"]["containers"][0]["env"]}
         unas_password = env["UP_UNAS_DEFAULT_PASS"]["valueFrom"]["secretKeyRef"]

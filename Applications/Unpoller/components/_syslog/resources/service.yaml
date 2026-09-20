@@ -19,9 +19,9 @@ spec:
   ports:
     - name: syslog-udp
       protocol: UDP
-      port: 1514
+      port: 514
       targetPort: syslog-udp
     - name: syslog-tcp
       protocol: TCP
-      port: 1514
+      port: 514
       targetPort: syslog-tcp

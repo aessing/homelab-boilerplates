@@ -29,7 +29,8 @@ configuration and regression tests.
 - `unpoller`, one Deployment, polls UDM and UNAS and exposes port 9130.
 - `alloy-unpoller`, one StatefulSet with a 5 GiB retained WAL volume, scrapes
   UnPoller and receives API events and Syslog.
-- `alloy-unpoller-syslog`, a LoadBalancer exposing UDP and TCP 1514. The private
+- `alloy-unpoller-syslog`, a LoadBalancer exposing standard Syslog port 514 over
+  UDP and TCP and forwarding it to Alloy on unprivileged port 1514. The private
   ADMIN01 overlay must pin it to `10.0.1.20`.
 - Dedicated Metrics and Logs writer identities, both named
   `unpoller-writer` in their separate authentication domains.
@@ -63,6 +64,12 @@ v5.2.7 does not resolve a `file://` password for the UNAS input, so the
 Deployment injects `unas_password` from the same Kubernetes Secret as
 `UP_UNAS_DEFAULT_PASS`. The value stays out of the ConfigMap and command line.
 
+Network and Protect on the UDM use separate logical controller entries. Network
+uses the read-only local account. Protect device metrics use a key-only client
+for the documented Integration API, avoiding interference from the Network
+login session. Protect events are collected through the UDM SIEM CEF export,
+not the legacy Protect log API. Thumbnails and other media stay disabled.
+
 Set `spec.loadBalancerIP` to `10.0.1.20` and retain the
 `metallb.io/address-pool: default-pool` annotation. MetalLB 0.16 rejects a
 Service that combines `spec.loadBalancerIP` with `metallb.io/loadBalancerIPs`.
@@ -78,7 +85,7 @@ and no internet route. Source IP filtering is not cryptographic authentication.
 On the current UniFi interface, configure each capable console under
 **Integration > System Logging / SIEM**. Select **SIEM Server**, enable the
 required categories, then enter `syslog-unifi.logs.home.essing.org` and port
-`1514`. The DNS record must resolve to the fixed LoadBalancer address
+`514`. The DNS record must resolve to the fixed LoadBalancer address
 `10.0.1.20` from both appliances. Start with Security and System, then add
 Monitoring, Internet and Power so volume and overlap can be measured. The
 vendor documents this export as CEF. UI names can move between UniFi OS

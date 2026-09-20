@@ -93,9 +93,8 @@ scrapt aber nicht zusätzlich den UnPoller-Endpoint.
 ### Syslog-Eingang
 
 Ein dedizierter LoadBalancer-Service zeigt nur auf den Syslog-Port von
-`alloy-unpoller`. Geplanter äußerer und innerer Port ist 1514, damit der Container
-ohne privilegierten Port läuft. Falls die Sender einen anderen Port benötigen,
-kann der Service diesen auf 1514 abbilden.
+`alloy-unpoller`. Der Service nimmt den Standard-Syslog-Port 514 an und bildet
+ihn auf Alloy-Port 1514 ab, damit der Container ohne privilegierten Port läuft.
 
 Im privaten ADMIN01-Overlay:
 
@@ -176,6 +175,10 @@ Versionen und gegebenenfalls Digests pinnen.
 - Network: dedizierter lokaler Zugang mit den minimal erforderlichen Leserechten.
   API-Key oder lokales Konto nach nachgewiesener Abdeckung der benötigten Endpoints.
 - Protect: eigener Integration-Key. Hosting auf der UDM und API-Rechte verifizieren.
+- Network und Protect als getrennte logische UnPoller-Controller konfigurieren:
+  Network mit lokalem Read-only-Account, Protect als Key-only-Client mit
+  `disable_network=true`. Protect-Ereignisse kommen über den SIEM-CEF-Export,
+  nicht über die alte Protect-Log-API.
 - UNAS: eigener Zugang am UNAS und eigener UNAS-Input. Nicht als Network-Controller
   konfigurieren. Modell und UniFi-OS-/Drive-Version konkret prüfen.
 - Höhere Rechte nur bei belegter Notwendigkeit dokumentieren, nicht vorsorglich
