@@ -58,9 +58,11 @@ The server-side writer identity selects the trusted `cluster` label.
 
 This covers core node, workload, collection-pipeline and the listed platform
 services. Kubernetes Services do not automatically make arbitrary application
-metrics available. Other applications still require explicit opt-in. Multus
-functional probes and UniFi remain separate coverage items because they require
-additional endpoint or probe setup. Detailed SMART collection is deliberately
+metrics available. Other applications still require explicit opt-in. UniFi is
+covered by the dedicated [Unpoller application](../Unpoller/README.md). The
+optional `_unifi-telemetry` component monitors that collector's own Alloy
+endpoint without scraping UnPoller twice. Multus functional probes remain a
+separate coverage item. Detailed SMART collection is deliberately
 omitted for storage connected through USB adapters without SMART passthrough.
 Log collection excludes traces, SQL statements, query payloads, application
 data files and arbitrary private application log files. Application-specific

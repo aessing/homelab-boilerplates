@@ -1,0 +1,53 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: unpoller
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: 5.2.7
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/config-unpoller.yaml
+  - ./generators/config-alloy.yaml
+  - ./generators/config-alloy-environment.yaml
+  - ./generators/secret-unpoller-credentials.yaml
+  - ./generators/secret-alloy-unifi-writers.yaml
+
+patches:
+  - path: ./patches/network-policy-unpoller.yaml
+    target:
+      kind: NetworkPolicy
+      name: unpoller-traffic
+  - path: ./patches/network-policy-alloy.yaml
+    target:
+      kind: NetworkPolicy
+      name: alloy-unifi-traffic
+  - path: ./patches/syslog-service.yaml
+    target:
+      kind: Service
+      name: alloy-unifi-syslog
+  - path: ./patches/resource-quota.yaml
+    target:
+      kind: ResourceQuota
+      name: unpoller
+  - path: ./patches/pvc.yaml
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: alloy-unifi
+
+transformers:
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml

@@ -1,0 +1,12 @@
+---
+- op: replace
+  path: /metadata/annotations/metallb.io~1loadBalancerIPs
+  value: 192.0.2.30
+- op: replace
+  path: /spec/loadBalancerIP
+  value: 192.0.2.30
+- op: replace
+  path: /spec/loadBalancerSourceRanges
+  value:
+    - 192.0.2.10/32
+    - 192.0.2.20/32

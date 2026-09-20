@@ -9,6 +9,7 @@ resources:
   - ./resources/network-policy-traefik-to-vmauth.yaml
   - ./resources/network-policy-vmauth-to-loki.yaml
   - ./resources/network-policy-vmauth-backend-egress.yaml
+  - ./resources/network-policy-unifi-to-vmauth.yaml
   - ./resources/resource-quota.yaml
 
 components:

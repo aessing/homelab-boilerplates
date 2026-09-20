@@ -119,3 +119,17 @@ options:
     reloader.stakater.com/match: 'false'
 files:
   - operations-center.json=./root-dashboards/operations-center.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-unifi
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - unifi-overview.json=./unifi-dashboards/unifi-overview.json
+  - unifi-network.json=./unifi-dashboards/unifi-network.json
+  - unifi-protect.json=./unifi-dashboards/unifi-protect.json
+  - unifi-unas.json=./unifi-dashboards/unifi-unas.json

@@ -25,6 +25,9 @@ spec:
             - name: monitoring-log-dashboards
               mountPath: /var/lib/grafana/monitoring-log-dashboards
               readOnly: true
+            - name: monitoring-unifi-dashboards
+              mountPath: /var/lib/grafana/monitoring-unifi-dashboards
+              readOnly: true
       volumes:
         - name: monitoring-root-dashboards
           configMap:
@@ -43,6 +46,9 @@ spec:
         - name: monitoring-log-dashboards
           configMap:
             name: grafana-monitoring-dashboards-logs
+        - name: monitoring-unifi-dashboards
+          configMap:
+            name: grafana-monitoring-dashboards-unifi
         - name: monitoring-dashboard-provider
           configMap:
             name: grafana-monitoring-dashboard-provider

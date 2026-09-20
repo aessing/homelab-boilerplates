@@ -1,0 +1,16 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: unpoller-image-transformer
+imageTag:
+  name: ghcr.io/unpoller/unpoller
+  newTag: v5.2.7
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: alloy-unifi-image-transformer
+imageTag:
+  name: grafana/alloy
+  newTag: v1.19.2

@@ -44,6 +44,14 @@
     },
     {
       "type": "link",
+      "title": "UniFi",
+      "url": "/d/mon-unifi-overview",
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": false
+    },
+    {
+      "type": "link",
       "title": "Monitors",
       "url": "/d/mon-app-uptime-monitors",
       "includeVars": true,

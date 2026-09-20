@@ -375,7 +375,7 @@ class GrafanaDashboards(unittest.TestCase):
             self.assertLess(path.stat().st_size, 200 * 1024, path.name)
         docs = render(ROOT / "Applications" / "Grafana" / "overlay" / "_SAMPLE")
         configmaps = [doc for doc in docs if doc["kind"] == "ConfigMap" and doc["metadata"]["name"].startswith("grafana-monitoring-dashboard")]
-        self.assertEqual(len(configmaps), 10)
+        self.assertEqual(len(configmaps), 11)
         for configmap in configmaps:
             total = sum(len(value.encode()) for value in configmap.get("data", {}).values())
             self.assertLess(total, 1024 * 1024)

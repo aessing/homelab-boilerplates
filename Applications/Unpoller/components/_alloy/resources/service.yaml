@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alloy-unifi
+  labels:
+    app.kubernetes.io/component: collector
+spec:
+  selector:
+    app.kubernetes.io/component: collector
+  ports:
+    - name: http
+      protocol: TCP
+      port: 12345
+      targetPort: http
+    - name: loki-push
+      protocol: TCP
+      port: 1515
+      targetPort: loki-push
+  type: ClusterIP

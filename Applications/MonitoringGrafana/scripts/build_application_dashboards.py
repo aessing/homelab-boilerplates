@@ -11,6 +11,7 @@ OUTPUT = Path(__file__).resolve().parents[1] / "components/_dashboards/applicati
 C = 'cluster=~"$cluster"'
 APP_NAMESPACES = "authentik|authentik-outpost|grafana|homeassistant|homecdn|timeserver|uptimekuma|homepage|scrypted|monitoring-logs|monitoring-metrics|postgres|postgresql|cnpg-system"
 ROOT_OUTPUT = OUTPUT.parent / "root-dashboards"
+UNIFI_OUTPUT = OUTPUT.parent / "unifi-dashboards"
 
 
 def metric(name, extra=""):
@@ -71,6 +72,79 @@ def make(uid, title, namespace, panels, purpose, variables=None, freshness=None)
         if p["type"] == "table" and "namespace" in p["targets"][0]["expr"]:
             p["fieldConfig"]["defaults"]["links"] = [{"title": "Pod diagnostics", "url": "/d/mon-pod?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.namespace}&var-pod=${__data.fields.pod}", "targetBlank": False}]
     return dashboard
+
+
+def unifi_logs(title, selector, description):
+    result = logs(title, selector + ' |= ${search:doublequote}', description)
+    result["fieldConfig"]["defaults"]["noValue"] = "No matching UniFi events"
+    return result
+
+
+def make_unifi(uid, title, panels, purpose, variables=None):
+    variables = variables or []
+    variables.append({"name": "search", "label": "Log contains", "type": "textbox", "query": "", "current": {"text": "", "value": ""}, "skipUrlSync": False})
+    dashboard = build({"uid": uid, "title": title, "purpose": purpose, "from": "now-6h", "refresh": "1m", "vars": variables, "panels": panels})
+    dashboard["tags"] = ["monitoring", "unifi", "metrics", "logs"]
+    dashboard["templating"]["list"][0] = variable("cluster", "unpoller_controller_up", "cluster")
+    freshness = dashboard["panels"][1]
+    freshness["targets"][0]["expr"] = 'max(clamp_min(time() - timestamp(unpoller_prometheus_cache_age_seconds{cluster=~"$cluster"}), 0))'
+    freshness["title"] = "Oldest UniFi collector sample"
+    freshness["description"] = "Age of the latest cached UnPoller sample. N/A means that the collector has not delivered this metric."
+    return reset_layout(dashboard)
+
+
+def unifi_dashboards():
+    site = 'cluster=~"$cluster",site_name=~"$site"'
+    return {
+        "unifi-overview.json": make_unifi("mon-unifi-overview", "UniFi Overview", [
+            stat("UnPoller target", 'min(up{cluster=~"$cluster",job="unpoller"})', "Reachability of the UnPoller Prometheus endpoint. This does not prove controller login success.", threshold="availability"),
+            stat("Controller collection", 'min(unpoller_controller_up{cluster=~"$cluster"})', "Lowest reported controller status.", threshold="availability"),
+            stat("Collector cache age", 'max(unpoller_prometheus_cache_age_seconds{cluster=~"$cluster"})', "Age of the cached controller data.", "s", "freshness"),
+            stat("Refresh failures", 'sum(increase(unpoller_prometheus_refresh_failures_total{cluster=~"$cluster"}[$__range]))', "Refresh failures in the selected range.", threshold="warning"),
+            stat("Network devices", 'count(unpoller_device_info{cluster=~"$cluster"})', "Observed adopted Network devices."),
+            stat("Protect devices", 'sum(unpoller_protect_device_present{cluster=~"$cluster"})', "Protect devices returned by the controller."),
+            stat("UNAS consoles", 'sum(unpoller_unas_device_present{cluster=~"$cluster"})', "UNAS consoles returned by the storage API."),
+            stat("UniFi Alloy target", 'min(up{cluster=~"$cluster",job="alloy-unifi"})', "Scrape status for the dedicated UniFi Alloy instance.", threshold="availability"),
+            log_query(chart("SIEM event volume", [], "Incoming UDM and UNAS SIEM records per second.", "logs/s"), 'sum by (cluster,appliance) (rate({cluster=~"$cluster",source="unifi-siem"}[$__auto]))', '{{cluster}} {{appliance}}'),
+            log_query(chart("API event volume", [], "Events obtained from supported UniFi APIs.", "logs/s"), 'sum by (cluster) (rate({cluster=~"$cluster",source="unpoller-api"}[$__auto]))', '{{cluster}}'),
+            unifi_logs("Recent UniFi security and system events", '{cluster=~"$cluster",source=~"unifi-siem|unpoller-api"}', "Sanitized SIEM and API records. Image payloads are disabled."),
+        ], "Health and event intake for the dedicated ADMIN01 UniFi monitoring path."),
+        "unifi-network.json": make_unifi("mon-unifi-network", "UniFi Network", [
+            stat("Gateways", f'sum(unpoller_site_gateways{{{site}}})', "Gateways reported for the selected sites."),
+            stat("Switches", f'sum(unpoller_site_switches{{{site}}})', "Switches reported for the selected sites."),
+            stat("Access points", f'sum(unpoller_site_aps{{{site}}})', "Access points reported for the selected sites."),
+            stat("Stations", f'sum(unpoller_site_stations{{{site}}})', "Associated stations reported for the selected sites."),
+            chart("Site traffic", [(f'sum by (cluster,site_name) (unpoller_site_receive_rate_bytes{{{site}}})', 'receive {{cluster}} {{site_name}}'), (f'sum by (cluster,site_name) (unpoller_site_transmit_rate_bytes{{{site}}})', 'transmit {{cluster}} {{site_name}}')], "Current site receive and transmit rates.", "Bps", width=24),
+            chart("Switch port traffic", [(f'sum by (cluster,name,port_name) (unpoller_device_port_receive_rate_bytes{{{site}}})', 'receive {{name}} {{port_name}}'), (f'sum by (cluster,name,port_name) (unpoller_device_port_transmit_rate_bytes{{{site}}})', 'transmit {{name}} {{port_name}}')], "Per-port receive and transmit rates.", "Bps", width=24),
+            table("Switch port errors and drops", f'sum by (cluster,site_name,name,port_name) (increase(unpoller_device_port_receive_errors_total{{{site}}}[$__range]) + increase(unpoller_device_port_transmit_errors_total{{{site}}}[$__range]) + increase(unpoller_device_port_receive_dropped_total{{{site}}}[$__range]) + increase(unpoller_device_port_transmit_dropped_total{{{site}}}[$__range]))', "Combined error and drop increases.", threshold="warning"),
+            gauge("PoE consumption", f'sum by (cluster,site_name,name,port_name) (unpoller_device_port_poe_watts{{{site}}})', "Current power draw per PoE port.", "watt", "warm", legend="{{cluster}} {{name}} {{port_name}}"),
+            chart("DPI traffic by category", [(f'sum by (cluster,site_name,category) (unpoller_site_dpi_receive_bytes{{{site}}})', 'receive {{site_name}} {{category}}'), (f'sum by (cluster,site_name,category) (unpoller_site_dpi_transmit_bytes{{{site}}})', 'transmit {{site_name}} {{category}}')], "DPI byte counters by category.", "bytes", width=24),
+            table("Rogue access points", f'max by (cluster,site_name,name,mac,security,band,channel) (unpoller_rogueap_rssi{{{site}}})', "Latest rogue-AP RSSI observations.", "dBm", "warning"),
+            unifi_logs("IDS, IPS and Network events", '{cluster=~"$cluster",source=~"unifi-siem|unpoller-api"} |~ "(?i)ids|ips|threat|intrusion|rogue|network"', "Detailed security and Network records."),
+        ], "Network inventory, traffic, DPI, switch ports, rogue access points and IDS or IPS details.", [variable("site", "unpoller_site_aps", "site_name", 'cluster=~"$cluster"')]),
+        "unifi-protect.json": make_unifi("mon-unifi-protect", "UniFi Protect", [
+            stat("Protect devices", 'sum(unpoller_protect_device_present{cluster=~"$cluster"})', "Protect devices returned by the controller."),
+            stat("Disconnected devices", 'count(unpoller_protect_device_state{cluster=~"$cluster"} == 0)', "Devices explicitly reporting disconnected state.", threshold="warning"),
+            table("Protect device state", 'max by (cluster,source,name,type,model_key) (unpoller_protect_device_state{cluster=~"$cluster"})', "State values are 2 connected, 1 connecting, 0 disconnected and -1 unknown.", threshold="availability", sort_desc=False),
+            table("Low sensor batteries", 'max by (cluster,source,name,type,model_key) (unpoller_protect_sensor_battery_low{cluster=~"$cluster"} == 1)', "Sensors explicitly reporting a low battery.", threshold="warning"),
+            chart("Sensor battery", [('unpoller_protect_sensor_battery_percent{cluster=~"$cluster"}', '{{cluster}} {{name}}')], "Battery percentage where supported.", "percent"),
+            chart("Sensor environment", [('unpoller_protect_sensor_temperature_celsius{cluster=~"$cluster"}', 'temperature {{name}}'), ('unpoller_protect_sensor_humidity_percent{cluster=~"$cluster"}', 'humidity {{name}}')], "Temperature and humidity where supported."),
+            table("Open and motion sensors", 'max by (cluster,source,name,type) (unpoller_protect_sensor_is_opened{cluster=~"$cluster"} or unpoller_protect_sensor_is_motion_detected{cluster=~"$cluster"})', "Binary sensor metadata only. No image or audio content is collected.", threshold="warning"),
+            unifi_logs("Protect events", '{cluster=~"$cluster",source="unpoller-api"} |~ "(?i)protect|camera|sensor|doorbell|nvr"', "Protect event metadata without thumbnails or images."),
+        ], "Protect device state and event metadata without thumbnails, snapshots, video or audio payloads."),
+        "unifi-unas.json": make_unifi("mon-unifi-unas", "UniFi UNAS", [
+            stat("UNAS reachable", 'min(unpoller_unas_device_present{cluster=~"$cluster"})', "UNAS consoles returned by the API.", threshold="availability"),
+            gauge("CPU load", 'max by (cluster,source,name) (unpoller_unas_cpu_load_percent{cluster=~"$cluster"})', "Current console CPU load.", "percent", "percent", legend="{{cluster}} {{name}}"),
+            gauge("Memory use", '100 * (1 - max by (cluster,source,name) (unpoller_unas_memory_available_bytes{cluster=~"$cluster"}) / max by (cluster,source,name) (unpoller_unas_memory_total_bytes{cluster=~"$cluster"}))', "Used memory based on available versus total.", "percent", "percent", legend="{{cluster}} {{name}}"),
+            gauge("Pool occupancy", '100 * max by (cluster,source,name,pool_id,pool_type,status) (unpoller_unas_pool_usage_bytes{cluster=~"$cluster"}) / max by (cluster,source,name,pool_id,pool_type,status) (unpoller_unas_pool_capacity_bytes{cluster=~"$cluster"})', "Used versus total pool capacity.", "percent", "percent", legend="{{cluster}} {{name}} {{pool_id}}"),
+            table("RAID protection gap", 'max by (cluster,source,name,pool_id,raid_group_id,current_level,config_level) (unpoller_unas_raid_group_expected_protection{cluster=~"$cluster"} - unpoller_unas_raid_group_current_protection{cluster=~"$cluster"})', "Positive values mean current protection is below expected.", threshold="warning"),
+            chart("RAID operation progress", [('unpoller_unas_raid_group_progress_percent{cluster=~"$cluster"}', '{{cluster}} {{name}} {{pool_id}} {{raid_group_id}}')], "Rebuild or expansion progress.", "percent", width=24),
+            table("Disk health", 'min by (cluster,source,name,slot_id,pool_id,disk_type,state,model,serial) (unpoller_unas_disk_health_score{cluster=~"$cluster"})', "Health score reported by UNAS.", threshold="availability"),
+            chart("Disk temperature", [('unpoller_unas_disk_temperature_celsius{cluster=~"$cluster"}', '{{cluster}} {{name}} slot {{slot_id}}')], "Physical disk temperature.", "celsius"),
+            table("Disk media errors", 'max by (cluster,source,name,slot_id,pool_id,model,serial) (unpoller_unas_disk_bad_sectors{cluster=~"$cluster"} + unpoller_unas_disk_uncorrectable_sectors{cluster=~"$cluster"} + unpoller_unas_disk_smart_read_errors{cluster=~"$cluster"})', "Combined bad, uncorrectable and SMART read-error counts.", threshold="warning"),
+            unifi_logs("UNAS SIEM events", '{cluster=~"$cluster",source="unifi-siem",appliance="unas"}', "Sanitized SIEM records sent directly by UNAS."),
+        ], "UNAS console, pools, RAID groups, disks, shares and direct SIEM records."),
+    }
 
 
 def state_colors(p):
@@ -338,7 +412,7 @@ def operations_center():
     next(p for p in d["panels"] if p["title"] == "Active monitor incident details")["fieldConfig"]["defaults"]["noValue"] = "No active monitor incidents"
     d["tags"] = ["monitoring", "operations", "metrics"]
     # Explicit links work even when Grafana's tag menu is collapsed in kiosk mode.
-    for title, uid in [("Applications", "mon-app-overview"), ("Monitors", "mon-app-uptime-monitors"), ("Metrics pipeline", "mon-pipeline"), ("Logs", "mon-log-explorer"), ("Storage", "mon-storage"), ("PostgreSQL", "mon-postgres")]:
+    for title, uid in [("Applications", "mon-app-overview"), ("UniFi", "mon-unifi-overview"), ("Monitors", "mon-app-uptime-monitors"), ("Metrics pipeline", "mon-pipeline"), ("Logs", "mon-log-explorer"), ("Storage", "mon-storage"), ("PostgreSQL", "mon-postgres")]:
         d["links"].append({"type": "link", "title": title, "url": f"/d/{uid}", "includeVars": True, "keepTime": True, "targetBlank": False})
     return d
 
@@ -350,6 +424,10 @@ def main():
         print(name)
     ROOT_OUTPUT.mkdir(parents=True, exist_ok=True)
     (ROOT_OUTPUT / "operations-center.json").write_text(json.dumps(operations_center(), indent=2) + "\n")
+    UNIFI_OUTPUT.mkdir(parents=True, exist_ok=True)
+    for name, dashboard in unifi_dashboards().items():
+        (UNIFI_OUTPUT / name).write_text(json.dumps(dashboard, indent=2) + "\n")
+        print(name)
 
 
 if __name__ == "__main__":

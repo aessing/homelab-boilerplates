@@ -1,0 +1,16 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ./resources/namespace.yaml
+  - ./resources/resource-quota.yaml
+  - ./resources/network-policy-default-deny.yaml
+  - ./resources/network-policy-dns.yaml
+  - ./resources/network-policy-unpoller.yaml
+  - ./resources/network-policy-alloy.yaml
+
+components:
+  - ../components/_application
+  - ../components/_alloy
+  - ../components/_syslog

@@ -1,0 +1,148 @@
+logging {
+  level  = "info"
+  format = "json"
+}
+
+local.file "metrics_token" {
+  filename  = "/var/run/secrets/alloy-unifi/metrics_token"
+  is_secret = true
+}
+
+local.file "logs_token" {
+  filename  = "/var/run/secrets/alloy-unifi/logs_token"
+  is_secret = true
+}
+
+prometheus.remote_write "central" {
+  endpoint {
+    url = sys.env("METRICS_WRITE_URL")
+    authorization {
+      type        = "Bearer"
+      credentials = local.file.metrics_token.content
+    }
+    queue_config {
+      capacity             = 10000
+      max_samples_per_send = 2000
+    }
+  }
+}
+
+prometheus.scrape "unpoller" {
+  targets = [{
+    "__address__" = "unpoller:9130",
+    "job"         = "unpoller",
+    "instance"    = "unpoller",
+  }]
+  job_name        = "unpoller"
+  scrape_interval = "60s"
+  scrape_timeout  = "20s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}
+
+loki.write "central" {
+  endpoint {
+    url = sys.env("LOKI_WRITE_URL")
+    authorization {
+      type        = "Bearer"
+      credentials = local.file.logs_token.content
+    }
+  }
+  wal {
+    enabled            = true
+    max_segment_age    = "1h"
+    min_read_frequency = "250ms"
+    max_read_frequency = "1s"
+    drain_timeout      = "30s"
+  }
+}
+
+loki.secretfilter "redact" {
+  forward_to  = [loki.write.central.receiver]
+  redact_with = "[REDACTED]"
+}
+
+loki.relabel "syslog" {
+  forward_to = [loki.process.syslog.receiver]
+
+  rule {
+    source_labels = ["__syslog_connection_ip_address"]
+    target_label  = "transport_source"
+  }
+  rule {
+    source_labels = ["__syslog_connection_ip_address"]
+    regex         = sys.env("UDM_SOURCE_IP")
+    replacement   = "udm"
+    target_label  = "appliance"
+  }
+  rule {
+    source_labels = ["__syslog_connection_ip_address"]
+    regex         = sys.env("UNAS_SOURCE_IP")
+    replacement   = "unas"
+    target_label  = "appliance"
+  }
+}
+
+loki.process "syslog" {
+  forward_to = [loki.secretfilter.redact.receiver]
+
+  stage.regex {
+    expression = "CEF:[^|]*\\|[^|]*\\|(?P<unifi_application>[^|]*)\\|[^|]*\\|[^|]*\\|[^|]*\\|(?P<cef_severity>[^| ]*)"
+  }
+
+  stage.labels {
+    values = {
+      unifi_application = "",
+      cef_severity      = "",
+    }
+  }
+
+  stage.static_labels {
+    values = {
+      cluster      = "ADMIN01",
+      service_name = "unifi-siem",
+      source       = "unifi-siem",
+    }
+  }
+}
+
+loki.source.syslog "udp" {
+  listener {
+    address            = "0.0.0.0:1514"
+    protocol           = "udp"
+    syslog_format      = "raw"
+    max_message_length = 65536
+    udp_queue_size     = 4096
+  }
+  forward_to = [loki.relabel.syslog.receiver]
+}
+
+loki.source.syslog "tcp" {
+  listener {
+    address            = "0.0.0.0:1514"
+    protocol           = "tcp"
+    syslog_format      = "raw"
+    max_message_length = 65536
+    idle_timeout       = "120s"
+  }
+  forward_to = [loki.relabel.syslog.receiver]
+}
+
+loki.process "unpoller_events" {
+  forward_to = [loki.secretfilter.redact.receiver]
+  stage.static_labels {
+    values = {
+      cluster      = "ADMIN01",
+      service_name = "unpoller",
+      source       = "unpoller-api",
+    }
+  }
+}
+
+loki.source.api "unpoller" {
+  http {
+    listen_address = "0.0.0.0"
+    listen_port    = 1515
+  }
+  use_incoming_timestamp = true
+  forward_to              = [loki.process.unpoller_events.receiver]
+}

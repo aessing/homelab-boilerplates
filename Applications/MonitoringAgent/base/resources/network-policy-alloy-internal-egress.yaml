@@ -276,3 +276,13 @@ spec:
       ports:
         - protocol: TCP
           port: 8123
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: unpoller
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: collector
+      ports:
+        - protocol: TCP
+          port: 12345

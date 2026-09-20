@@ -46,6 +46,13 @@ Monitoring Logs datasources, with no new collectors or Grafana plugins:
 folders. It summarizes cluster and node health, monitors, workloads, capacity,
 databases and telemetry delivery, with links to diagnostic dashboards.
 
+Four dashboards are provisioned into **Monitoring UniFi** (UID
+`monitoring-unifi`): UniFi Overview, Network, Protect and UNAS. They combine the
+existing Monitoring Metrics and Monitoring Logs datasources. Network includes
+DPI, switch ports, PoE, rogue AP and IDS or IPS views. Protect contains device
+and event metadata without media. UNAS covers console, pools, RAID, disks and
+direct SIEM records. The Operations Center links to UniFi Overview.
+
 Kuma group monitors and individual monitors have separate status-history panels.
 The exporter does not provide parent-child relationships, so this is not a nested
 copy of Kuma's tree. History is sampled telemetry, with 20 rows per page and up to

@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: alloy-unifi-telemetry
+    behavior: create
+    options:
+      labels:
+        app.kubernetes.io/component: alloy
+      annotations:
+        reloader.stakater.com/match: 'false'
+    files:
+      - 65-unifi-telemetry.alloy=./configs/65-unifi-telemetry.alloy
+
+patches:
+  - path: ./patches/statefulset.yaml
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: alloy-metrics

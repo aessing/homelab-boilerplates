@@ -1,0 +1,13 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: unpoller-config
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: application
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - up.conf=./configs/up.conf

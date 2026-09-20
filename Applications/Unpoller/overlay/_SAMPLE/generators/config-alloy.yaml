@@ -1,0 +1,13 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: alloy-unifi-config
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: collector
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - unifi.alloy=./configs/unifi.alloy
