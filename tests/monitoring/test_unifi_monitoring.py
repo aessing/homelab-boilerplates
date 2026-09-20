@@ -1,4 +1,5 @@
 """UniFi collector, security boundary and dashboard regression tests."""
+import base64
 import json
 import sys
 from pathlib import Path
@@ -61,8 +62,14 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertEqual(config.count('interval = "60s"'), 2)
         for forbidden in ("talk", "netconsole", "netflow", "ipfix", "snapshot", "base64"):
             self.assertNotIn(forbidden, config.lower())
-        for secret in ("network_password", "protect_api_key", "unas_password"):
+        for secret in ("network_password", "protect_api_key"):
             self.assertIn(f"file:///var/run/secrets/unpoller/{secret}", config)
+        self.assertNotIn("file:///var/run/secrets/unpoller/unas_password", config)
+        deployment = self.index["Deployment", "unpoller"]
+        env = {entry["name"]: entry for entry in deployment["spec"]["template"]["spec"]["containers"][0]["env"]}
+        unas_password = env["UP_UNAS_DEFAULT_PASS"]["valueFrom"]["secretKeyRef"]
+        self.assertEqual(unas_password["key"], "unas_password")
+        self.assertTrue(unas_password["name"].startswith("unpoller-credentials-"))
         self.assertNotIn("replace-with", config)
 
     def test_alloy_uses_only_internal_write_paths_and_bounded_syslog(self):
@@ -73,11 +80,20 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertIn('"__address__" = "unpoller:9130"', alloy)
         self.assertIn("max_message_length = 65536", alloy)
         self.assertIn("udp_queue_size     = 4096", alloy)
+        self.assertEqual(alloy.count("relabel_rules = loki.relabel.syslog.rules"), 2)
+        self.assertEqual(alloy.count("forward_to    = [loki.process.syslog.receiver]"), 2)
+        self.assertNotIn("forward_to = [loki.relabel.syslog.receiver]", alloy)
         self.assertIn('source       = "unifi-siem"', alloy)
         self.assertIn('source       = "unpoller-api"', alloy)
         self.assertIn('cluster      = "example-cluster"', alloy)
         self.assertIn("loki.secretfilter", alloy)
         self.assertNotIn("https://", alloy)
+        writers = next(
+            d for d in self.docs
+            if d["kind"] == "Secret" and d["metadata"]["name"].startswith("alloy-unpoller-writers-")
+        )
+        for value in writers["data"].values():
+            self.assertTrue(base64.b64decode(value).decode().startswith("replace-with-unpoller-"))
 
     def test_network_policies_have_narrow_flows(self):
         alloy = self.index["NetworkPolicy", "alloy-unpoller-traffic"]["spec"]
@@ -136,5 +152,26 @@ class UniFiMonitoring(unittest.TestCase):
         mount = next(m for m in deployment["spec"]["template"]["spec"]["containers"][0]["volumeMounts"] if m["name"] == "monitoring-unifi-dashboards")
         self.assertEqual(mount["mountPath"], "/var/lib/grafana/monitoring-unifi-dashboards")
         self.assertIn("folder: Monitoring UniFi", (GRAFANA / "components/_dashboards/configs/providers.yaml").read_text())
+
+    def test_unifi_dashboard_queries_match_exported_metric_semantics(self):
+        dashboards = unifi_dashboards()
+        overview = " ".join(target.get("expr", "") for panel in dashboards["unifi-overview.json"]["panels"] for target in panel.get("targets", []))
+        network = " ".join(target.get("expr", "") for panel in dashboards["unifi-network.json"]["panels"] for target in panel.get("targets", []))
+        protect = dashboards["unifi-protect.json"]
+
+        self.assertIn('count(max without (tag) (unpoller_device_info', overview)
+        for metric in ("receive_rate_bytes", "transmit_rate_bytes", "poe_watts"):
+            self.assertIn(f'max without (tag) (unpoller_device_port_{metric}', network)
+        self.assertIn('max without (tag) (increase(unpoller_device_port_receive_errors_total', network)
+        self.assertIn("unpoller_rogueap_channel", network)
+        self.assertIn("source,name,mac,security,band,ap_mac,radio,radio_name,oui", network)
+        self.assertNotIn("band,channel", network)
+
+        panel_expressions = {
+            panel["title"]: " ".join(target.get("expr", "") for target in panel.get("targets", []))
+            for panel in protect["panels"]
+        }
+        self.assertIn("unpoller_protect_sensor_is_opened", panel_expressions["Open sensors"])
+        self.assertIn("unpoller_protect_sensor_is_motion_detected", panel_expressions["Motion sensors"])
 if __name__ == "__main__":
     unittest.main()

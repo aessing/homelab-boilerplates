@@ -113,7 +113,8 @@ loki.source.syslog "udp" {
     max_message_length = 65536
     udp_queue_size     = 4096
   }
-  forward_to = [loki.relabel.syslog.receiver]
+  relabel_rules = loki.relabel.syslog.rules
+  forward_to    = [loki.process.syslog.receiver]
 }
 
 loki.source.syslog "tcp" {
@@ -124,7 +125,8 @@ loki.source.syslog "tcp" {
     max_message_length = 65536
     idle_timeout       = "120s"
   }
-  forward_to = [loki.relabel.syslog.receiver]
+  relabel_rules = loki.relabel.syslog.rules
+  forward_to    = [loki.process.syslog.receiver]
 }
 
 loki.process "unpoller_events" {

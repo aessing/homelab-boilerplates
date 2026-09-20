@@ -58,6 +58,11 @@ Replace the documentation values in these files:
 | `patches/network-policy-alloy.yaml` | Exact backend Service IPs |
 | `patches/syslog-service.yaml` | `10.0.1.20` and the exact UDM and UNAS source `/32` ranges |
 
+Network and Protect read credentials are mounted as read-only files. UnPoller
+v5.2.7 does not resolve a `file://` password for the UNAS input, so the
+Deployment injects `unas_password` from the same Kubernetes Secret as
+`UP_UNAS_DEFAULT_PASS`. The value stays out of the ConfigMap and command line.
+
 Set both `metallb.io/loadBalancerIPs` and `spec.loadBalancerIP` to `10.0.1.20`.
 The duplicate declaration is deliberate for compatibility with the current
 MetalLB conventions in this repository. Before deployment, verify that `.20`

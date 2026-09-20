@@ -44,6 +44,12 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          env:
+            - name: UP_UNAS_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: unpoller-credentials
+                  key: unas_password
           ports:
             - name: metrics
               containerPort: 9130

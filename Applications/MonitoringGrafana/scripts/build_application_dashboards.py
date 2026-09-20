@@ -95,13 +95,24 @@ def make_unifi(uid, title, panels, purpose, variables=None):
 
 def unifi_dashboards():
     site = 'cluster=~"$cluster",site_name=~"$site"'
+    network_devices = 'max without (tag) (unpoller_device_info{cluster=~"$cluster"})'
+    port_rx = f'max without (tag) (unpoller_device_port_receive_rate_bytes{{{site}}})'
+    port_tx = f'max without (tag) (unpoller_device_port_transmit_rate_bytes{{{site}}})'
+    port_errors = (
+        f'max without (tag) ('
+        f'increase(unpoller_device_port_receive_errors_total{{{site}}}[$__range]) + '
+        f'increase(unpoller_device_port_transmit_errors_total{{{site}}}[$__range]) + '
+        f'increase(unpoller_device_port_receive_dropped_total{{{site}}}[$__range]) + '
+        f'increase(unpoller_device_port_transmit_dropped_total{{{site}}}[$__range]))'
+    )
+    port_poe = f'max without (tag) (unpoller_device_port_poe_watts{{{site}}})'
     return {
         "unifi-overview.json": make_unifi("mon-unifi-overview", "UniFi Overview", [
             stat("UnPoller target", 'min(up{cluster=~"$cluster",job="unpoller"})', "Reachability of the UnPoller Prometheus endpoint. This does not prove controller login success.", threshold="availability"),
             stat("Controller collection", 'min(unpoller_controller_up{cluster=~"$cluster"})', "Lowest reported controller status.", threshold="availability"),
             stat("Collector cache age", 'max(unpoller_prometheus_cache_age_seconds{cluster=~"$cluster"})', "Age of the cached controller data.", "s", "freshness"),
             stat("Refresh failures", 'sum(increase(unpoller_prometheus_refresh_failures_total{cluster=~"$cluster"}[$__range]))', "Refresh failures in the selected range.", threshold="warning"),
-            stat("Network devices", 'count(unpoller_device_info{cluster=~"$cluster"})', "Observed adopted Network devices."),
+            stat("Network devices", f'count({network_devices})', "Observed adopted Network devices, deduplicated across UniFi device tags."),
             stat("Protect devices", 'sum(unpoller_protect_device_present{cluster=~"$cluster"})', "Protect devices returned by the controller."),
             stat("UNAS consoles", 'sum(unpoller_unas_device_present{cluster=~"$cluster"})', "UNAS consoles returned by the storage API."),
             stat("UniFi Alloy target", 'min(up{cluster=~"$cluster",job="alloy-unpoller"})', "Scrape status for the dedicated UniFi Alloy instance.", threshold="availability"),
@@ -115,11 +126,12 @@ def unifi_dashboards():
             stat("Access points", f'sum(unpoller_site_aps{{{site}}})', "Access points reported for the selected sites."),
             stat("Stations", f'sum(unpoller_site_stations{{{site}}})', "Associated stations reported for the selected sites."),
             chart("Site traffic", [(f'sum by (cluster,site_name) (unpoller_site_receive_rate_bytes{{{site}}})', 'receive {{cluster}} {{site_name}}'), (f'sum by (cluster,site_name) (unpoller_site_transmit_rate_bytes{{{site}}})', 'transmit {{cluster}} {{site_name}}')], "Current site receive and transmit rates.", "Bps", width=24),
-            chart("Switch port traffic", [(f'sum by (cluster,name,port_name) (unpoller_device_port_receive_rate_bytes{{{site}}})', 'receive {{name}} {{port_name}}'), (f'sum by (cluster,name,port_name) (unpoller_device_port_transmit_rate_bytes{{{site}}})', 'transmit {{name}} {{port_name}}')], "Per-port receive and transmit rates.", "Bps", width=24),
-            table("Switch port errors and drops", f'sum by (cluster,site_name,name,port_name) (increase(unpoller_device_port_receive_errors_total{{{site}}}[$__range]) + increase(unpoller_device_port_transmit_errors_total{{{site}}}[$__range]) + increase(unpoller_device_port_receive_dropped_total{{{site}}}[$__range]) + increase(unpoller_device_port_transmit_dropped_total{{{site}}}[$__range]))', "Combined error and drop increases.", threshold="warning"),
-            gauge("PoE consumption", f'sum by (cluster,site_name,name,port_name) (unpoller_device_port_poe_watts{{{site}}})', "Current power draw per PoE port.", "watt", "warm", legend="{{cluster}} {{name}} {{port_name}}"),
+            chart("Switch port traffic", [(f'sum by (cluster,name,port_name) ({port_rx})', 'receive {{name}} {{port_name}}'), (f'sum by (cluster,name,port_name) ({port_tx})', 'transmit {{name}} {{port_name}}')], "Per-port receive and transmit rates, deduplicated across UniFi device tags.", "Bps", width=24),
+            table("Switch port errors and drops", f'sum by (cluster,site_name,name,port_name) ({port_errors})', "Combined error and drop increases, deduplicated across UniFi device tags.", threshold="warning"),
+            gauge("PoE consumption", f'sum by (cluster,site_name,name,port_name) ({port_poe})', "Current power draw per PoE port, deduplicated across UniFi device tags.", "watt", "warm", legend="{{cluster}} {{name}} {{port_name}}"),
             chart("DPI traffic by category", [(f'sum by (cluster,site_name,category) (unpoller_site_dpi_receive_bytes{{{site}}})', 'receive {{site_name}} {{category}}'), (f'sum by (cluster,site_name,category) (unpoller_site_dpi_transmit_bytes{{{site}}})', 'transmit {{site_name}} {{category}}')], "DPI byte counters by category.", "bytes", width=24),
-            table("Rogue access points", f'max by (cluster,site_name,name,mac,security,band,channel) (unpoller_rogueap_rssi{{{site}}})', "Latest rogue-AP RSSI observations.", "dBm", "warning"),
+            table("Rogue access point signal", f'max by (cluster,site_name,source,name,mac,security,band,ap_mac,radio,radio_name,oui) (unpoller_rogueap_rssi{{{site}}})', "Latest rogue-AP RSSI observations per detecting access point and radio.", "dBm", "warning"),
+            table("Rogue access point channel", f'max by (cluster,site_name,source,name,mac,security,band,ap_mac,radio,radio_name,oui) (unpoller_rogueap_channel{{{site}}})', "Latest channel reported per rogue access point observation."),
             unifi_logs("IDS, IPS and Network events", '{cluster=~"$cluster",source=~"unifi-siem|unpoller-api"} |~ "(?i)ids|ips|threat|intrusion|rogue|network"', "Detailed security and Network records."),
         ], "Network inventory, traffic, DPI, switch ports, rogue access points and IDS or IPS details.", [variable("site", "unpoller_site_aps", "site_name", 'cluster=~"$cluster"')]),
         "unifi-protect.json": make_unifi("mon-unifi-protect", "UniFi Protect", [
@@ -129,7 +141,8 @@ def unifi_dashboards():
             table("Low sensor batteries", 'max by (cluster,source,name,type,model_key) (unpoller_protect_sensor_battery_low{cluster=~"$cluster"} == 1)', "Sensors explicitly reporting a low battery.", threshold="warning"),
             chart("Sensor battery", [('unpoller_protect_sensor_battery_percent{cluster=~"$cluster"}', '{{cluster}} {{name}}')], "Battery percentage where supported.", "percent"),
             chart("Sensor environment", [('unpoller_protect_sensor_temperature_celsius{cluster=~"$cluster"}', 'temperature {{name}}'), ('unpoller_protect_sensor_humidity_percent{cluster=~"$cluster"}', 'humidity {{name}}')], "Temperature and humidity where supported."),
-            table("Open and motion sensors", 'max by (cluster,source,name,type) (unpoller_protect_sensor_is_opened{cluster=~"$cluster"} or unpoller_protect_sensor_is_motion_detected{cluster=~"$cluster"})', "Binary sensor metadata only. No image or audio content is collected.", threshold="warning"),
+            table("Open sensors", 'max by (cluster,source,name,type) (unpoller_protect_sensor_is_opened{cluster=~"$cluster"})', "Open-state metadata only. No image or audio content is collected.", threshold="warning"),
+            table("Motion sensors", 'max by (cluster,source,name,type) (unpoller_protect_sensor_is_motion_detected{cluster=~"$cluster"})', "Motion-state metadata only. No image or audio content is collected.", threshold="warning"),
             unifi_logs("Protect events", '{cluster=~"$cluster",source="unpoller-api"} |~ "(?i)protect|camera|sensor|doorbell|nvr"', "Protect event metadata without thumbnails or images."),
         ], "Protect device state and event metadata without thumbnails, snapshots, video or audio payloads."),
         "unifi-unas.json": make_unifi("mon-unifi-unas", "UniFi UNAS", [

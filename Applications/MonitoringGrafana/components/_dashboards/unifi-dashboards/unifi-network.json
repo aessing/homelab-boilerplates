@@ -583,7 +583,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Per-port receive and transmit rates.",
+      "description": "Per-port receive and transmit rates, deduplicated across UniFi device tags.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -672,7 +672,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster,name,port_name) (unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",site_name=~\"$site\"})",
+          "expr": "sum by (cluster,name,port_name) (max without (tag) (unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",site_name=~\"$site\"}))",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
@@ -686,7 +686,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster,name,port_name) (unpoller_device_port_transmit_rate_bytes{cluster=~\"$cluster\",site_name=~\"$site\"})",
+          "expr": "sum by (cluster,name,port_name) (max without (tag) (unpoller_device_port_transmit_rate_bytes{cluster=~\"$cluster\",site_name=~\"$site\"}))",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
@@ -703,7 +703,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Combined error and drop increases.",
+      "description": "Combined error and drop increases, deduplicated across UniFi device tags.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -769,7 +769,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster,site_name,name,port_name) (increase(unpoller_device_port_receive_errors_total{cluster=~\"$cluster\",site_name=~\"$site\"}[$__range]) + increase(unpoller_device_port_transmit_errors_total{cluster=~\"$cluster\",site_name=~\"$site\"}[$__range]) + increase(unpoller_device_port_receive_dropped_total{cluster=~\"$cluster\",site_name=~\"$site\"}[$__range]) + increase(unpoller_device_port_transmit_dropped_total{cluster=~\"$cluster\",site_name=~\"$site\"}[$__range]))",
+          "expr": "sum by (cluster,site_name,name,port_name) (max without (tag) (increase(unpoller_device_port_receive_errors_total{cluster=~\"$cluster\",site_name=~\"$site\"}[$__range]) + increase(unpoller_device_port_transmit_errors_total{cluster=~\"$cluster\",site_name=~\"$site\"}[$__range]) + increase(unpoller_device_port_receive_dropped_total{cluster=~\"$cluster\",site_name=~\"$site\"}[$__range]) + increase(unpoller_device_port_transmit_dropped_total{cluster=~\"$cluster\",site_name=~\"$site\"}[$__range])))",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -786,7 +786,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Current power draw per PoE port.",
+      "description": "Current power draw per PoE port, deduplicated across UniFi device tags.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -856,7 +856,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster,site_name,name,port_name) (unpoller_device_port_poe_watts{cluster=~\"$cluster\",site_name=~\"$site\"})",
+          "expr": "sum by (cluster,site_name,name,port_name) (max without (tag) (unpoller_device_port_poe_watts{cluster=~\"$cluster\",site_name=~\"$site\"}))",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -993,7 +993,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Latest rogue-AP RSSI observations.",
+      "description": "Latest rogue-AP RSSI observations per detecting access point and radio.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1059,7 +1059,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster,site_name,name,mac,security,band,channel) (unpoller_rogueap_rssi{cluster=~\"$cluster\",site_name=~\"$site\"})",
+          "expr": "max by (cluster,site_name,source,name,mac,security,band,ap_mac,radio,radio_name,oui) (unpoller_rogueap_rssi{cluster=~\"$cluster\",site_name=~\"$site\"})",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -1068,7 +1068,94 @@
           "refId": "A"
         }
       ],
-      "title": "Rogue access points",
+      "title": "Rogue access point signal",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Latest channel reported per rogue access point observation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#8AB8FF",
+                "value": null
+              },
+              {
+                "color": "#5794F2",
+                "value": 50
+              },
+              {
+                "color": "#1F60C4",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 55
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster,site_name,source,name,mac,security,band,ap_mac,radio,radio_name,oui) (unpoller_rogueap_channel{cluster=~\"$cluster\",site_name=~\"$site\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Rogue access point channel",
       "type": "table"
     },
     {
@@ -1083,7 +1170,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 55
+        "y": 63
       },
       "fieldConfig": {
         "defaults": {
@@ -1114,7 +1201,7 @@
         "dedupStrategy": "none",
         "sortOrder": "Descending"
       },
-      "id": 13
+      "id": 14
     }
   ],
   "preload": false,

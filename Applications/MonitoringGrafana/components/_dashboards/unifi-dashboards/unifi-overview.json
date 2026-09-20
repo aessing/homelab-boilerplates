@@ -459,7 +459,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Observed adopted Network devices.",
+      "description": "Observed adopted Network devices, deduplicated across UniFi device tags.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -520,7 +520,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "count(unpoller_device_info{cluster=~\"$cluster\"})",
+          "expr": "count(max without (tag) (unpoller_device_info{cluster=~\"$cluster\"}))",
           "format": "time_series",
           "instant": true,
           "interval": "30s",

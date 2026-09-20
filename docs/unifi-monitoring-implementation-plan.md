@@ -183,7 +183,9 @@ Versionen und gegebenenfalls Digests pinnen.
 - Im öffentlichen Sample Zertifikatsprüfung einschalten. Die dokumentierte
   ADMIN01-Ausnahme nicht auf andere Umgebungen übertragen.
 - SecretGenerator, read-only Secret-Mounts und unterstützte dateibasierte
-  Credentials verwenden. Keine gerenderten privaten Secrets ausgeben oder committen.
+  Credentials verwenden. UnPoller v5.2.7 erhält das UNAS-Passwort mangels
+  `file://`-Unterstützung dieses Inputs über `UP_UNAS_DEFAULT_PASS` aus einem
+  `secretKeyRef`. Keine gerenderten privaten Secrets ausgeben oder committen.
 
 ### Metriken
 

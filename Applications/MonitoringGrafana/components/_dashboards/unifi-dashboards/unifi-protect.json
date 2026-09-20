@@ -699,7 +699,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Binary sensor metadata only. No image or audio content is collected.",
+      "description": "Open-state metadata only. No image or audio content is collected.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -765,7 +765,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (cluster,source,name,type) (unpoller_protect_sensor_is_opened{cluster=~\"$cluster\"} or unpoller_protect_sensor_is_motion_detected{cluster=~\"$cluster\"})",
+          "expr": "max by (cluster,source,name,type) (unpoller_protect_sensor_is_opened{cluster=~\"$cluster\"})",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -774,7 +774,90 @@
           "refId": "A"
         }
       ],
-      "title": "Open and motion sensors",
+      "title": "Open sensors",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Motion-state metadata only. No image or audio content is collected.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster,source,name,type) (unpoller_protect_sensor_is_motion_detected{cluster=~\"$cluster\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Motion sensors",
       "type": "table"
     },
     {
@@ -789,7 +872,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 48
       },
       "fieldConfig": {
         "defaults": {
@@ -820,7 +903,7 @@
         "dedupStrategy": "none",
         "sortOrder": "Descending"
       },
-      "id": 10
+      "id": 11
     }
   ],
   "preload": false,
