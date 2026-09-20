@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: alloy-unifi-traffic
+  name: alloy-unpoller-traffic
 spec:
   podSelector:
     matchLabels:

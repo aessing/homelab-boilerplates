@@ -10,7 +10,7 @@ imageTag:
 apiVersion: builtin
 kind: ImageTagTransformer
 metadata:
-  name: alloy-unifi-image-transformer
+  name: alloy-unpoller-image-transformer
 imageTag:
   name: grafana/alloy
   newTag: v1.19.2

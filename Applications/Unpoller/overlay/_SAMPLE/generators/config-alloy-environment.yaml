@@ -2,7 +2,7 @@
 apiVersion: builtin
 kind: ConfigMapGenerator
 metadata:
-  name: alloy-unifi-environment
+  name: alloy-unpoller-environment
 behavior: create
 options:
   labels:

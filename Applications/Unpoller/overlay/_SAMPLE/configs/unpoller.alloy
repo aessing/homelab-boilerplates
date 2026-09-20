@@ -4,12 +4,12 @@ logging {
 }
 
 local.file "metrics_token" {
-  filename  = "/var/run/secrets/alloy-unifi/metrics_token"
+  filename  = "/var/run/secrets/alloy-unpoller/metrics_token"
   is_secret = true
 }
 
 local.file "logs_token" {
-  filename  = "/var/run/secrets/alloy-unifi/logs_token"
+  filename  = "/var/run/secrets/alloy-unpoller/logs_token"
   is_secret = true
 }
 
@@ -98,7 +98,7 @@ loki.process "syslog" {
 
   stage.static_labels {
     values = {
-      cluster      = "ADMIN01",
+      cluster      = "example-cluster",
       service_name = "unifi-siem",
       source       = "unifi-siem",
     }
@@ -131,7 +131,7 @@ loki.process "unpoller_events" {
   forward_to = [loki.secretfilter.redact.receiver]
   stage.static_labels {
     values = {
-      cluster      = "ADMIN01",
+      cluster      = "example-cluster",
       service_name = "unpoller",
       source       = "unpoller-api",
     }

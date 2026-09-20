@@ -21,7 +21,7 @@ class UniFiMonitoring(unittest.TestCase):
 
     def test_collector_topology_and_hardening(self):
         unpoller = self.index["Deployment", "unpoller"]
-        alloy = self.index["StatefulSet", "alloy-unifi"]
+        alloy = self.index["StatefulSet", "alloy-unpoller"]
         self.assertEqual(unpoller["spec"]["replicas"], 1)
         self.assertEqual(unpoller["spec"]["strategy"]["type"], "Recreate")
         self.assertEqual(alloy["spec"]["replicas"], 1)
@@ -39,7 +39,7 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertEqual(alloy["spec"]["template"]["spec"]["containers"][0]["image"], "grafana/alloy:v1.19.2")
 
     def test_syslog_load_balancer_is_fixed_and_source_restricted(self):
-        service = self.index["Service", "alloy-unifi-syslog"]
+        service = self.index["Service", "alloy-unpoller-syslog"]
         self.assertEqual(service["spec"]["type"], "LoadBalancer")
         self.assertEqual(service["spec"]["externalTrafficPolicy"], "Local")
         self.assertEqual(service["spec"]["loadBalancerIP"], "192.0.2.30")
@@ -47,6 +47,8 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertEqual(service["spec"]["loadBalancerSourceRanges"], ["192.0.2.10/32", "192.0.2.20/32"])
         self.assertEqual({(p["protocol"], p["port"]) for p in service["spec"]["ports"]}, {("UDP", 1514), ("TCP", 1514)})
         self.assertNotIn("10.0.1.20", json.dumps(self.docs))
+        self.assertNotIn("ADMIN01", json.dumps(self.docs))
+        self.assertNotIn("admin01", json.dumps(self.docs))
 
     def test_unpoller_data_contract_excludes_media_and_out_of_scope_inputs(self):
         config = next(d["data"]["up.conf"] for d in self.docs if d["kind"] == "ConfigMap" and "up.conf" in d.get("data", {}))
@@ -55,7 +57,7 @@ class UniFiMonitoring(unittest.TestCase):
             self.assertIn(f"{setting} = true", config)
         self.assertIn("protect_thumbnails = false", config)
         self.assertIn("verify_ssl = true", config)
-        self.assertIn("http://alloy-unifi:1515/loki/api/v1/push", config)
+        self.assertIn("http://alloy-unpoller:1515/loki/api/v1/push", config)
         for forbidden in ("talk", "netconsole", "netflow", "ipfix", "snapshot", "base64"):
             self.assertNotIn(forbidden, config.lower())
         for secret in ("network_password", "protect_api_key", "unas_password"):
@@ -63,7 +65,7 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertNotIn("replace-with", config)
 
     def test_alloy_uses_only_internal_write_paths_and_bounded_syslog(self):
-        alloy = next(d["data"]["unifi.alloy"] for d in self.docs if d["kind"] == "ConfigMap" and "unifi.alloy" in d.get("data", {}))
+        alloy = next(d["data"]["unpoller.alloy"] for d in self.docs if d["kind"] == "ConfigMap" and "unpoller.alloy" in d.get("data", {}))
         env = next(d["data"] for d in self.docs if d["kind"] == "ConfigMap" and "METRICS_WRITE_URL" in d.get("data", {}))
         self.assertEqual(env["METRICS_WRITE_URL"], "http://vmauth.monitoring-metrics.svc:8427/api/v1/write")
         self.assertEqual(env["LOKI_WRITE_URL"], "http://vmauth.monitoring-logs.svc:8427/loki/api/v1/push")
@@ -72,12 +74,12 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertIn("udp_queue_size     = 4096", alloy)
         self.assertIn('source       = "unifi-siem"', alloy)
         self.assertIn('source       = "unpoller-api"', alloy)
-        self.assertIn('cluster      = "ADMIN01"', alloy)
+        self.assertIn('cluster      = "example-cluster"', alloy)
         self.assertIn("loki.secretfilter", alloy)
         self.assertNotIn("https://", alloy)
 
     def test_network_policies_have_narrow_flows(self):
-        alloy = self.index["NetworkPolicy", "alloy-unifi-traffic"]["spec"]
+        alloy = self.index["NetworkPolicy", "alloy-unpoller-traffic"]["spec"]
         unpoller = self.index["NetworkPolicy", "unpoller-traffic"]["spec"]
         self.assertEqual({target["ipBlock"]["cidr"] for target in alloy["ingress"][2]["from"]}, {"192.0.2.10/32", "192.0.2.20/32"})
         self.assertEqual({target["ipBlock"]["cidr"] for target in unpoller["egress"][0]["to"]}, {"192.0.2.10/32", "192.0.2.20/32"})
@@ -89,22 +91,26 @@ class UniFiMonitoring(unittest.TestCase):
         for app, path in (("MonitoringMetrics", "/api/v1/write"), ("MonitoringLogs", "/loki/api/v1/push")):
             docs = render(ROOT / "Applications" / app / "overlay" / "_SAMPLE")
             index = objects(docs)
-            policy = index["NetworkPolicy", "unifi-to-vmauth"]
+            policy = index["NetworkPolicy", "unpoller-to-vmauth"]
             source = policy["spec"]["ingress"][0]["from"][0]
             self.assertEqual(source["namespaceSelector"]["matchLabels"]["kubernetes.io/metadata.name"], "unpoller")
             self.assertEqual(source["podSelector"]["matchLabels"]["app.kubernetes.io/component"], "collector")
             auth = next(d["data"]["auth.yml"] for d in docs if d["kind"] == "ConfigMap" and "auth.yml" in d.get("data", {}))
-            self.assertIn("name: unifi-admin01-writer", auth)
+            self.assertIn("name: unpoller-writer", auth)
+            self.assertNotIn("unifi-admin01-writer", auth)
+            self.assertNotIn("UNIFI_ADMIN01_WRITER_TOKEN", auth)
             self.assertIn(path, auth)
+            secret = next(d for d in docs if d["kind"] == "Secret")
+            self.assertIn("UNPOLLER_WRITER_TOKEN", secret["data"])
             if app == "MonitoringMetrics":
-                self.assertIn("extra_label=cluster=ADMIN01", auth)
+                self.assertIn("extra_label=cluster=example-cluster", auth)
 
-    def test_existing_metrics_agent_scrapes_only_alloy_unifi(self):
+    def test_existing_metrics_agent_scrapes_only_alloy_unpoller(self):
         docs = render(ROOT / "Applications" / "MonitoringAgent" / "overlay" / "_SAMPLE")
-        config = next(d["data"] for d in docs if d["kind"] == "ConfigMap" and "65-unifi-telemetry.alloy" in d.get("data", {}))["65-unifi-telemetry.alloy"]
-        self.assertIn('"alloy-unifi.unpoller.svc:12345"', config)
+        config = next(d["data"] for d in docs if d["kind"] == "ConfigMap" and "65-unpoller-telemetry.alloy" in d.get("data", {}))["65-unpoller-telemetry.alloy"]
+        self.assertIn('"alloy-unpoller.unpoller.svc:12345"', config)
         self.assertNotIn("unpoller:9130", config)
-        self.assertEqual(config.count('job_name        = "alloy-unifi"'), 1)
+        self.assertEqual(config.count('job_name        = "alloy-unpoller"'), 1)
 
     def test_unifi_dashboards_are_reproducible_and_provisioned(self):
         dashboards = unifi_dashboards()

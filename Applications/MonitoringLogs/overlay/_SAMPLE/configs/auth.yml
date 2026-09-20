@@ -1,6 +1,6 @@
 users:
-  - name: unifi-admin01-writer
-    bearer_token: "%{UNIFI_ADMIN01_WRITER_TOKEN}"
+  - name: unpoller-writer
+    bearer_token: "%{UNPOLLER_WRITER_TOKEN}"
     url_map:
       - src_paths:
           - "/loki/api/v1/push"

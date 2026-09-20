@@ -14,9 +14,9 @@ fieldSpecs:
 apiVersion: builtin
 kind: ReplicaCountTransformer
 metadata:
-  name: alloy-unifi-replica-transformer
+  name: alloy-unpoller-replica-transformer
 replica:
-  name: alloy-unifi
+  name: alloy-unpoller
   count: 1
 fieldSpecs:
   - path: spec/replicas

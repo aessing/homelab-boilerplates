@@ -9,7 +9,7 @@ keine erneute Architekturfreigabe.
 
 ## 1. Ziel und festgelegter Umfang
 
-Auf ADMIN01 werden UnPoller und eine dedizierte Alloy-Instanz `alloy-unifi`
+Auf ADMIN01 werden UnPoller und eine dedizierte Alloy-Instanz `alloy-unpoller`
 betrieben. Sie ergänzen die vorhandenen VictoriaMetrics-, Loki- und
 Grafana-Installationen.
 
@@ -47,14 +47,14 @@ UDM (Network + Protect) -- HTTPS API --\
 UNAS ------------------- HTTPS API --/      |
                                            | /metrics + ergänzende Loki-Push-Events
                                            v
-UDM  -- SIEM/Syslog --> 10.0.1.20 --> alloy-unifi
+UDM  -- SIEM/Syslog --> 10.0.1.20 --> alloy-unpoller
 UNAS -- SIEM/Syslog --> 10.0.1.20 -->     |
                                          +-- Remote Write --> Metrics-vmauth --> VictoriaMetrics
                                          +-- Loki Push -----> Logs-vmauth ----> Loki
 
 Bestehendes Grafana --> bestehende Datasources / Backends
-Bestehender alloy-metrics --> Eigenmetriken von alloy-unifi
-Bestehender alloy-logs --> stdout/stderr von UnPoller und alloy-unifi
+Bestehender alloy-metrics --> Eigenmetriken von alloy-unpoller
+Bestehender alloy-logs --> stdout/stderr von UnPoller und alloy-unpoller
 ```
 
 Alle Pfeile außer den Verbindungen zu UDM und UNAS bleiben clusterintern.
@@ -63,11 +63,11 @@ Alle Pfeile außer den Verbindungen zu UDM und UNAS bleiben clusterintern.
 
 - `alloy-metrics`: bestehende Kubernetes-, Host- und Anwendungsmesswerte.
 - `alloy-logs`: bestehende Pod-, Journal- und Hostlogs.
-- `alloy-unifi`: ausschließlich UnPoller-Scraping, UniFi-Syslog und ergänzende
+- `alloy-unpoller`: ausschließlich UnPoller-Scraping, UniFi-Syslog und ergänzende
   UnPoller-Ereignisse, inklusive Verarbeitung, Pufferung und Weiterleitung.
 - UnPoller: lokale API-Abfragen, Prometheus-Endpoint und unterstützte Ereignisexporte.
 
-`alloy-unifi` ist eine eigene Instanz, kein zusätzlicher Konfigurationsblock im
+`alloy-unpoller` ist eine eigene Instanz, kein zusätzlicher Konfigurationsblock im
 bestehenden Metrics-Alloy. Sie erhält keinen Kubernetes-API-Zugriff. Statische
 Service-Ziele reichen für die Sammlung aus. Ihr ServiceAccount-Token wird nicht
 automatisch eingebunden. Der bestehende Metrics-Alloy überwacht ihre Eigenmetriken,
@@ -76,7 +76,7 @@ scrapt aber nicht zusätzlich den UnPoller-Endpoint.
 ### Workloads und Speicherung
 
 - UnPoller: Deployment mit einer Replica und `Recreate`, zunächst ohne PVC.
-- `alloy-unifi`: StatefulSet mit einer Replica und einem PVC für die getrennten
+- `alloy-unpoller`: StatefulSet mit einer Replica und einem PVC für die getrennten
   Remote-Write- und Loki-WAL-Verzeichnisse. Retain-Verhalten wie bei bestehenden
   Monitoring-Workloads. Keine parallelen aktiven Collector-Replicas.
 - Ausgangswerte: UnPoller 100m CPU / 128Mi Request, 500m / 512Mi Limit.
@@ -93,7 +93,7 @@ scrapt aber nicht zusätzlich den UnPoller-Endpoint.
 ### Syslog-Eingang
 
 Ein dedizierter LoadBalancer-Service zeigt nur auf den Syslog-Port von
-`alloy-unifi`. Geplanter äußerer und innerer Port ist 1514, damit der Container
+`alloy-unpoller`. Geplanter äußerer und innerer Port ist 1514, damit der Container
 ohne privilegierten Port läuft. Falls die Sender einen anderen Port benötigen,
 kann der Service diesen auf 1514 abbilden.
 
@@ -227,7 +227,7 @@ Versionen und gegebenenfalls Digests pinnen.
   Loki-Annahmegrenzen behandeln und Drops zählen.
 - Alloy unterstützt RFC3164/RFC5424. Für nicht standardkonformes CEF kann `raw`
   erforderlich sein. Das ist in der aktuellen Dokumentation experimentell und
-  erfordert die passende Stability-Einstellung nur an `alloy-unifi`. Erst anhand
+  erfordert die passende Stability-Einstellung nur an `alloy-unpoller`. Erst anhand
   realer Nachrichten entscheiden. Keine Stability-Änderung bestehender Collector.
 - Keine pauschale Inhalts-Sampling- oder Drop-Regel für DPI/IDS-bezogene Daten.
 
@@ -241,13 +241,13 @@ Applications/Unpoller/
   README.md
   base/                         Namespace unpoller, Quota, Default-Deny und DNS
   components/_application/      UnPoller Deployment, Config, interne Services
-  components/_alloy/            alloy-unifi StatefulSet, WAL, Config, Services
+  components/_alloy/            alloy-unpoller StatefulSet, WAL, Config, Services
   components/_syslog/           LoadBalancer und dazugehörige Policies
   overlay/_SAMPLE/              Öffentliche vollständige Vorlage
     configs/ generators/ patches/ secrets/ transformers/
   overlay/admin01/              Privat und Git-ignoriert
 
-Applications/MonitoringAgent/   Ausschließlich Eigenüberwachung von alloy-unifi
+Applications/MonitoringAgent/   Ausschließlich Eigenüberwachung von alloy-unpoller
 Applications/MonitoringMetrics/ Eigene UniFi-Writer-Identität und Ziel-Ingress
 Applications/MonitoringLogs/    Eigene UniFi-Writer-Identität und Ziel-Ingress
 Applications/MonitoringGrafana/ Generierte UniFi-Dashboards und Provisionierung
@@ -255,7 +255,7 @@ Applications/Grafana/           Erforderliche Mounts/Provisionierungsintegration
 tests/monitoring/               Render-, Pipeline- und Dashboardtests
 ```
 
-UnPoller und `alloy-unifi` gehören zu einer gemeinsam deploybaren Anwendung im
+UnPoller und `alloy-unpoller` gehören zu einer gemeinsam deploybaren Anwendung im
 Namespace `unpoller`, bleiben aber getrennte Workloads. `_SAMPLE` enthält keine
 echten Adressen oder Zugangsdaten. Bestehende Generator-Hashes und Rollout-
 Konventionen beibehalten. Private Overlays niemals force-adden.
@@ -301,7 +301,7 @@ Keine neuen Benachrichtigungskanäle oder vollständige Alerting-Plattform einf�
 - Statisches UnPoller-Scraping und beide getrennten internen Writer-Pfade umsetzen.
 - Writer-Identitäten in öffentlichen Beispielen und privaten Overlays konsistent
   ergänzen, ohne bestehende Tokens zu ändern oder preiszugeben.
-- Eigenmetriken von `alloy-unifi` in das bestehende Monitoring aufnehmen.
+- Eigenmetriken von `alloy-unpoller` in das bestehende Monitoring aufnehmen.
 - Konfiguration mit dem tatsächlich gepinnten Image validieren und ausführen.
 
 ### C. Quellen und Log-Verarbeitung
@@ -382,7 +382,7 @@ Zugänge oder Deployment-Freigabe keine vollständige Live-Verifikation behaupte
 Rollout-Reihenfolge: Backend-Writer und Ziel-Policies, Anwendung/PVC, interne
 Metriken/API-Ereignisse, Syslog-Quellkonfiguration, Grafana, Live-Abnahme.
 
-Rollback: SIEM-Versand an den neuen Eingang stoppen, UnPoller und `alloy-unifi`
+Rollback: SIEM-Versand an den neuen Eingang stoppen, UnPoller und `alloy-unpoller`
 herunterfahren und neue Eigenüberwachung deaktivieren. PVC/WAL sowie gespeicherte
 Backenddaten erhalten. Writer erst nach gestoppten Schreibern deaktivieren.
 LoadBalancer-IP erst freigeben, wenn beide Sender nicht mehr dorthin senden.

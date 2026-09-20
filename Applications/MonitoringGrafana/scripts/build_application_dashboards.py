@@ -104,7 +104,7 @@ def unifi_dashboards():
             stat("Network devices", 'count(unpoller_device_info{cluster=~"$cluster"})', "Observed adopted Network devices."),
             stat("Protect devices", 'sum(unpoller_protect_device_present{cluster=~"$cluster"})', "Protect devices returned by the controller."),
             stat("UNAS consoles", 'sum(unpoller_unas_device_present{cluster=~"$cluster"})', "UNAS consoles returned by the storage API."),
-            stat("UniFi Alloy target", 'min(up{cluster=~"$cluster",job="alloy-unifi"})', "Scrape status for the dedicated UniFi Alloy instance.", threshold="availability"),
+            stat("UniFi Alloy target", 'min(up{cluster=~"$cluster",job="alloy-unpoller"})', "Scrape status for the dedicated UniFi Alloy instance.", threshold="availability"),
             log_query(chart("SIEM event volume", [], "Incoming UDM and UNAS SIEM records per second.", "logs/s"), 'sum by (cluster,appliance) (rate({cluster=~"$cluster",source="unifi-siem"}[$__auto]))', '{{cluster}} {{appliance}}'),
             log_query(chart("API event volume", [], "Events obtained from supported UniFi APIs.", "logs/s"), 'sum by (cluster) (rate({cluster=~"$cluster",source="unpoller-api"}[$__auto]))', '{{cluster}}'),
             unifi_logs("Recent UniFi security and system events", '{cluster=~"$cluster",source=~"unifi-siem|unpoller-api"}', "Sanitized SIEM and API records. Image payloads are disabled."),

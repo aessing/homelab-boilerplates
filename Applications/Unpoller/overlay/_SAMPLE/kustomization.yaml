@@ -21,7 +21,7 @@ generators:
   - ./generators/config-alloy.yaml
   - ./generators/config-alloy-environment.yaml
   - ./generators/secret-unpoller-credentials.yaml
-  - ./generators/secret-alloy-unifi-writers.yaml
+  - ./generators/secret-alloy-unpoller-writers.yaml
 
 patches:
   - path: ./patches/network-policy-unpoller.yaml
@@ -31,11 +31,11 @@ patches:
   - path: ./patches/network-policy-alloy.yaml
     target:
       kind: NetworkPolicy
-      name: alloy-unifi-traffic
+      name: alloy-unpoller-traffic
   - path: ./patches/syslog-service.yaml
     target:
       kind: Service
-      name: alloy-unifi-syslog
+      name: alloy-unpoller-syslog
   - path: ./patches/resource-quota.yaml
     target:
       kind: ResourceQuota
@@ -45,7 +45,7 @@ patches:
       group: apps
       version: v1
       kind: StatefulSet
-      name: alloy-unifi
+      name: alloy-unpoller
 
 transformers:
   - ./transformers/images.yaml

@@ -26,13 +26,13 @@ configuration and regression tests.
 ## Components
 
 - `unpoller`, one Deployment, polls UDM and UNAS and exposes port 9130.
-- `alloy-unifi`, one StatefulSet with a 5 GiB retained WAL volume, scrapes
+- `alloy-unpoller`, one StatefulSet with a 5 GiB retained WAL volume, scrapes
   UnPoller and receives API events and Syslog.
-- `alloy-unifi-syslog`, a LoadBalancer exposing UDP and TCP 1514. The private
+- `alloy-unpoller-syslog`, a LoadBalancer exposing UDP and TCP 1514. The private
   ADMIN01 overlay must pin it to `10.0.1.20`.
 - Dedicated Metrics and Logs writer identities, both named
-  `unifi-admin01-writer` in their separate authentication domains.
-- The existing ADMIN01 Metrics Alloy scrapes only `alloy-unifi` telemetry. It
+  `unpoller-writer` in their separate authentication domains.
+- The existing ADMIN01 Metrics Alloy scrapes only `alloy-unpoller` telemetry. It
   does not scrape UnPoller a second time.
 
 ## Create the ADMIN01 overlay
@@ -52,7 +52,7 @@ Replace the documentation values in these files:
 | `configs/up.conf` | UDM and UNAS HTTPS addresses, local read-only account names and CA settings |
 | `configs/alloy.env` | Actual UDM and UNAS source IPs |
 | `secrets/secret-unpoller-credentials.env` | Network password, Protect API key and UNAS password |
-| `secrets/secret-alloy-unifi-writers.env` | Dedicated Metrics and Logs writer tokens |
+| `secrets/secret-alloy-unpoller-writers.env` | Dedicated Metrics and Logs writer tokens |
 | `patches/network-policy-unpoller.yaml` | Exact UDM and UNAS `/32` destinations |
 | `patches/network-policy-alloy.yaml` | Exact backend Service IPs |
 | `patches/syslog-service.yaml` | `10.0.1.20` and the exact UDM and UNAS source `/32` ranges |
@@ -127,7 +127,7 @@ approval:
 Useful checks:
 
 ```promql
-up{cluster="ADMIN01",job=~"unpoller|alloy-unifi"}
+up{cluster="ADMIN01",job=~"unpoller|alloy-unpoller"}
 unpoller_controller_up{cluster="ADMIN01"}
 unpoller_prometheus_cache_age_seconds{cluster="ADMIN01"}
 ```
@@ -140,7 +140,7 @@ unpoller_prometheus_cache_age_seconds{cluster="ADMIN01"}
 ## Rollback and incident handling
 
 - Stop new SIEM traffic on UDM and UNAS first if ingestion is unsafe or noisy.
-- Scale `alloy-unifi` and UnPoller to zero only when collection must stop.
+- Scale `alloy-unpoller` and UnPoller to zero only when collection must stop.
 - Revert backend writer entries after producers are stopped. Revoking a token
   while Alloy still has WAL data causes retries.
 - Keep the retained Alloy PVC during ordinary rollback. Delete it only after an

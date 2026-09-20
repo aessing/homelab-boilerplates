@@ -2,7 +2,7 @@
 apiVersion: builtin
 kind: ConfigMapGenerator
 metadata:
-  name: alloy-unifi-config
+  name: alloy-unpoller-config
 behavior: create
 options:
   labels:
@@ -10,4 +10,4 @@ options:
   annotations:
     reloader.stakater.com/match: 'false'
 files:
-  - unifi.alloy=./configs/unifi.alloy
+  - unpoller.alloy=./configs/unpoller.alloy

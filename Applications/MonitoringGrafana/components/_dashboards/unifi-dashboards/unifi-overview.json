@@ -754,7 +754,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "min(up{cluster=~\"$cluster\",job=\"alloy-unifi\"})",
+          "expr": "min(up{cluster=~\"$cluster\",job=\"alloy-unpoller\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",

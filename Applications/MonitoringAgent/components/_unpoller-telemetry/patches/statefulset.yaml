@@ -11,4 +11,4 @@ spec:
           projected:
             sources:
               - configMap:
-                  name: alloy-unifi-telemetry
+                  name: alloy-unpoller-telemetry

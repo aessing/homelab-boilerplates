@@ -2,11 +2,11 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: alloy-unifi
+  name: alloy-unpoller
   labels:
     app.kubernetes.io/component: collector
 spec:
-  serviceName: alloy-unifi
+  serviceName: alloy-unpoller
   replicas: 0
   revisionHistoryLimit: 3
   persistentVolumeClaimRetentionPolicy:
@@ -30,7 +30,7 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: alloy-unifi
+        - name: alloy-unpoller
           image: grafana/alloy:0.0.0
           imagePullPolicy: IfNotPresent
           args:
@@ -41,7 +41,7 @@ spec:
             - /etc/alloy/config
           envFrom:
             - configMapRef:
-                name: alloy-unifi-environment
+                name: alloy-unpoller-environment
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -87,7 +87,7 @@ spec:
               mountPath: /etc/alloy/config
               readOnly: true
             - name: credentials
-              mountPath: /var/run/secrets/alloy-unifi
+              mountPath: /var/run/secrets/alloy-unpoller
               readOnly: true
             - name: data
               mountPath: /var/lib/alloy
@@ -96,10 +96,10 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: alloy-unifi-config
+            name: alloy-unpoller-config
         - name: credentials
           secret:
-            secretName: alloy-unifi-writers
+            secretName: alloy-unpoller-writers
         - name: tmp
           emptyDir: {}
   volumeClaimTemplates:

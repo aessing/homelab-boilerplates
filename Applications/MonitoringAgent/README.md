@@ -60,7 +60,7 @@ This covers core node, workload, collection-pipeline and the listed platform
 services. Kubernetes Services do not automatically make arbitrary application
 metrics available. Other applications still require explicit opt-in. UniFi is
 covered by the dedicated [Unpoller application](../Unpoller/README.md). The
-optional `_unifi-telemetry` component monitors that collector's own Alloy
+optional `_unpoller-telemetry` component monitors that collector's own Alloy
 endpoint without scraping UnPoller twice. Multus functional probes remain a
 separate coverage item. Detailed SMART collection is deliberately
 omitted for storage connected through USB adapters without SMART passthrough.

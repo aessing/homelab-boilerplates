@@ -5,7 +5,7 @@ metadata:
   name: unpoller-label-transformer
 labels:
   app.kubernetes.io/name: unpoller
-  app.kubernetes.io/instance: unpoller-admin01
+  app.kubernetes.io/instance: unpoller-example
   app.kubernetes.io/part-of: monitoring
 fieldSpecs:
   - path: metadata/labels
