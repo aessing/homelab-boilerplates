@@ -1,0 +1,22 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: unpoller-to-vmauth
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: auth
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: unpoller
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: collector
+      ports:
+        - protocol: TCP
+          port: 8427

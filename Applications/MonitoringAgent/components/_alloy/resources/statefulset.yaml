@@ -1,0 +1,186 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alloy-metrics
+  labels:
+    app.kubernetes.io/component: alloy
+spec:
+  serviceName: alloy-metrics
+  replicas: 0
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: alloy
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Retain
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: alloy
+    spec:
+      serviceAccountName: alloy
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: alloy-metrics
+          image: grafana/alloy:0.0.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - --stability.level=public-preview
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --storage.path=/var/lib/alloy/data
+            - /etc/alloy/config
+          envFrom:
+            - configMapRef:
+                name: alloy-environment
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: '0'
+              memory: '0'
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          ports:
+            - name: http
+              containerPort: 12345
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy/config
+              readOnly: true
+            - name: remote-write-token
+              mountPath: /var/run/secrets/monitoring-agent
+              readOnly: true
+            - name: alloy-data
+              mountPath: /var/lib/alloy
+            - name: tmp
+              mountPath: /tmp
+            - name: grafana-metrics
+              mountPath: /var/run/secrets/monitoring-agent-grafana-metrics
+              readOnly: true
+            - name: grafana-haengine
+              mountPath: /var/run/secrets/monitoring-agent-grafana-haengine
+              readOnly: true
+            - name: uptimekuma-database
+              mountPath: /var/run/secrets/monitoring-agent-uptimekuma-database
+              readOnly: true
+            - name: homeassistant-prometheus
+              mountPath: /var/run/secrets/monitoring-agent-homeassistant-prometheus
+              readOnly: true
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: alloy-config
+              - configMap:
+                  name: alloy-central-telemetry
+                  optional: true
+              - configMap:
+                  name: alloy-logs-events-config
+                  optional: true
+              - configMap:
+                  name: alloy-logs-telemetry
+                  optional: true
+              - configMap:
+                  name: alloy-application-metrics
+                  optional: true
+              - configMap:
+                  name: alloy-grafana-metrics
+                  optional: true
+              - configMap:
+                  name: alloy-grafana-backend-metrics
+                  optional: true
+              - configMap:
+                  name: alloy-uptimekuma-mariadb-metrics
+                  optional: true
+              - configMap:
+                  name: alloy-uptimekuma-metrics
+                  optional: true
+              - configMap:
+                  name: alloy-homeassistant-core-metrics
+                  optional: true
+              - configMap:
+                  name: alloy-unpoller-telemetry
+                  optional: true
+        - name: remote-write-token
+          secret:
+            secretName: monitoring-agent-remote-write
+            items:
+              - key: token
+                path: token
+        - name: tmp
+          emptyDir: {}
+        - name: grafana-metrics
+          secret:
+            secretName: monitoring-agent-grafana-metrics
+            optional: true
+            items:
+              - key: username
+                path: username
+              - key: password
+                path: password
+        - name: grafana-haengine
+          secret:
+            secretName: monitoring-agent-grafana-haengine
+            optional: true
+            items:
+              - key: authkey
+                path: authkey
+        - name: uptimekuma-database
+          secret:
+            secretName: monitoring-agent-uptimekuma-database
+            optional: true
+            items:
+              - key: dsn
+                path: dsn
+        - name: homeassistant-prometheus
+          secret:
+            secretName: monitoring-agent-homeassistant-prometheus
+            optional: true
+            items:
+              - key: token
+                path: token
+  volumeClaimTemplates:
+    - metadata:
+        name: alloy-data
+        labels:
+          app.kubernetes.io/component: alloy
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 0Gi

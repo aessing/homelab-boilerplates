@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alloy-unpoller-syslog
+  labels:
+    app.kubernetes.io/component: collector
+  annotations:
+    metallb.io/address-pool: default-pool
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  loadBalancerIP: 192.0.2.30
+  loadBalancerSourceRanges:
+    - 192.0.2.10/32
+    - 192.0.2.20/32
+  selector:
+    app.kubernetes.io/component: collector
+  ports:
+    - name: syslog-udp
+      protocol: UDP
+      port: 514
+      targetPort: syslog-udp
+    - name: syslog-tcp
+      protocol: TCP
+      port: 514
+      targetPort: syslog-tcp

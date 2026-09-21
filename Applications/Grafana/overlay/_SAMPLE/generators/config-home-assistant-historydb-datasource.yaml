@@ -1,0 +1,13 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-home-assistant-historydb-datasource
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: application
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - home-assistant-historydb.yaml=./configs/home-assistant-historydb.yaml

@@ -1,0 +1,84 @@
+users:
+  - name: unpoller-writer
+    bearer_token: "%{WRITER_UNPOLLER_TOKEN}"
+    url_map:
+      - src_paths:
+          - "/loki/api/v1/push"
+        headers:
+          - "Authorization:"
+          - "X-Scope-OrgID:"
+        url_prefix: "http://loki:3100/"
+  - name: cluster-a-writer
+    bearer_token: "%{WRITER_CLUSTER_A_TOKEN}"
+    url_map:
+      - src_paths:
+          - "/loki/api/v1/push"
+        headers:
+          - "Authorization:"
+          - "X-Scope-OrgID:"
+        url_prefix: "http://loki:3100/"
+  - name: cluster-b-writer
+    bearer_token: "%{WRITER_CLUSTER_B_TOKEN}"
+    url_map:
+      - src_paths:
+          - "/loki/api/v1/push"
+        headers:
+          - "Authorization:"
+          - "X-Scope-OrgID:"
+        url_prefix: "http://loki:3100/"
+  - name: cluster-c-writer
+    bearer_token: "%{WRITER_CLUSTER_C_TOKEN}"
+    url_map:
+      - src_paths:
+          - "/loki/api/v1/push"
+        headers:
+          - "Authorization:"
+          - "X-Scope-OrgID:"
+        url_prefix: "http://loki:3100/"
+  - name: cluster-d-writer
+    bearer_token: "%{WRITER_CLUSTER_D_TOKEN}"
+    url_map:
+      - src_paths:
+          - "/loki/api/v1/push"
+        headers:
+          - "Authorization:"
+          - "X-Scope-OrgID:"
+        url_prefix: "http://loki:3100/"
+  - name: grafana-reader
+    username: "%{GRAFANA_USERNAME}"
+    password: "%{GRAFANA_PASSWORD}"
+    url_map:
+      - src_paths:
+          - "/loki/api/v1/query"
+          - "/loki/api/v1/query_range"
+          - "/loki/api/v1/labels"
+          - "/loki/api/v1/label/[^/]+/values"
+          - "/loki/api/v1/series"
+          - "/loki/api/v1/index/stats"
+          - "/loki/api/v1/index/volume"
+          - "/loki/api/v1/index/volume_range"
+          - "/loki/api/v1/detected_fields"
+          - "/loki/api/v1/detected_labels"
+          - "/loki/api/v1/patterns"
+          - "/loki/api/v1/status/buildinfo"
+        headers:
+          - "Authorization:"
+          - "X-Scope-OrgID:"
+        url_prefix: "http://loki:3100/"
+  - name: management-telemetry-reader
+    bearer_token: "%{TELEMETRY_TOKEN}"
+    url_map:
+      - src_paths:
+          - "/telemetry/loki/metrics"
+        drop_src_path_prefix_parts: 2
+        headers:
+          - "Authorization:"
+          - "X-Scope-OrgID:"
+        url_prefix: "http://loki:3100/"
+      - src_paths:
+          - "/telemetry/vmauth/metrics"
+        drop_src_path_prefix_parts: 2
+        headers:
+          - "Authorization:"
+          - "X-Scope-OrgID:"
+        url_prefix: "http://127.0.0.1:8426/"

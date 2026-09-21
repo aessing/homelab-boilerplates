@@ -12,7 +12,7 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 2026.8.3 # The current version of the application
+      app.kubernetes.io/version: 2026.9.2 # The current version of the application
 
 resources:
   - ../../base
@@ -22,6 +22,7 @@ generators:
   - ./generators/secret-historydb-grafana-auth.yaml
   - ./generators/secret-mqtt-acl.yaml
   - ./generators/secret-mqtt-user.yaml
+  - ./generators/secret-mqtt-exporter-auth.yaml
 
 patches:
   - path: ./patches/certificate-editor.yaml

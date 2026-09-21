@@ -1,0 +1,4 @@
+---
+- op: replace
+  path: /spec/routes/0/match
+  value: Host(`metrics.example.com`) && Path(`/api/v1/write`) && Method(`POST`)

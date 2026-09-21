@@ -21,7 +21,7 @@ metadata:
   name: historydb-imagetransformer
 imageTag:
   name: victoriametrics/victoria-metrics
-  newTag: v1.151.0
+  newTag: v1.152.0
 ---
 apiVersion: builtin
 kind: ImageTagTransformer
@@ -29,7 +29,7 @@ metadata:
   name: homeassistant-imagetransformer
 imageTag:
   name: ghcr.io/home-assistant/home-assistant
-  newTag: 2026.8.3
+  newTag: 2026.9.2
 ---
 apiVersion: builtin
 kind: ImageTagTransformer
@@ -38,3 +38,11 @@ metadata:
 imageTag:
   name: eclipse-mosquitto
   newTag: 2.1.2-alpine
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: mqtt-metrics-imagetransformer
+imageTag:
+  name: ghcr.io/d0ugal/mosquitto-exporter
+  newTag: v0.2.50

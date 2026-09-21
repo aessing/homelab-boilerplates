@@ -1,0 +1,17 @@
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: loki-image-transformer
+imageTag:
+  name: grafana/loki
+  newTag: 3.7.7
+
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: vmauth-image-transformer
+imageTag:
+  name: victoriametrics/vmauth
+  newTag: v1.152.0

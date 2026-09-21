@@ -1,0 +1,51 @@
+// Keep component-specific status, error, sum and count metrics. Generic client,
+// API machinery, workqueue and Go runtime buckets add many low-value series.
+prometheus.relabel "metrics_server" {
+  forward_to = [prometheus.remote_write.central.receiver]
+
+  rule {
+    source_labels = ["__name__"]
+    regex = "(apiserver|authorization|authentication|field_validation|rest_client|workqueue)_.*_bucket|go_(gc|sched)_.*_bucket"
+    action = "drop"
+  }
+
+  rule {
+    source_labels = ["__name__"]
+    regex = "metrics_server_manager_tick_duration_seconds_bucket"
+    action = "drop"
+  }
+}
+
+prometheus.relabel "metallb" {
+  forward_to = [prometheus.remote_write.central.receiver]
+
+  rule {
+    source_labels = ["__name__"]
+    regex = "(rest_client|workqueue)_.*_bucket|go_(gc|sched)_.*_bucket"
+    action = "drop"
+  }
+
+  // Retain coarse controller reconciliation percentiles without storing all
+  // 41 upstream bucket boundaries. Sums, counts and error counters stay intact.
+  rule {
+    source_labels = ["__name__"]
+    regex = "controller_runtime_reconcile_time_seconds_bucket"
+    target_label = "__tmp_reduce_bucket"
+    replacement = "true"
+  }
+  rule {
+    source_labels = ["__tmp_reduce_bucket", "le"]
+    regex = "true;(0\\.1|1(\\.0)?|5(\\.0)?|\\+Inf)"
+    target_label = "__tmp_keep_bucket"
+    replacement = "true"
+  }
+  rule {
+    source_labels = ["__tmp_reduce_bucket", "__tmp_keep_bucket"]
+    regex = "true;"
+    action = "drop"
+  }
+  rule {
+    regex = "__tmp_(reduce|keep)_bucket"
+    action = "labeldrop"
+  }
+}

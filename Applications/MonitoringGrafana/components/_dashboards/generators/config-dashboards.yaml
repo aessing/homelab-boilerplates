@@ -1,0 +1,178 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-core
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: application
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - 00-overview.json=./dashboards/00-overview.json
+  - 10-cluster.json=./dashboards/10-cluster.json
+  - 20-node.json=./dashboards/20-node.json
+  - 30-pod.json=./dashboards/30-pod.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-platform
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: application
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - 40-k3s-etcd.json=./dashboards/40-k3s-etcd.json
+  - 50-network.json=./dashboards/50-network.json
+  - 60-storage.json=./dashboards/60-storage.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-operations
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: application
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - 80-platform.json=./dashboards/80-platform.json
+  - 90-pipeline.json=./dashboards/90-pipeline.json
+  - 100-daily.json=./dashboards/100-daily.json
+  - 110-capacity.json=./dashboards/110-capacity.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-logs
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - log-explorer.json=./log-dashboards/log-explorer.json
+  - log-pipeline-health.json=./log-dashboards/log-pipeline-health.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-applications-core
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - applications-overview.json=./application-dashboards/applications-overview.json
+  - uptime-kuma.json=./application-dashboards/uptime-kuma.json
+  - authentik.json=./application-dashboards/authentik.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-applications-services
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - grafana.json=./application-dashboards/grafana.json
+  - home-assistant.json=./application-dashboards/home-assistant.json
+  - homecdn.json=./application-dashboards/homecdn.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-applications-network
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - timeserver.json=./application-dashboards/timeserver.json
+  - uptime-kuma-monitors.json=./application-dashboards/uptime-kuma-monitors.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-applications-backends
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - loki.json=./application-dashboards/loki.json
+  - victoriametrics.json=./application-dashboards/victoriametrics.json
+  - postgresql.json=./application-dashboards/postgresql.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-root
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - operations-center.json=./root-dashboards/operations-center.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-unifi-core
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - unifi-overview.json=./unifi-dashboards/unifi-overview.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-unifi-gateway
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - unifi-gateway.json=./unifi-dashboards/unifi-gateway.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-unifi-switches
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - unifi-switches.json=./unifi-dashboards/unifi-switches.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-unifi-access-points
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - unifi-access-points.json=./unifi-dashboards/unifi-access-points.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-unifi-services
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - unifi-protect.json=./unifi-dashboards/unifi-protect.json
+  - unifi-ups.json=./unifi-dashboards/unifi-ups.json
+  - unifi-unas.json=./unifi-dashboards/unifi-unas.json

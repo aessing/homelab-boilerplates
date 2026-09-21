@@ -98,20 +98,23 @@ sudo ./21-create-etcd-snapshot-secret.sh mycluster
 | `K3S_NODE_CIDR_SIZE_IPV4` | CIDR size per node | `22` |
 | `K3S_FLANNEL_BACKEND` | CNI backend | `vxlan` |
 | `K3S_MAX_PODS` | Max pods per node | `250` |
+| `K3S_SYSTEM_RESERVED` | Optional kubelet reservation for operating-system services | Empty |
+| `K3S_KUBE_RESERVED` | Optional kubelet reservation for Kubernetes services | Empty |
 | `K3S_KUBECONFIG_MODE` | Kubeconfig file permissions | `600` |
 | `K3S_SERVICE_DISABLE` | Services to disable | `local-storage servicelb traefik` |
 | `K3S_EMBEDDED_REGISTRY` | Enable Spegel registry | `true` |
 
-### etcd Backup Configuration
+### etcd Configuration
 
-| Variable | Description |
-|----------|-------------|
-| `K3S_ETCD_SNAPSHOT_RETENTION` | Local snapshot retention count |
-| `K3S_ETCD_SNAPSHOT_SCHEDULE_CRON` | Backup schedule (cron format) |
-| `K3S_ETCD_SNAPSHOT_S3_ENABLED` | Enable S3 backups |
-| `K3S_ETCD_SNAPSHOT_S3_ENDPOINT` | S3 endpoint URL |
-| `K3S_ETCD_SNAPSHOT_S3_BUCKET` | S3 bucket name |
-| `K3S_ETCD_SNAPSHOT_S3_REGION` | S3 region |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `K3S_ETCD_EXPOSE_METRICS` | Expose native embedded etcd metrics on the internal server-node address, TCP 2381 | `false` |
+| `K3S_ETCD_SNAPSHOT_RETENTION` | Local snapshot retention count | Environment-specific |
+| `K3S_ETCD_SNAPSHOT_SCHEDULE_CRON` | Backup schedule (cron format) | Environment-specific |
+| `K3S_ETCD_SNAPSHOT_S3_ENABLED` | Enable S3 backups | Environment-specific |
+| `K3S_ETCD_SNAPSHOT_S3_ENDPOINT` | S3 endpoint URL | Environment-specific |
+| `K3S_ETCD_SNAPSHOT_S3_BUCKET` | S3 bucket name | Environment-specific |
+| `K3S_ETCD_SNAPSHOT_S3_REGION` | S3 region | Environment-specific |
 
 ## Security Hardening
 
@@ -122,6 +125,12 @@ The installation script applies CIS-compliant security configurations:
 - **Swap Disabled**: Required for Kubernetes
 - **Firewall Rules**: Automatic UFW configuration for cluster ports
 - **PSAD Integration**: Optional port scan detection
+
+When `K3S_ETCD_EXPOSE_METRICS="true"`, the script also allows TCP 2381 on
+server nodes from the exact addresses in `K3S_NODES_ALL`. The endpoint uses
+plain HTTP without authentication. Enable it only for cluster-local monitoring,
+keep the UFW source list narrow and do not publish it through an Ingress or
+LoadBalancer.
 
 ## Troubleshooting
 

@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: monitoring-metrics
+spec:
+  hard:
+    pods: 3
+    persistentvolumeclaims: 1
+    limits.cpu: '2'
+    limits.memory: 2Gi

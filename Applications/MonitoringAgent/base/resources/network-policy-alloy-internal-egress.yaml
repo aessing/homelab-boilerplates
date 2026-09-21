@@ -1,0 +1,288 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: alloy-internal-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: alloy
+  policyTypes:
+    - Egress
+  egress:
+    # Overlays replace the documentation addresses with exact service/node IPs.
+    - to:
+        - ipBlock:
+            cidr: 192.0.2.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - ipBlock:
+            cidr: 192.0.2.11/32
+      ports:
+        - protocol: TCP
+          port: 6443
+    - to:
+        - ipBlock:
+            cidr: 192.0.2.11/32
+      ports:
+        - protocol: TCP
+          port: 10250
+        - protocol: TCP
+          port: 9100
+        - protocol: TCP
+          port: 2112
+        - protocol: TCP
+          port: 2381
+        - protocol: TCP
+          port: 9120
+    - to:
+        - ipBlock:
+            cidr: 192.0.2.100/32
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: kube-state-metrics
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8081
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              monitoring-metrics-scrape: 'true'
+      ports:
+        - protocol: TCP
+          port: metrics
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: TCP
+          port: 9153
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: metrics-server
+      ports:
+        - protocol: TCP
+          port: 10250
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: metallb-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: metallb
+              app.kubernetes.io/name: metallb
+      ports:
+        - protocol: TCP
+          port: 9120
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: snapshot-controller
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: certmgr-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: cert-manager
+      ports:
+        - protocol: TCP
+          port: 9402
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: certmgr-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: trust-manager
+      ports:
+        - protocol: TCP
+          port: 9402
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - protocol: TCP
+          port: 9100
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: longhorn-system
+          podSelector:
+            matchLabels:
+              app: longhorn-manager
+      ports:
+        - protocol: TCP
+          port: 9500
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: longhorn-system
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - csi-attacher
+                  - csi-provisioner
+                  - csi-resizer
+                  - csi-snapshotter
+      ports:
+        - protocol: TCP
+          port: 8000
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: reloader-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: reloader
+      ports:
+        - protocol: TCP
+          port: 9090
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cnpg-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: cloudnative-pg
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: cloudnative-pg
+              app.kubernetes.io/name: postgresql
+      ports:
+        - protocol: TCP
+          port: 9187
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: authentik
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: authentik
+      ports:
+        - protocol: TCP
+          port: 9300
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: authentik-outpost
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: goauthentik.io
+      ports:
+        - protocol: TCP
+          port: 9300
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: homeassistant
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: historydb
+      ports:
+        - protocol: TCP
+          port: 8428
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: grafana
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: renderer
+      ports:
+        - protocol: TCP
+          port: 8081
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: grafana
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: application
+      ports:
+        - protocol: TCP
+          port: 3000
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: grafana
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: haengine
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: uptimekuma
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: database
+      ports:
+        - protocol: TCP
+          port: 3306
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: uptimekuma
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: application
+              app.kubernetes.io/name: uptimekuma
+      ports:
+        - protocol: TCP
+          port: 3001
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: homeassistant
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: application
+      ports:
+        - protocol: TCP
+          port: 8123
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: unpoller
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: collector
+      ports:
+        - protocol: TCP
+          port: 12345

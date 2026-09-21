@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alloy-metrics
+spec:
+  template:
+    spec:
+      containers:
+        - name: alloy-metrics
+          env:
+            - name: LOKI_TELEMETRY_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: alloy-logs-environment
+                  key: LOKI_TELEMETRY_HOST
+          volumeMounts:
+            - name: logs-telemetry-token
+              mountPath: /var/run/secrets/monitoring-agent-logs-telemetry
+              readOnly: true
+      volumes:
+        - name: logs-telemetry-token
+          secret:
+            secretName: monitoring-agent-logs-telemetry
+            items:
+              - key: token
+                path: token

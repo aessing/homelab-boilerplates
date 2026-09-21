@@ -1,0 +1,88 @@
+discovery.kubernetes "etcd_nodes" {
+  role = "node"
+
+  selectors {
+    role  = "node"
+    label = "node-role.kubernetes.io/etcd=true"
+  }
+}
+
+discovery.relabel "etcd" {
+  targets = discovery.kubernetes.etcd_nodes.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_node_address_InternalIP"]
+    regex         = "(.+)"
+    replacement   = "$1:2381"
+    target_label  = "__address__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_node_name"]
+    target_label  = "node"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_node_name"]
+    target_label  = "instance"
+  }
+}
+
+prometheus.scrape "etcd" {
+  targets         = discovery.relabel.etcd.output
+  job_name        = "etcd"
+  scheme          = "http"
+  metrics_path    = "/metrics"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.relabel.etcd_metrics.receiver]
+}
+
+prometheus.relabel "etcd_metrics" {
+  forward_to = [prometheus.remote_write.central.receiver]
+
+  // K3s embeds etcd in its main process, so this endpoint also exposes the
+  // shared Kubernetes registry. Keep native etcd and scrape-health metrics.
+  rule {
+    source_labels = ["__name__"]
+    regex = "(etcd_.*|up|scrape_.*)"
+    action = "keep"
+  }
+
+  // Retain coarse latency percentiles for the paths that directly expose
+  // quorum, peer-network and persistent-storage health.
+  rule {
+    source_labels = ["__name__"]
+    regex = "(etcd_server_apply_duration_seconds|etcd_network_peer_round_trip_time_seconds|etcd_disk_backend_commit_duration_seconds|etcd_disk_wal_fsync_duration_seconds|etcd_disk_wal_write_duration_seconds)_bucket"
+    target_label = "__tmp_reduce_bucket"
+    replacement = "true"
+  }
+  rule {
+    source_labels = ["__name__", "le"]
+    regex = "(etcd_server_apply_duration_seconds|etcd_network_peer_round_trip_time_seconds)_bucket;(0\\.0128|0\\.0512|0\\.2048|0\\.8192|\\+Inf)"
+    target_label = "__tmp_keep_bucket"
+    replacement = "true"
+  }
+  rule {
+    source_labels = ["__name__", "le"]
+    regex = "(etcd_disk_backend_commit_duration_seconds|etcd_disk_wal_fsync_duration_seconds|etcd_disk_wal_write_duration_seconds)_bucket;(0\\.008|0\\.032|0\\.128|0\\.512|2\\.048|\\+Inf)"
+    target_label = "__tmp_keep_bucket"
+    replacement = "true"
+  }
+  rule {
+    source_labels = ["__tmp_reduce_bucket", "__tmp_keep_bucket"]
+    regex = "true;"
+    action = "drop"
+  }
+
+  // Other histograms retain their sum/count pairs but not every bucket.
+  rule {
+    source_labels = ["__name__", "__tmp_reduce_bucket"]
+    regex = "etcd_.*_bucket;"
+    action = "drop"
+  }
+  rule {
+    regex = "__tmp_(reduce|keep)_bucket"
+    action = "labeldrop"
+  }
+}

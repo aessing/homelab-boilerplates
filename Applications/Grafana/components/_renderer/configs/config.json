@@ -8,7 +8,7 @@
     "minTLSVersion": "TLSv1.2",
 
     "metrics": {
-      "enabled": false,
+      "enabled": true,
       "collectDefaultMetrics": true,
       "requestDurationBuckets": [1, 5, 7, 9, 11, 13, 15, 20, 30]
     },

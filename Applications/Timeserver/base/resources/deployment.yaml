@@ -20,6 +20,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/component: 'application'  # The component within the architecture
+        monitoring-metrics-scrape: 'true'
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
@@ -85,6 +86,36 @@ spec:
               mountPath: /var/lib/chrony
             - name: chrony-run
               mountPath: /var/run/chrony
+        - name: chrony-metrics
+          image: quay.io/superq/chrony-exporter:0.0.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --chrony.address=unix:///var/run/chrony/chronyd.sock
+            - --web.listen-address=:9123
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 100
+            runAsGroup: 101
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            limits:
+              cpu: 50m
+              memory: 32Mi
+          ports:
+            - containerPort: 9123
+              protocol: TCP
+              name: metrics
+          volumeMounts:
+            - name: chrony-run
+              mountPath: /var/run/chrony
+              # Unix datagram replies require the exporter to create its own socket here.
+              readOnly: false
       volumes:
         - name: chrony-config
           configMap:

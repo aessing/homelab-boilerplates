@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+configMapGenerator:
+  - name: alloy-logs-telemetry
+    files:
+      - 55-logs-telemetry.alloy=./configs/55-logs-telemetry.alloy
+patches:
+  - path: ./patches/statefulset.yaml

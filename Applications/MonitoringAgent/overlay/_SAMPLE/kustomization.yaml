@@ -1,0 +1,80 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring-agent
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: 1.19.2
+
+resources:
+  - ../../base
+
+components:
+  - ../../components/_application-metrics
+  - ../../components/_central-telemetry
+  - ../../components/_grafana-backend-metrics
+  - ../../components/_grafana-metrics
+  - ../../components/_homeassistant-core-metrics
+  - ../../components/_cnpg-state
+  - ../../components/_etcd
+  - ../../components/_logs
+  - ../../components/_logs-events
+  - ../../components/_logs-telemetry
+  - ../../components/_uptimekuma-metrics
+  - ../../components/_uptimekuma-mariadb-metrics
+  - ../../components/_unpoller-telemetry
+
+generators:
+  - ./generators/config-alloy-environment.yaml
+  - ./generators/secret-monitoring-agent-grafana-haengine.yaml
+  - ./generators/secret-monitoring-agent-grafana-metrics.yaml
+  - ./generators/secret-monitoring-agent-homeassistant-prometheus.yaml
+  - ./generators/secret-monitoring-agent-remote-write.yaml
+  - ./generators/secret-monitoring-agent-telemetry.yaml
+  - ./generators/secret-monitoring-agent-uptimekuma-database.yaml
+  - ./generators/config-alloy-logs-environment.yaml
+  - ./generators/secret-monitoring-agent-logs.yaml
+  - ./generators/secret-monitoring-agent-logs-telemetry.yaml
+
+patches:
+  - path: ./patches/network-policy-alloy-egress.yaml
+    target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: alloy-internal-egress
+  - path: ./patches/network-policy-kubernetes-api-egress.yaml
+    target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: kube-state-metrics-kubernetes-api-egress
+  - path: ./patches/network-policy-alloy-logs-egress.yaml
+    target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: alloy-logs-egress
+  - path: ./patches/pvc.yaml
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: alloy-metrics
+  - path: ./patches/resource-quota.yaml
+    target:
+      version: v1
+      kind: ResourceQuota
+      name: monitoring-agent
+
+transformers:
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml

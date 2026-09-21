@@ -1,0 +1,47 @@
+local.file "homeassistant_prometheus_token" {
+  filename  = "/var/run/secrets/monitoring-agent-homeassistant-prometheus/token"
+  is_secret = true
+}
+
+discovery.kubernetes "homeassistant_pods" {
+  role = "pod"
+}
+
+discovery.relabel "homeassistant" {
+  targets = discovery.kubernetes.homeassistant_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase", "__meta_kubernetes_namespace", "__meta_kubernetes_pod_label_app_kubernetes_io_component", "__meta_kubernetes_pod_container_port_name"]
+    regex         = "Running;homeassistant;application;http"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+}
+
+prometheus.scrape "homeassistant" {
+  targets         = discovery.relabel.homeassistant.output
+  job_name        = "homeassistant"
+  metrics_path    = "/api/prometheus"
+  scrape_interval = sys.env("SLOW_SCRAPE_INTERVAL")
+  scrape_timeout  = "30s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+
+  authorization {
+    type        = "Bearer"
+    credentials = local.file.homeassistant_prometheus_token.content
+  }
+}

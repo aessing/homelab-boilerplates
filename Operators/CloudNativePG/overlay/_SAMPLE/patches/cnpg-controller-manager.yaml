@@ -5,3 +5,4 @@ metadata:
   name: cnpg-controller-manager
 spec:
   replicas: 1
+  revisionHistoryLimit: 3

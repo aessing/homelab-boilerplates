@@ -1,0 +1,21 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: alloy-logs-config
+    behavior: create
+    options:
+      labels:
+        app.kubernetes.io/component: alloy-logs
+      annotations:
+        reloader.stakater.com/match: 'false'
+    files:
+      - 00-logs.alloy=./configs/00-logs.alloy
+
+resources:
+  - ./resources/serviceaccount.yaml
+  - ./resources/clusterrole.yaml
+  - ./resources/clusterrolebinding.yaml
+  - ./resources/service.yaml
+  - ./resources/daemonset.yaml

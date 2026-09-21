@@ -1,0 +1,96 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: victoriametrics
+  labels:
+    app.kubernetes.io/component: application
+spec:
+  serviceName: victoriametrics
+  replicas: 0
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: application
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Retain
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: application
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: victoriametrics
+          image: victoriametrics/victoria-metrics:0.0.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - -httpListenAddr=:8428
+            - -storageDataPath=/victoria-metrics-data
+            - -retentionPeriod=90d
+            - -storage.minFreeDiskSpaceBytes=10GiB
+            - -loggerFormat=json
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: '0'
+              memory: '0'
+            limits:
+              cpu: '1'
+              memory: 1Gi
+          ports:
+            - name: http
+              containerPort: 8428
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 2
+            failureThreshold: 3
+          volumeMounts:
+            - name: victoriametrics-data
+              mountPath: /victoria-metrics-data
+  volumeClaimTemplates:
+    - metadata:
+        name: victoriametrics-data
+        labels:
+          app.kubernetes.io/component: application
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 0Gi

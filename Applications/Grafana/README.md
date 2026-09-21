@@ -30,6 +30,7 @@ Grafana/
 │   │       ├── objectstore.yaml      # Backup object storage
 │   │       └── scheduledbackup.yaml  # Backup schedule
 │   ├── _haengine/                    # Home Assistant engine integration
+│   ├── _monitoring-logs-datasource/   # Loki log datasource
 │   └── _renderer/                    # Image renderer for alerts
 │       └── configs/
 │           └── config.json           # Renderer configuration
@@ -128,6 +129,13 @@ GF_METRICS_BASIC_AUTH_USERNAME=metrics
 GF_METRICS_BASIC_AUTH_PASSWORD=<your-secure-password>
 ```
 
+**`secrets/secret-grafana-monitoring-logs-datasource.env`** - Loki datasource credentials:
+
+```dotenv
+username=<monitoring-logs-reader>
+password=<matching-reader-password>
+```
+
 **`secrets/secret-grafana-haengine-auth.env`** - HA Engine authentication:
 
 ```dotenv
@@ -171,6 +179,9 @@ This application uses modular components:
 | `_database` | PostgreSQL database via CloudNativePG |
 | `_haengine` | Home Assistant custom engine |
 | `_renderer` | Image renderer for alert notifications |
+| `_home-assistant-historydb-datasource` | Provisioned **Home Assistant HistoryDB** datasource |
+| `_monitoring-metrics-datasource` | Provisioned read-only **Monitoring Metrics** datasource backed by VictoriaMetrics |
+| `_monitoring-logs-datasource` | Provisioned read-only **Monitoring Logs** datasource backed by Loki |
 
 Enable components in your overlay's `kustomization.yaml`:
 
@@ -181,6 +192,55 @@ components:
   - ../../components/_renderer
   # - ../../components/_haengine  # Optional
 ```
+
+### Central metrics datasource
+
+The `_monitoring-metrics-datasource` component provisions VictoriaMetrics as the
+Prometheus-compatible server-side datasource **Monitoring Metrics**. Its stable
+UID is `monitoring-metrics`. Each enabled overlay generates
+the datasource ConfigMap from its own `configs/monitoring-metrics.yaml`, where
+the environment-specific query URL is configured. The private overlay generates the
+`grafana-monitoring-datasource` Secret from an ignored `.env` file with
+`username` and `password` keys. These credentials must match the dedicated
+Grafana reader in vmauth. Do not reuse Grafana's own metrics endpoint credential
+or an Alloy writer token.
+
+The public sample contains only an `example.com` URL and Secret references. It
+does not contain credentials.
+
+### Central logs datasource
+
+The `_monitoring-logs-datasource` component provisions the server-side Loki
+datasource **Monitoring Logs**. Its stable UID is `monitoring-logs`. Each
+enabled overlay generates the datasource ConfigMap from its own
+`configs/monitoring-logs.yaml`, where the environment-specific Loki query URL
+is configured. The private overlay generates the
+`grafana-monitoring-logs-datasource` Secret from an ignored `.env` file with
+`username` and `password` keys. These credentials must match MonitoringLogs'
+dedicated Grafana query reader. Do not use a cluster's Loki writer token.
+
+The public sample contains only an `example.com` URL and placeholder Secret
+values. It does not contain credentials.
+
+The optional dashboard component lives in
+[`Applications/MonitoringGrafana`](../MonitoringGrafana/README.md). It reuses
+this datasource and existing Grafana server. It does not deploy another Grafana
+instance.
+
+### Home Assistant HistoryDB datasource
+
+The `_home-assistant-historydb-datasource` component provisions the Home
+Assistant Prometheus-compatible HistoryDB endpoint. Each enabled overlay
+generates the datasource ConfigMap from its own
+`configs/home-assistant-historydb.yaml`. When adopting an existing datasource,
+keep its current UID in this file to avoid creating a duplicate. The private
+overlay generates the `grafana-home-assistant-historydb-datasource` Secret from
+an ignored `.env` file with `username` and `password` keys. The Secret is created
+in the Grafana namespace because Kubernetes Secrets cannot be referenced across
+namespaces.
+
+The public sample contains only an `example.com` URL and Secret references. It
+does not contain credentials.
 
 ## Configuration
 

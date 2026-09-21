@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: monitoring-agent
+spec:
+  hard:
+    pods: 10
+    persistentvolumeclaims: 2
+    limits.cpu: '2'
+    limits.memory: 2Gi
