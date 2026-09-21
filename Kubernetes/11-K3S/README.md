@@ -98,6 +98,8 @@ sudo ./21-create-etcd-snapshot-secret.sh mycluster
 | `K3S_NODE_CIDR_SIZE_IPV4` | CIDR size per node | `22` |
 | `K3S_FLANNEL_BACKEND` | CNI backend | `vxlan` |
 | `K3S_MAX_PODS` | Max pods per node | `250` |
+| `K3S_SYSTEM_RESERVED` | Optional kubelet reservation for operating-system services | Empty |
+| `K3S_KUBE_RESERVED` | Optional kubelet reservation for Kubernetes services | Empty |
 | `K3S_KUBECONFIG_MODE` | Kubeconfig file permissions | `600` |
 | `K3S_SERVICE_DISABLE` | Services to disable | `local-storage servicelb traefik` |
 | `K3S_EMBEDDED_REGISTRY` | Enable Spegel registry | `true` |

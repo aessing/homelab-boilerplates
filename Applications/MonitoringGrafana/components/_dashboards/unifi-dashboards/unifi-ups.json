@@ -234,7 +234,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Lowest reported charge among selected UPS devices.",
+      "description": "Lowest reported charge among selected UPS devices. Red is below 20%, amber is 20% to 49.99%, and green begins at 50%.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -248,12 +248,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
                 "color": "#FFB357",
-                "value": 1
+                "value": 20
+              },
+              {
+                "color": "green",
+                "value": 50
               }
             ]
           },

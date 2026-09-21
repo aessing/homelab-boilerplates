@@ -36,6 +36,9 @@ def thresholds(kind="status"):
         values = [(None, "green"), (75, "#FFB357"), (90, "red")]
     elif kind == "availability":
         values = [(None, "red"), (95, "#FFB357"), (99.5, "green")]
+    elif kind == "battery":
+        # Remaining charge is healthy when high, unlike utilization percentages.
+        values = [(None, "red"), (20, "#FFB357"), (50, "green")]
     elif kind == "error_ratio":
         values = [(None, "green"), (0.001, "#FFB357"), (0.01, "red")]
     elif kind == "free":
