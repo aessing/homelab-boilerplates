@@ -1,0 +1,36 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: monitoring-logs
+  labels:
+    app.kubernetes.io/component: ingress
+  annotations:
+    reloader.stakater.com/match: 'false'
+spec:
+  secretName: monitoring-logs-tls
+  secretTemplate:
+    labels:
+      app.kubernetes.io/component: ingress
+    annotations:
+      reloader.stakater.com/match: 'true'
+  duration: 2160h
+  renewBefore: 360h
+  subject:
+    organizations:
+      - CHANGE_ME
+  isCA: false
+  privateKey:
+    algorithm: ECDSA
+    size: 384
+    rotationPolicy: Always
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  dnsNames:
+    - CHANGE_ME
+  issuerRef:
+    name: letsencrypt-production-default
+    kind: ClusterIssuer
+    group: cert-manager.io

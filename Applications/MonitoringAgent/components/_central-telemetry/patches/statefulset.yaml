@@ -1,0 +1,21 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alloy-metrics
+spec:
+  template:
+    spec:
+      containers:
+        - name: alloy-metrics
+          volumeMounts:
+            - name: telemetry-token
+              mountPath: /var/run/secrets/monitoring-agent-telemetry
+              readOnly: true
+      volumes:
+        - name: telemetry-token
+          secret:
+            secretName: monitoring-agent-telemetry
+            items:
+              - key: token
+                path: token

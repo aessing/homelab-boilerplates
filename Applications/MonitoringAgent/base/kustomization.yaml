@@ -1,0 +1,20 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ./resources/namespace.yaml
+  - ./resources/network-policy-default-deny.yaml
+  - ./resources/network-policy-allow-dns-egress.yaml
+  - ./resources/network-policy-alloy-internal-egress.yaml
+  - ./resources/network-policy-alloy-to-exporters.yaml
+  - ./resources/network-policy-alloy-to-alloy-logs.yaml
+  - ./resources/network-policy-alloy-to-alloy-logs-egress.yaml
+  - ./resources/network-policy-alloy-logs-egress.yaml
+  - ./resources/network-policy-kube-state-metrics-kubernetes-api-egress.yaml
+  - ./resources/resource-quota.yaml
+
+components:
+  - ../components/_alloy
+  - ../components/_node-exporter
+  - ../components/_kube-state-metrics

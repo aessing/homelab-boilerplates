@@ -1,0 +1,26 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-state-metrics
+spec:
+  template:
+    spec:
+      containers:
+        - name: kube-state-metrics
+          # Strategic merge replaces args, so preserve the standard collectors.
+          args:
+            - --host=0.0.0.0
+            - --port=8080
+            - --telemetry-host=0.0.0.0
+            - --telemetry-port=8081
+            - --resources=pods,nodes,namespaces,services,endpointslices,persistentvolumes,persistentvolumeclaims,resourcequotas,limitranges,deployments,daemonsets,statefulsets,replicasets,jobs,cronjobs,horizontalpodautoscalers,poddisruptionbudgets,storageclasses,volumeattachments
+            - --custom-resource-state-config-file=/etc/kube-state-metrics/custom-resources.yaml
+          volumeMounts:
+            - name: cnpg-state
+              mountPath: /etc/kube-state-metrics
+              readOnly: true
+      volumes:
+        - name: cnpg-state
+          configMap:
+            name: monitoring-cnpg-state

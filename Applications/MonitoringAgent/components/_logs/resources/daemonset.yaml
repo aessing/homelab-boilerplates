@@ -1,0 +1,162 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: alloy-logs
+  labels:
+    app.kubernetes.io/component: alloy-logs
+spec:
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: alloy-logs
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: alloy-logs
+    spec:
+      serviceAccountName: alloy-logs
+      automountServiceAccountToken: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      terminationGracePeriodSeconds: 60
+      tolerations:
+        - operator: Exists
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: alloy-logs
+          image: grafana/alloy:0.0.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - --stability.level=experimental
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --storage.path=/var/lib/alloy/data
+            - /etc/alloy/config
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          envFrom:
+            - configMapRef:
+                name: alloy-environment
+            - configMapRef:
+                name: alloy-logs-environment
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: '0'
+              memory: '0'
+              ephemeral-storage: '0'
+            limits:
+              cpu: 250m
+              memory: 256Mi
+              ephemeral-storage: 768Mi
+          ports:
+            - name: http
+              containerPort: 12345
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 2
+            failureThreshold: 3
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy/config
+              readOnly: true
+            - name: logs-token
+              mountPath: /var/run/secrets/monitoring-agent-logs
+              readOnly: true
+            - name: state
+              mountPath: /var/lib/alloy
+            # Bound the WAL separately from durable, small tail positions.
+            - name: wal
+              mountPath: /var/lib/alloy/data/loki.write.central
+            - name: host-pod-logs
+              mountPath: /var/log/pods
+              readOnly: true
+            - name: host-runtime-journal
+              mountPath: /run/log/journal
+              readOnly: true
+            - name: host-machine-id
+              mountPath: /etc/machine-id
+              readOnly: true
+            - name: host-maintenance-logs
+              mountPath: /var/log
+              readOnly: true
+            - name: host-containerd-log
+              mountPath: /var/lib/rancher/k3s/agent/containerd
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: alloy-logs-config
+        - name: logs-token
+          secret:
+            secretName: monitoring-agent-logs
+            items:
+              - key: token
+                path: token
+        - name: state
+          hostPath:
+            path: /var/lib/alloy-logs
+            type: DirectoryOrCreate
+        - name: host-pod-logs
+          hostPath:
+            path: /var/log/pods
+            type: Directory
+        - name: host-runtime-journal
+          hostPath:
+            path: /run/log/journal
+            type: Directory
+        - name: host-machine-id
+          hostPath:
+            path: /etc/machine-id
+            type: File
+        - name: host-maintenance-logs
+          hostPath:
+            path: /var/log
+            type: Directory
+        - name: host-containerd-log
+          hostPath:
+            path: /var/lib/rancher/k3s/agent/containerd
+            type: Directory
+        - name: tmp
+          emptyDir:
+            sizeLimit: 16Mi
+        - name: wal
+          emptyDir:
+            sizeLimit: 512Mi

@@ -1,0 +1,41 @@
+local.file "events_logs_token" {
+  filename  = "/var/run/secrets/monitoring-agent-logs/token"
+  is_secret = true
+}
+
+loki.write "central_events" {
+  endpoint {
+    url = sys.env("LOKI_WRITE_URL")
+
+    authorization {
+      type        = "Bearer"
+      credentials = local.file.events_logs_token.content
+    }
+
+    tls_config {
+      min_version = "TLS12"
+    }
+  }
+}
+
+loki.secretfilter "events_redact" {
+  forward_to  = [loki.write.central_events.receiver]
+  redact_with = "[REDACTED]"
+}
+
+loki.process "events" {
+  forward_to = [loki.secretfilter.events_redact.receiver]
+
+  stage.static_labels {
+    values = {
+      cluster = sys.env("CLUSTER_NAME"),
+      source  = "event",
+    }
+  }
+}
+
+loki.source.kubernetes_events "cluster" {
+  job_name   = "kubernetes-events"
+  log_format = "json"
+  forward_to = [loki.process.events.receiver]
+}

@@ -1,0 +1,58 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring-logs
+
+buildMetadata:
+  - managedByLabel
+  - originAnnotations
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: 3.7.7
+
+resources:
+  - ../../base
+
+generators:
+  - ./generators/config-loki.yaml
+  - ./generators/config-vmauth.yaml
+  - ./generators/secret-monitoring-logs-auth.yaml
+
+patches:
+  - path: ./patches/certificate.yaml
+    target:
+      group: cert-manager.io
+      version: v1
+      kind: Certificate
+      name: monitoring-logs
+  - path: ./patches/ingressroute-write.yaml
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+      name: monitoring-logs-write
+  - path: ./patches/ingressroute-query.yaml
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+      name: monitoring-logs-query
+  - path: ./patches/pvc.yaml
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: loki
+  - path: ./patches/resource-quota.yaml
+    target:
+      version: v1
+      kind: ResourceQuota
+      name: monitoring-logs
+
+transformers:
+  - ./transformers/images.yaml
+  - ./transformers/labels.yaml
+  - ./transformers/replicas.yaml

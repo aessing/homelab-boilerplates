@@ -1,0 +1,18 @@
+local.file "grafana_redis_password" {
+  filename  = "/var/run/secrets/monitoring-agent-grafana-haengine/authkey"
+  is_secret = true
+}
+
+prometheus.exporter.redis "grafana_haengine" {
+  redis_addr         = "grafana-haengine.grafana.svc:6379"
+  redis_password     = local.file.grafana_redis_password.content
+  redis_metrics_only = true
+}
+
+prometheus.scrape "grafana_haengine" {
+  targets         = prometheus.exporter.redis.grafana_haengine.targets
+  job_name        = "grafana-redis"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}

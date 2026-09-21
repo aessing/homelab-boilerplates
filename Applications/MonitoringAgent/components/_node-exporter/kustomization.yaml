@@ -1,0 +1,18 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: node-maintenance-collector
+    behavior: create
+    options:
+      labels:
+        app.kubernetes.io/component: node-exporter
+      annotations:
+        reloader.stakater.com/match: 'false'
+    files:
+      - collect-maintenance-metrics.sh=./configs/collect-maintenance-metrics.sh
+
+resources:
+  - ./resources/daemonset.yaml
+  - ./resources/service.yaml

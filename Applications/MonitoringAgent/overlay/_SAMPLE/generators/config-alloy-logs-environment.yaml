@@ -1,0 +1,13 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: alloy-logs-environment
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: alloy-logs
+  annotations:
+    reloader.stakater.com/match: 'false'
+envs:
+  - ./configs/alloy-logs.env

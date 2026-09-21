@@ -1,0 +1,127 @@
+kind: CustomResourceStateMetrics
+spec:
+  resources:
+    - groupVersionKind:
+        group: postgresql.cnpg.io
+        version: v1
+        kind: Cluster
+      metricNamePrefix: cnpg_resource
+      labelsFromPath:
+        namespace: [metadata, namespace]
+        cnpg_cluster: [metadata, name]
+      metrics:
+        - name: instances_desired
+          help: Desired PostgreSQL instance count.
+          each:
+            type: Gauge
+            gauge:
+              path: [spec, instances]
+        - name: instances_ready
+          help: Ready PostgreSQL instance count.
+          each:
+            type: Gauge
+            gauge:
+              path: [status, readyInstances]
+        - name: condition
+          help: PostgreSQL cluster condition, 1 when True and 0 when False or Unknown.
+          each:
+            type: Gauge
+            gauge:
+              path: [status, conditions]
+              labelsFromPath:
+                condition: [type]
+              valueFrom: [status]
+    - groupVersionKind:
+        group: postgresql.cnpg.io
+        version: v1
+        kind: Backup
+      metricNamePrefix: cnpg_resource
+      labelsFromPath:
+        namespace: [metadata, namespace]
+        cnpg_cluster: [spec, cluster, name]
+        backup: [metadata, name]
+      metrics:
+        - name: backup_phase
+          help: Observed backup phase.
+          each:
+            type: StateSet
+            stateSet:
+              labelName: phase
+              path: [status, phase]
+              list: [pending, started, running, finalizing, completed, failed]
+        - name: backup_started_timestamp_seconds
+          help: Backup start time as Unix seconds, absent until started.
+          errorLogV: 5
+          each:
+            type: Gauge
+            gauge:
+              path: [status, startedAt]
+        - name: backup_stopped_timestamp_seconds
+          help: Backup stop time as Unix seconds, absent until stopped.
+          errorLogV: 5
+          each:
+            type: Gauge
+            gauge:
+              path: [status, stoppedAt]
+    - groupVersionKind:
+        group: postgresql.cnpg.io
+        version: v1
+        kind: ScheduledBackup
+      metricNamePrefix: cnpg_resource
+      labelsFromPath:
+        namespace: [metadata, namespace]
+        cnpg_cluster: [spec, cluster, name]
+        scheduled_backup: [metadata, name]
+      metrics:
+        - name: backup_schedule_suspended
+          help: Whether a scheduled backup is suspended.
+          each:
+            type: Gauge
+            gauge:
+              path: [spec, suspend]
+              nilIsZero: true
+        - name: backup_last_schedule_timestamp_seconds
+          help: Last scheduled backup time as Unix seconds.
+          errorLogV: 5
+          each:
+            type: Gauge
+            gauge:
+              path: [status, lastScheduleTime]
+    - groupVersionKind:
+        group: barmancloud.cnpg.io
+        version: v1
+        kind: ObjectStore
+      metricNamePrefix: cnpg_resource
+      labelsFromPath:
+        namespace: [metadata, namespace]
+        objectstore: [metadata, name]
+      metrics:
+        - name: backup_last_success_timestamp_seconds
+          help: Last successful backup according to the Barman object-store catalogue.
+          # Unused ObjectStore templates have no recovery window. Absence must
+          # remain absence, not a fabricated successful timestamp or zero.
+          errorLogV: 5
+          each:
+            type: Gauge
+            gauge:
+              path: [status, serverRecoveryWindow]
+              labelFromKey: cnpg_cluster
+              valueFrom: [lastSuccessfulBackupTime]
+        - name: backup_last_failure_timestamp_seconds
+          help: Last failed backup according to the Barman object-store catalogue.
+          errorLogV: 5
+          each:
+            type: Gauge
+            gauge:
+              path: [status, serverRecoveryWindow]
+              labelFromKey: cnpg_cluster
+              valueFrom: [lastFailedBackupTime]
+        - name: backup_first_recoverability_timestamp_seconds
+          help: Earliest recovery point reported by Barman, not proof of a successful restore.
+          errorLogV: 5
+          each:
+            type: Gauge
+            gauge:
+              path: [status, serverRecoveryWindow]
+              labelFromKey: cnpg_cluster
+              valueFrom: [firstRecoverabilityPoint]

@@ -1,0 +1,30 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  template:
+    spec:
+      containers:
+        - name: grafana
+          env:
+            - name: LOKI_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-monitoring-logs-datasource
+                  key: username
+            - name: LOKI_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-monitoring-logs-datasource
+                  key: password
+          volumeMounts:
+            - name: monitoring-logs-datasource
+              mountPath: /etc/grafana/provisioning/datasources/monitoring-logs.yaml
+              subPath: monitoring-logs.yaml
+              readOnly: true
+      volumes:
+        - name: monitoring-logs-datasource
+          configMap:
+            name: grafana-monitoring-logs-datasource

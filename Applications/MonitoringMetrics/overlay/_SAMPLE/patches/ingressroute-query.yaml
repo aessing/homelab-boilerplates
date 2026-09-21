@@ -1,0 +1,4 @@
+---
+- op: replace
+  path: /spec/routes/0/match
+  value: Host(`metrics.example.com`) && (Path(`/api/v1/query`) || Path(`/api/v1/query_range`) || Path(`/api/v1/series`) || Path(`/api/v1/labels`) || PathRegexp(`^/api/v1/label/[^/]+/values$`) || Path(`/api/v1/metadata`) || Path(`/api/v1/status/buildinfo`) || Path(`/telemetry/victoriametrics/metrics`) || Path(`/telemetry/vmauth/metrics`)) && (Method(`GET`) || Method(`POST`))

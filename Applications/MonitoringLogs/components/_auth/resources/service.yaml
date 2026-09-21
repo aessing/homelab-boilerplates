@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vmauth
+  labels:
+    app.kubernetes.io/component: auth
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/component: auth
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8427
+      targetPort: http
+    - name: internal
+      protocol: TCP
+      port: 8426
+      targetPort: internal

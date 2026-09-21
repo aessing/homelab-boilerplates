@@ -1,0 +1,9 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: alloy-config
+    behavior: merge
+    files:
+      - 40-etcd.alloy=./configs/40-etcd.alloy

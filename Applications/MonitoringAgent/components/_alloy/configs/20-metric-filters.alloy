@@ -1,0 +1,45 @@
+// K3s shares one registry per PROCESS, not per cluster. Keep every node and its
+// identity. Filtering here reduces WAL, network and storage, not scrape cost.
+prometheus.relabel "k3s_metrics" {
+  forward_to = [prometheus.remote_write.central.receiver]
+
+  // Payload-size and watch/cache internals are not needed for system health.
+  // Keep sums/counts so averages and event rates remain available.
+  rule {
+    source_labels = ["__name__"]
+    regex = "apiserver_(request_body_size_bytes|response_sizes|watch_events_sizes|watch_list_duration_seconds|watch_cache_read_wait_seconds)_bucket"
+    action = "drop"
+  }
+
+  // This SLI-specific family largely overlaps request duration. Retain the
+  // standard request-duration histogram for coarse latency percentiles.
+  rule {
+    source_labels = ["__name__"]
+    regex = "apiserver_request_sli_duration_seconds_bucket"
+    action = "drop"
+  }
+
+  // Keep the same bucket boundaries on all nodes, including +Inf. Mark only
+  // selected families so other histograms and all non-bucket metrics survive.
+  rule {
+    source_labels = ["__name__"]
+    regex = "(apiserver_request_duration_seconds|etcd_request_duration_seconds)_bucket"
+    target_label = "__tmp_reduce_bucket"
+    replacement = "true"
+  }
+  rule {
+    source_labels = ["__tmp_reduce_bucket", "le"]
+    regex = "true;(0\\.1|0\\.4|1(\\.0)?|5(\\.0)?|\\+Inf)"
+    target_label = "__tmp_keep_bucket"
+    replacement = "true"
+  }
+  rule {
+    source_labels = ["__tmp_reduce_bucket", "__tmp_keep_bucket"]
+    regex = "true;"
+    action = "drop"
+  }
+  rule {
+    regex = "__tmp_(reduce|keep)_bucket"
+    action = "labeldrop"
+  }
+}

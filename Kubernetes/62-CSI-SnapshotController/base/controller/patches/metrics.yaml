@@ -1,0 +1,10 @@
+---
+- op: add
+  path: /spec/template/spec/containers/0/args/-
+  value: --http-endpoint=:8080
+- op: add
+  path: /spec/template/spec/containers/0/ports
+  value:
+    - name: metrics
+      containerPort: 8080
+      protocol: TCP

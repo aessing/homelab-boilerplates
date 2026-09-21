@@ -1,0 +1,23 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: monitoring-metrics-query
+  labels:
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`metrics.example.com`) && (Path(`/api/v1/query`) || Path(`/api/v1/query_range`) || Path(`/api/v1/series`) || Path(`/api/v1/labels`) || PathRegexp(`^/api/v1/label/[^/]+/values$`) || Path(`/api/v1/metadata`) || Path(`/api/v1/status/buildinfo`) || Path(`/telemetry/victoriametrics/metrics`) || Path(`/telemetry/vmauth/metrics`)) && (Method(`GET`) || Method(`POST`))
+      middlewares:
+        - name: chain-default
+          namespace: traefik-system
+      services:
+        - name: vmauth
+          port: 8427
+          passHostHeader: true
+  tls:
+    secretName: monitoring-metrics-tls

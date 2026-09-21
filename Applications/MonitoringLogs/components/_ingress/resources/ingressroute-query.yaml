@@ -1,0 +1,33 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: monitoring-logs-query
+  labels:
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`logs.example.com`) && (Path(`/loki/api/v1/query`) || Path(`/loki/api/v1/query_range`) || Path(`/loki/api/v1/labels`) || PathRegexp(`^/loki/api/v1/label/[^/]+/values$`) || Path(`/loki/api/v1/series`) || Path(`/loki/api/v1/index/stats`) || Path(`/loki/api/v1/index/volume`) || Path(`/loki/api/v1/index/volume_range`) || Path(`/loki/api/v1/detected_fields`) || Path(`/loki/api/v1/detected_labels`) || Path(`/loki/api/v1/patterns`) || Path(`/loki/api/v1/status/buildinfo`)) && Method(`GET`)
+      middlewares:
+        - name: chain-default
+          namespace: traefik-system
+      services:
+        - name: vmauth
+          port: 8427
+          passHostHeader: true
+    - kind: Rule
+      match: Host(`logs.example.com`) && (Path(`/telemetry/loki/metrics`) || Path(`/telemetry/vmauth/metrics`)) && Method(`GET`)
+      middlewares:
+        - name: chain-default
+          namespace: traefik-system
+      services:
+        - name: vmauth
+          port: 8427
+          passHostHeader: true
+  tls:
+    secretName: monitoring-logs-tls

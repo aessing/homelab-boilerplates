@@ -1,0 +1,52 @@
+local.file "telemetry_token" {
+  filename  = "/var/run/secrets/monitoring-agent-telemetry/token"
+  is_secret = true
+}
+
+prometheus.scrape "victoriametrics_self" {
+  targets = [
+    {
+      "__address__"      = sys.env("TELEMETRY_QUERY_HOST"),
+      "__scheme__"       = "https",
+      "__metrics_path__" = "/telemetry/victoriametrics/metrics",
+      "instance"         = "victoriametrics",
+    },
+  ]
+  job_name        = "victoriametrics"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+
+  authorization {
+    type        = "Bearer"
+    credentials = local.file.telemetry_token.content
+  }
+
+  tls_config {
+    min_version = "TLS12"
+  }
+}
+
+prometheus.scrape "vmauth_self" {
+  targets = [
+    {
+      "__address__"      = sys.env("TELEMETRY_QUERY_HOST"),
+      "__scheme__"       = "https",
+      "__metrics_path__" = "/telemetry/vmauth/metrics",
+      "instance"         = "vmauth",
+    },
+  ]
+  job_name        = "vmauth"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+
+  authorization {
+    type        = "Bearer"
+    credentials = local.file.telemetry_token.content
+  }
+
+  tls_config {
+    min_version = "TLS12"
+  }
+}

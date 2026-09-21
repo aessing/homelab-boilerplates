@@ -15,3 +15,11 @@ metadata:
 imageTag:
   name: busybox
   newTag: 1.38.0
+---
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: chrony-metrics-imagetransformer
+imageTag:
+  name: quay.io/superq/chrony-exporter
+  newTag: v0.14.0

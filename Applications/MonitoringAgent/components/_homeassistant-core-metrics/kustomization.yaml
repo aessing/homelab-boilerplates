@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: alloy-homeassistant-core-metrics
+    behavior: create
+    options:
+      labels:
+        app.kubernetes.io/component: alloy
+      annotations:
+        reloader.stakater.com/match: 'false'
+    files:
+      - 54-homeassistant-core-metrics.alloy=./configs/54-homeassistant-core-metrics.alloy

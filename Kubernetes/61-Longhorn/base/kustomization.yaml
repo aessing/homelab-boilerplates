@@ -13,6 +13,7 @@ resources:
   - ./resources/ingressroute-dashboard.yaml
   - ./resources/storageclass.yaml
   - ./resources/jobs.yaml
+  - ./resources/network-policy-monitoring.yaml
 
 transformers:
   # HelmChart and HelmChartConfigs needs to be deployed in namespace kube-system

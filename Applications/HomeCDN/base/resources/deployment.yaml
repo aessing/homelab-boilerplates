@@ -17,6 +17,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/component: 'application'  # The component within the architecture
+        monitoring-metrics-scrape: 'true'
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
@@ -90,6 +91,31 @@ spec:
               mountPath: /var/cache/nginx
             - name: nginx-run
               mountPath: /var/run
+        - name: nginx-metrics
+          image: nginx/nginx-prometheus-exporter:0.0.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --nginx.scrape-uri=http://127.0.0.1:8080/stub_status
+            - --web.listen-address=:9113
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            limits:
+              cpu: 50m
+              memory: 32Mi
+          ports:
+            - containerPort: 9113
+              protocol: TCP
+              name: metrics
       volumes:
         - name: homecdn-config-vol
           configMap:

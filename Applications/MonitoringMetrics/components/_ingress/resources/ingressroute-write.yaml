@@ -1,0 +1,23 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: monitoring-metrics-write
+  labels:
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`metrics.example.com`) && Path(`/api/v1/write`) && Method(`POST`)
+      middlewares:
+        - name: chain-default
+          namespace: traefik-system
+      services:
+        - name: vmauth
+          port: 8427
+          passHostHeader: true
+  tls:
+    secretName: monitoring-metrics-tls

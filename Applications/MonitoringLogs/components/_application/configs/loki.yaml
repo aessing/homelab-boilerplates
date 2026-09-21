@@ -1,0 +1,61 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_format: json
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /var/loki
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+  storage:
+    filesystem:
+      chunks_directory: /var/loki/chunks
+      rules_directory: /var/loki/rules
+
+schema_config:
+  configs:
+    - from: "2024-01-01"
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /var/loki/tsdb-index
+    cache_location: /var/loki/tsdb-cache
+
+ingester:
+  chunk_encoding: snappy
+  wal:
+    enabled: true
+    dir: /var/loki/wal
+
+querier:
+  max_concurrent: 2
+
+compactor:
+  working_directory: /var/loki/compactor
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 2
+  delete_request_store: filesystem
+
+limits_config:
+  retention_period: 2160h
+  deletion_mode: disabled
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  max_query_lookback: 2160h
+  tsdb_max_query_parallelism: 2
+
+analytics:
+  reporting_enabled: false

@@ -9,6 +9,7 @@ resources:
   - ./resources/network-policy-application-to-haengine.yaml
   - ./resources/network-policy-application-to-renderer.yaml
   - ./resources/network-policy-renderer-to-application.yaml
+  - ./resources/network-policy-monitoring-agent-metrics.yaml
   - ./resources/resource-quota.yaml
 
 components:

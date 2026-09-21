@@ -1,0 +1,15 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: monitoring-agent-alloy-logs
+  labels:
+    app.kubernetes.io/component: alloy-logs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: monitoring-agent-alloy-logs
+subjects:
+  - kind: ServiceAccount
+    name: alloy-logs
+    namespace: monitoring-agent
