@@ -81,7 +81,7 @@ class MonitoringManifests(unittest.TestCase):
                                 if field in ref:
                                     self.assertIn((kind, ref[field]["name"]), index)
                     for volume in template["spec"].get("volumes", []):
-                        if "secret" in volume:
+                        if "secret" in volume and not volume["secret"].get("optional", False):
                             self.assertIn(("Secret", volume["secret"]["secretName"]), index)
                         sources = volume.get("projected", {}).get("sources", [])
                         if "configMap" in volume:
@@ -227,13 +227,19 @@ class MonitoringManifests(unittest.TestCase):
             if key != "GRAFANA_USERNAME":
                 self.assertTrue(base64.b64decode(value).decode().startswith("replace-with-"))
 
-    def test_agent_overlay_layouts_match_sample(self):
+    def test_agent_overlay_layouts_match_sample_except_optional_credentials(self):
         base = APPS / "MonitoringAgent" / "overlay"
         paths = {str(p.relative_to(base / "_SAMPLE")) for p in (base / "_SAMPLE").rglob("*") if p.is_file()}
+        optional_credentials = {
+            f"{directory}/secret-monitoring-agent-{integration}.{extension}"
+            for integration in ("grafana-haengine", "grafana-metrics", "homeassistant-prometheus", "uptimekuma-database")
+            for directory, extension in (("generators", "yaml"), ("secrets", "env"))
+        }
         for app, overlay in self.builds:
             if app == "MonitoringAgent":
                 current = {str(p.relative_to(base / overlay)) for p in (base / overlay).rglob("*") if p.is_file()}
-                self.assertEqual(paths, current, overlay)
+                self.assertFalse(current - paths, overlay)
+                self.assertFalse((paths - current) - optional_credentials, overlay)
 
     def test_optional_etcd_collection(self):
         for (app, overlay), docs in self.builds.items():

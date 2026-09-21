@@ -131,6 +131,9 @@ spec:
               - configMap:
                   name: alloy-homeassistant-core-metrics
                   optional: true
+              - configMap:
+                  name: alloy-unpoller-telemetry
+                  optional: true
         - name: remote-write-token
           secret:
             secretName: monitoring-agent-remote-write

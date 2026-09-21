@@ -161,13 +161,17 @@ class GrafanaDashboards(unittest.TestCase):
             with self.subTest(dashboard=name):
                 self.assertEqual(dashboard["templating"]["list"][0]["name"], "cluster")
                 self.assertEqual(dashboard["templating"]["list"][0]["allValue"], ".*")
-                self.assertEqual(len(dashboard["links"]), 1)
-                link = dashboard["links"][0]
-                self.assertEqual(link["type"], "dashboards")
-                self.assertEqual(link["tags"], ["monitoring"])
-                self.assertTrue(link["asDropdown"])
-                self.assertTrue(link["includeVars"])
-                self.assertTrue(link["keepTime"])
+                self.assertEqual(len(dashboard["links"]), 2)
+                all_dashboards, category = dashboard["links"]
+                self.assertEqual(all_dashboards["title"], "Monitoring dashboards")
+                self.assertEqual(all_dashboards["tags"], ["monitoring"])
+                self.assertEqual(category["title"], "Monitoring Metrics")
+                self.assertEqual(category["tags"], ["monitoring-metrics"])
+                for link in dashboard["links"]:
+                    self.assertEqual(link["type"], "dashboards")
+                    self.assertTrue(link["asDropdown"])
+                    self.assertTrue(link["includeVars"])
+                    self.assertTrue(link["keepTime"])
                 for panel in dashboard["panels"]:
                     for data_link in panel.get("fieldConfig", {}).get("defaults", {}).get("links", []):
                         target_uid = data_link["url"].split("/d/", 1)[1].split("?", 1)[0]
@@ -177,7 +181,7 @@ class GrafanaDashboards(unittest.TestCase):
         operational = set(EXPECTED) - {"100-daily.json"}
         for name in operational:
             self.assertEqual(self.dashboards[name]["time"], {"from": "now-1h", "to": "now"})
-            self.assertEqual(self.dashboards[name]["refresh"], "15s")
+            self.assertEqual(self.dashboards[name]["refresh"], "1m")
         for dashboard in self.dashboards.values():
             self.assertIn("metrics", dashboard["tags"])
             description = next(panel for panel in dashboard["panels"] if panel["type"] == "text")
@@ -186,9 +190,11 @@ class GrafanaDashboards(unittest.TestCase):
             self.assertTrue(description["options"]["content"].startswith(dashboard["description"]))
             self.assertIn(dashboard["description"], description["options"]["content"])
         self.assertEqual(self.dashboards["100-daily.json"]["time"], {"from": "now-24h", "to": "now"})
-        self.assertEqual(self.dashboards["100-daily.json"]["refresh"], "")
+        self.assertEqual(self.dashboards["100-daily.json"]["refresh"], "1m")
         self.assertEqual(self.dashboards["110-capacity.json"]["time"]["from"], "now-1h")
-        self.assertEqual(self.dashboards["110-capacity.json"]["refresh"], "15s")
+        self.assertEqual(self.dashboards["110-capacity.json"]["refresh"], "1m")
+        for dashboard in self.dashboards.values():
+            self.assertEqual(dashboard["timepicker"]["refresh_intervals"], ["1m", "5m", "15m", "30m", "1h"])
 
     def test_visual_and_missing_data_contract(self):
         suite_text = ""
@@ -208,9 +214,9 @@ class GrafanaDashboards(unittest.TestCase):
                         self.assertFalse(panel["fieldConfig"]["defaults"]["custom"]["spanNulls"])
                     if panel["type"] == "table":
                         self.assertEqual(panel["gridPos"]["w"], 24)
-        self.assertIn("#8AB8FF", suite_text)
         self.assertIn("#5794F2", suite_text)
-        self.assertIn("#1F60C4", suite_text)
+        self.assertNotIn("#8AB8FF", suite_text)
+        self.assertNotIn("#1F60C4", suite_text)
         self.assertIn("#FFB357", suite_text)
         self.assertNotIn("#F2CC0C", suite_text)
         self.assertNotIn("#FF780A", suite_text)
@@ -375,10 +381,11 @@ class GrafanaDashboards(unittest.TestCase):
             self.assertLess(path.stat().st_size, 200 * 1024, path.name)
         docs = render(ROOT / "Applications" / "Grafana" / "overlay" / "_SAMPLE")
         configmaps = [doc for doc in docs if doc["kind"] == "ConfigMap" and doc["metadata"]["name"].startswith("grafana-monitoring-dashboard")]
-        self.assertEqual(len(configmaps), 10)
+        self.assertEqual(len(configmaps), 15)
         for configmap in configmaps:
             total = sum(len(value.encode()) for value in configmap.get("data", {}).values())
             self.assertLess(total, 1024 * 1024)
+            self.assertLess(len(json.dumps(configmap).encode()), 250 * 1024)
 
     def test_sample_render_mounts_all_dashboard_configmaps(self):
         docs = render(ROOT / "Applications" / "Grafana" / "overlay" / "_SAMPLE")

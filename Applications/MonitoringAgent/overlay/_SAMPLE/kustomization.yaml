@@ -29,6 +29,7 @@ components:
   - ../../components/_logs-telemetry
   - ../../components/_uptimekuma-metrics
   - ../../components/_uptimekuma-mariadb-metrics
+  - ../../components/_unpoller-telemetry
 
 generators:
   - ./generators/config-alloy-environment.yaml

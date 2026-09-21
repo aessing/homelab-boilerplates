@@ -1,0 +1,13 @@
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: alloy-unpoller-config
+behavior: create
+options:
+  labels:
+    app.kubernetes.io/component: collector
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
+  - unpoller.alloy=./configs/unpoller.alloy

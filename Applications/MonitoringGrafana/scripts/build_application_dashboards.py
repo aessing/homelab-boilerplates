@@ -11,6 +11,7 @@ OUTPUT = Path(__file__).resolve().parents[1] / "components/_dashboards/applicati
 C = 'cluster=~"$cluster"'
 APP_NAMESPACES = "authentik|authentik-outpost|grafana|homeassistant|homecdn|timeserver|uptimekuma|homepage|scrypted|monitoring-logs|monitoring-metrics|postgres|postgresql|cnpg-system"
 ROOT_OUTPUT = OUTPUT.parent / "root-dashboards"
+UNIFI_OUTPUT = OUTPUT.parent / "unifi-dashboards"
 
 
 def metric(name, extra=""):
@@ -59,8 +60,8 @@ def log_panels(namespace):
 def make(uid, title, namespace, panels, purpose, variables=None, freshness=None):
     variables = variables or []
     variables.append({"name": "search", "label": "Log contains", "type": "textbox", "query": "", "current": {"text": "", "value": ""}, "skipUrlSync": False})
-    dashboard = build({"uid": uid, "title": title, "purpose": purpose, "from": "now-1h", "refresh": "1m", "vars": variables, "panels": panels + runtime(namespace) + log_panels(namespace)})
-    dashboard["tags"] = ["monitoring", "applications", "metrics", "logs"]
+    dashboard = build({"uid": uid, "title": title, "purpose": purpose, "from": "now-1h", "refresh": "1m", "category_title": "Monitoring Applications", "category_tag": "monitoring-applications", "vars": variables, "panels": panels + runtime(namespace) + log_panels(namespace)})
+    dashboard["tags"] = ["monitoring", "monitoring-applications", "applications", "metrics", "logs"]
     dashboard["templating"]["list"][0] = variable("cluster", "kube_pod_info", "cluster", f'namespace=~"{namespace}"')
     # Freshness belongs to the application scope, not unrelated cluster targets.
     fresh = dashboard["panels"][1]
@@ -71,6 +72,309 @@ def make(uid, title, namespace, panels, purpose, variables=None, freshness=None)
         if p["type"] == "table" and "namespace" in p["targets"][0]["expr"]:
             p["fieldConfig"]["defaults"]["links"] = [{"title": "Pod diagnostics", "url": "/d/mon-pod?${__url_time_range}&var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.namespace}&var-pod=${__data.fields.pod}", "targetBlank": False}]
     return dashboard
+
+
+def unifi_logs(title, selector, description):
+    result = logs(title, selector + ' |= ${search:doublequote}', description)
+    result["fieldConfig"]["defaults"]["noValue"] = "No matching UniFi events"
+    return result
+
+
+def dual_throughput_chart(title, series, description, width=24):
+    """Show the same traffic truthfully in Bytes/s and bit/s without a second panel."""
+    items = []
+    for expr, legend in series:
+        items.extend([
+            (expr, f"{legend} Byte/s"),
+            (f"8 * ({expr})", f"{legend} bit/s"),
+        ])
+    result = chart(title, items, description + " Byte/s is on the left axis; bit/s is on the right axis and is the primary network-rate unit.", "Bps", width=width)
+    result["fieldConfig"]["defaults"]["custom"]["axisPlacement"] = "left"
+    result["fieldConfig"]["overrides"].append({
+        "matcher": {"id": "byRegexp", "options": ".* bit/s$"},
+        "properties": [
+            {"id": "unit", "value": "bps"},
+            {"id": "custom.axisPlacement", "value": "right"},
+        ],
+    })
+    return result
+
+
+def hide_table_time(dashboard):
+    """Metric tables are instant queries, so their timestamp adds no useful detail."""
+    for item in dashboard["panels"]:
+        if item["type"] != "table":
+            continue
+        transformations = list(item.get("transformations") or [])
+        transformations.append({"id": "organize", "options": {"excludeByName": {"Time": True}}})
+        item["transformations"] = transformations
+    return dashboard
+
+
+def poe_draw_chart(scope):
+    result = chart(
+        "PoE draw",
+        [(f'sum by (name) (unpoller_device_port_poe_watts{{{scope}}})', "PoE draw {{name}}")],
+        "Current PoE consumption by switch. Series are stacked so the total PoE load remains visible; switch budgets are shown separately below.",
+        "watt",
+        width=24,
+    )
+    result["fieldConfig"]["defaults"]["custom"]["stacking"] = {"group": "A", "mode": "normal"}
+    return result
+
+
+def port_link_speed_table(scope):
+    result = table("Port link speed", f'max by (location,site_name,name,port_name,port_num) (unpoller_device_port_port_speed_bps{{{scope}}})', "Negotiated port speed.", "bps")
+    result["fieldConfig"]["overrides"].append({
+        "matcher": {"id": "byName", "options": "port_num"},
+        "properties": [{"id": "unit", "value": "string"}, {"id": "decimals", "value": 0}],
+    })
+    return result
+
+
+def radio_percentage_table(title, expr, description):
+    """Keep the radio-band label numeric while formatting only the measurement as a percentage."""
+    result = table(title, expr, description, "percent", "percent")
+    result["fieldConfig"]["overrides"].append({
+        "matcher": {"id": "byName", "options": "band"},
+        "properties": [{"id": "unit", "value": "string"}, {"id": "decimals", "value": 0}],
+    })
+    return result
+
+
+def radio_band_table(title, expr, description, unit="short", threshold="warm"):
+    """Render the numeric radio band consistently as an unformatted label."""
+    result = table(title, expr, description, unit, threshold)
+    result["fieldConfig"]["overrides"].append({
+        "matcher": {"id": "byName", "options": "band"},
+        "properties": [{"id": "unit", "value": "string"}, {"id": "decimals", "value": 0}],
+    })
+    return result
+
+
+def rogue_access_points_table(scope):
+    """Join two equally labelled UniFi metrics so each rogue AP is a single row."""
+    labels = "location,site_name,source,name,mac,security,band,ap_mac,radio,radio_name,oui"
+    identity = ", ".join(
+        f'"{label}"'
+        for label in ("location", "site_name", "source", "name", "mac", "band", "ap_mac", "radio", "radio_name")
+    )
+    rssi = f'label_join(max by ({labels}) (unpoller_rogueap_rssi{{{scope}}}), "observation", " / ", {identity})'
+    channel = f'label_join(max by ({labels}) (unpoller_rogueap_channel{{{scope}}}), "observation", " / ", {identity})'
+    result = table(
+        "Rogue access points",
+        rssi,
+        "Latest signal and channel reported for each rogue AP observation. Signal and channel share the same source, AP and radio identity.",
+        "dBm",
+        "warning",
+    )
+    rssi_target = query(rssi, interval="60s", instant=True, fmt="table")
+    channel_target = query(channel, interval="60s", instant=True, fmt="table")
+    channel_target["refId"] = "B"
+    result["targets"] = [rssi_target, channel_target]
+    result["transformations"] = [{
+        "id": "joinByField",
+        "options": {"byField": "observation", "mode": "outer"},
+    }, {
+        "id": "organize",
+        "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {"Value #A": "Signal (dBm)", "Value #B": "Channel"},
+        },
+    }]
+    result["fieldConfig"]["overrides"].extend([
+        {
+            "matcher": {"id": "byName", "options": "band"},
+            "properties": [{"id": "unit", "value": "string"}, {"id": "decimals", "value": 0}],
+        }, {
+            "matcher": {"id": "byName", "options": "Value #B"},
+            "properties": [{"id": "unit", "value": "short"}, {"id": "decimals", "value": 0}],
+        },
+    ])
+    return result
+
+
+def full_width_poe_gauge(scope):
+    result = gauge("PoE consumption", f'sum by (location,site_name,name,port_name) (max without (tag) (unpoller_device_port_poe_watts{{{scope}}}))', "Current power draw per PoE port, deduplicated across UniFi device tags.", "watt", "warm", legend="{{location}} {{name}} {{port_name}}")
+    result["gridPos"]["w"] = 24
+    return result
+
+
+def protect_state_table(scope, title="Protect device state"):
+    result = mapped_table(
+        title,
+        f'max by (location,source,name,type,model_key) (unpoller_protect_device_state{{{scope}}})',
+        "Connection state reported by Protect. Unknown is explicit source data, not missing telemetry.",
+        {-1: "Unknown", 0: "Disconnected", 1: "Connecting", 2: "Connected"},
+        sort_desc=False,
+    )
+    colors = {"-1": "#FFB357", "0": "red", "1": "#FFB357", "2": "green"}
+    for value, color in colors.items():
+        result["fieldConfig"]["defaults"]["mappings"][0]["options"][value]["color"] = color
+    result["fieldConfig"]["defaults"]["custom"]["cellOptions"] = {"type": "color-text"}
+    return result
+
+
+def make_unifi(uid, title, panels, purpose, variables=None):
+    variables = list(variables or [])
+    variables.append({"name": "search", "label": "Log contains", "type": "textbox", "query": "", "current": {"text": "", "value": ""}, "skipUrlSync": False})
+    dashboard = build({"uid": uid, "title": title, "purpose": purpose, "from": "now-1h", "refresh": "1m", "category_title": "Monitoring UniFi", "category_tag": "monitoring-unifi", "vars": variables, "panels": panels})
+    dashboard["tags"] = ["monitoring", "monitoring-unifi", "unifi", "metrics", "logs"]
+    cluster = variable("cluster", "unpoller_controller_up", "cluster")
+    cluster["hide"] = 2
+    location = variable("location", "unpoller_controller_up", "location", 'cluster=~"$cluster"')
+    dashboard["templating"]["list"] = [location, cluster, *dashboard["templating"]["list"][1:]]
+    freshness = dashboard["panels"][1]
+    freshness["targets"][0]["expr"] = 'max(clamp_min(time() - timestamp(unpoller_prometheus_cache_age_seconds{cluster=~"$cluster",location=~"$location"}), 0))'
+    freshness["title"] = "Oldest UniFi collector sample"
+    freshness["description"] = "Age of the latest cached UnPoller sample. N/A means that the collector has not delivered this metric."
+    return hide_table_time(reset_layout(dashboard))
+
+
+def unifi_dashboards():
+    base = 'cluster=~"$cluster",location=~"$location"'
+    site = f'{base},site_name=~"$site"'
+    network_devices = f'max without (tag) (unpoller_device_info{{{base}}})'
+    unifi_log_scope = '{cluster=~"$cluster",location=~"$location",source=~"unifi-siem|unpoller-api"}'
+    camera_scope = f'{base},name=~"$camera"'
+    camera_logs = '{cluster=~"$cluster",location=~"$location",source=~"unifi-siem|unpoller-api",unifi_application="UniFi Protect",camera=~"$camera"}'
+    switch_scope = f'{site},name=~"$switch"'
+    switch_port_scope = f'{switch_scope},port_name=~"$port"'
+    ap_scope = f'{site},name=~"$ap"'
+    lte_info = f'max by (cluster,location,site_name,name) (unpoller_device_info{{{site},model="ULTEPEU"}})'
+    return {
+        "unifi-overview.json": make_unifi("mon-unifi-overview", "UniFi Overview", [
+            stat("UnPoller target", f'min(up{{{base},job="unpoller"}})', "Reachability of the UnPoller Prometheus endpoint. This does not prove controller login success.", threshold="ready"),
+            stat("Controller collection", f'min(unpoller_controller_up{{{base}}})', "Lowest reported controller status.", threshold="ready"),
+            stat("Collector cache age", f'max(unpoller_prometheus_cache_age_seconds{{{base}}})', "Age of the cached controller data.", "s", "age"),
+            stat("Refresh failures", f'sum(increase(unpoller_prometheus_refresh_failures_total{{{base}}}[$__range]))', "Refresh failures in the selected range.", threshold="warning"),
+            stat("Network devices", f'count({network_devices})', "Observed adopted Network devices, deduplicated across UniFi device tags."),
+            stat("Protect devices", f'sum(unpoller_protect_device_present{{{base}}})', "Protect devices returned by the controller."),
+            stat("UNAS consoles", f'sum(unpoller_unas_device_present{{{base}}})', "UNAS consoles returned by the storage API."),
+            stat("UniFi Alloy target", 'min(up{cluster=~"$cluster",job="alloy-unpoller"})', "Scrape status for the dedicated UniFi Alloy instance.", threshold="ready"),
+            table("Device uptime", f'max by (location,site_name,name,type) (unpoller_device_uptime_seconds{{{base}}})', "Device uptime reported by UniFi.", "s"),
+            table("Device firmware", f'max by (location,site_name,name,type,model,version) (unpoller_device_info{{{base}}})', "Observed firmware versions for Network devices."),
+            table("Available device updates", f'max by (location,site_name,name,type) (unpoller_device_upgradable{{{base}}})', "One means UniFi reports an available update.", threshold="warning"),
+            log_query(chart("API event volume", [], "Events obtained from supported UniFi APIs.", "logs/s", width=24), 'sum by (location) (rate({cluster=~"$cluster",location=~"$location",source="unpoller-api"}[$__auto]))', '{{location}}'),
+            chart("UniFi metric ingestion rate", [(f'sum by (location) (rate(prometheus_remote_storage_samples_in_total{{{base},job="alloy-unpoller"}}[$__rate_interval]))', "samples {{location}}")], "Samples entering remote write from the dedicated UniFi Alloy instance. This measures pipeline input, not a backend commit acknowledgement.", "ops"),
+            chart("UniFi log delivery rate", [(f'sum by (location) (rate(loki_write_sent_entries_total{{{base},job="alloy-unpoller"}}[$__rate_interval]))', "entries {{location}}")], "Log entries successfully sent by the dedicated UniFi Alloy instance.", "logs/s"),
+            unifi_logs("All UniFi log events", unifi_log_scope, "Latest sanitized SIEM and supported API records for the selected UniFi location."),
+        ], "Health, API event intake and telemetry delivery for the selected UniFi location."),
+        "unifi-gateway.json": make_unifi("mon-unifi-gateway", "UniFi Gateway and WAN", [
+            stat("Internet receive", f'8 * sum(unpoller_device_wan_receive_rate_bytes{{{site}}})', "Current primary gateway WAN receive rate.", "bps"),
+            stat("Internet transmit", f'8 * sum(unpoller_device_wan_transmit_rate_bytes{{{site}}})', "Current primary gateway WAN transmit rate.", "bps"),
+            stat("Internet outages", f'sum(increase(unpoller_site_intenet_drops_total{{{site}}}[$__range]))', "Internet drop counter increases in the selected range.", threshold="warning"),
+            stat("Primary WAN uptime", f'max(unpoller_wan_uptime_percentage{{{site},wan_networkgroup="WAN"}})', "Controller-reported WAN uptime percentage.", "percent", "availability"),
+            stat("Rolling 30d download", f'sum(increase(unpoller_device_wan_receive_bytes_total{{{site}}}[30d]))', "Rolling 30-day gateway WAN receive bytes. This is not a calendar-month billing counter.", "bytes", width=8),
+            stat("Rolling 30d upload", f'sum(increase(unpoller_device_wan_transmit_bytes_total{{{site}}}[30d]))', "Rolling 30-day gateway WAN transmit bytes. This is not a calendar-month billing counter.", "bytes", width=8),
+            stat("Rolling 30d total", f'sum(increase(unpoller_device_wan_receive_bytes_total{{{site}}}[30d])) + sum(increase(unpoller_device_wan_transmit_bytes_total{{{site}}}[30d]))', "Rolling 30-day gateway WAN traffic total.", "bytes", width=8),
+            stat("LTE device traffic 30d", f'sum((increase(unpoller_device_receive_bytes_total{{{site},type="uap"}}[30d]) + increase(unpoller_device_transmit_bytes_total{{{site},type="uap"}}[30d])) * on (cluster,location,site_name,name) group_left() ({lte_info}))', "Traffic observed on the LTE device over 30 days. This is device traffic, not a carrier billing counter." , "bytes"),
+            stat("Speed test download", f'max(unpoller_device_speedtest_download{{{site}}})', "Latest controller speed-test download result.", "Mbits"),
+            stat("Speed test upload", f'max(unpoller_device_speedtest_upload{{{site}}})', "Latest controller speed-test upload result.", "Mbits"),
+            stat("WAN latency", f'max(unpoller_site_latency_seconds{{{site}}})', "Latest WAN latency reported by the controller.", "s"),
+            dual_throughput_chart("Site traffic", [
+                (f'sum by (location,site_name) (unpoller_site_receive_rate_bytes{{{site}}})', 'receive {{location}} {{site_name}}'),
+                (f'sum by (location,site_name) (unpoller_site_transmit_rate_bytes{{{site}}})', 'transmit {{location}} {{site_name}}'),
+            ], "Current site receive and transmit rates for the selected gateway sites."),
+            dual_throughput_chart("Internet throughput", [(f'sum(unpoller_device_wan_receive_rate_bytes{{{site}}})', "receive"), (f'sum(unpoller_device_wan_transmit_rate_bytes{{{site}}})', "transmit")], "Gateway WAN receive and transmit rate."),
+            dual_throughput_chart("LTE device throughput", [(f'sum(unpoller_device_rate_bytes{{{site},type="uap"}} * on (cluster,location,site_name,name) group_left() ({lte_info}))', "LTE device")], "Current LTE device traffic. It does not prove cellular failover use or match carrier accounting."),
+            chart("DPI traffic by category", [(f'sum by (location,site_name,category) (unpoller_client_dpi_receive_bytes{{{site}}})', 'receive {{site_name}} {{category}}'), (f'sum by (location,site_name,category) (unpoller_client_dpi_transmit_bytes{{{site}}})', 'transmit {{site_name}} {{category}}')], "DPI byte counters by category, aggregated across clients and applications.", "bytes", width=24),
+            mapped_table("WAN interfaces", f'max by (location,site_name,wan_interface,wan_networkgroup,state) (unpoller_wan_interface_state{{{site}}})', "Controller-reported interface state. Disabled backup interfaces can legitimately be inactive.", {0: "Inactive or disabled", 1: "Active"}, sort_desc=False),
+            table("WAN availability", f'max by (location,site_name,wan_name,wan_networkgroup,wan_type) (unpoller_wan_uptime_percentage{{{site}}} >= 0)', "Controller-reported WAN uptime. Interfaces without a nonnegative availability value are omitted.", "percent", "availability", sort_desc=False),
+            table("Gateway and LTE uptime", f'max by (location,site_name,name,type) (unpoller_device_uptime_seconds{{{site},type="udm"}} or (unpoller_device_uptime_seconds{{{site},type="uap"}} * on (cluster,location,site_name,name) group_left() ({lte_info})))', "Controller-reported uptime for the gateway and LTE modem.", "s"),
+            table("Gateway and LTE firmware", f'max by (location,site_name,name,type,model,version) (unpoller_device_info{{{site},type="udm"}} or unpoller_device_info{{{site},model="ULTEPEU"}})', "Observed UDM and LTE modem firmware."),
+            table("Gateway and LTE updates", f'max by (location,site_name,name,type) (unpoller_device_upgradable{{{site},type="udm"}} or (unpoller_device_upgradable{{{site},type="uap"}} * on (cluster,location,site_name,name) group_left() ({lte_info})))', "One means UniFi reports an available update.", threshold="warning"),
+            log_query(chart("Gateway and WAN SIEM event volume", [], "Incoming UDM and UNAS SIEM records per second for the selected location.", "logs/s", width=24), 'sum by (location,appliance) (rate({cluster=~"$cluster",location=~"$location",source="unifi-siem"}[$__auto]))', '{{location}} {{appliance}}'),
+            unifi_logs("Gateway, WAN, IDS, IPS and Network events", unifi_log_scope + ' |~ "(?i)gateway|wan|internet|lte|failover|dhcp|dns|dpi|ids|ips|threat|intrusion|rogue|network"', "Gateway, WAN, LTE, IDS, IPS and Network records."),
+        ], "Gateway, primary WAN, LTE failover device and rolling traffic totals. LTE values are device telemetry, not carrier billing data.", [variable("site", "unpoller_site_gateways", "site_name", base)]),
+        "unifi-switches.json": make_unifi("mon-unifi-switches", "UniFi Switches", [
+            stat("Selected switches", f'count(max without (tag) (unpoller_device_info{{{switch_scope},type="usw"}}))', "Standalone switches in the selected scope. The UDM integrated switch is covered by the Gateway and WAN dashboard."),
+            stat("Switch throughput", f'8 * (sum(unpoller_device_port_receive_rate_bytes{{{switch_port_scope}}}) + sum(unpoller_device_port_transmit_rate_bytes{{{switch_port_scope}}}))', "Current receive plus transmit rate for selected switch ports.", "bps"),
+            stat("PoE output", f'sum(unpoller_device_port_poe_watts{{{switch_port_scope}}})', "Current PoE output for selected switch ports.", "watt"),
+            stat("Updates available", f'sum(unpoller_device_upgradable{{{switch_scope},type="usw"}})', "Selected switches with an available firmware update.", threshold="warning"),
+            dual_throughput_chart("Port throughput", [(f'sum by (name,port_name) (unpoller_device_port_receive_rate_bytes{{{switch_port_scope}}})', "receive {{name}} {{port_name}}"), (f'sum by (name,port_name) (unpoller_device_port_transmit_rate_bytes{{{switch_port_scope}}})', "transmit {{name}} {{port_name}}")], "Per-port switch traffic."),
+            poe_draw_chart(switch_scope),
+            table("Switch PoE budget", f'max by (location,site_name,name) (unpoller_device_max_power_total{{{switch_scope},type="usw"}})', "Controller-reported maximum PoE budget per switch.", "watt"),
+            table("Port errors and drops", f'sum by (location,site_name,name,port_name) (increase(unpoller_device_port_receive_errors_total{{{switch_port_scope}}}[$__range]) + increase(unpoller_device_port_transmit_errors_total{{{switch_port_scope}}}[$__range]) + increase(unpoller_device_port_receive_dropped_total{{{switch_port_scope}}}[$__range]) + increase(unpoller_device_port_transmit_dropped_total{{{switch_port_scope}}}[$__range]))', "Combined port errors and drops in the selected range.", threshold="warning"),
+            port_link_speed_table(switch_port_scope),
+            chart("Switch CPU and memory", [(f'100 * max by (name) (unpoller_device_cpu_utilization_ratio{{{switch_scope},type="usw"}})', "CPU {{name}}"), (f'100 * max by (name) (unpoller_device_memory_utilization_ratio{{{switch_scope},type="usw"}})', "memory {{name}}")], "Controller-reported switch CPU and memory utilization.", "percent", width=24),
+            table("Switch uptime", f'max by (location,site_name,name) (unpoller_device_uptime_seconds{{{switch_scope},type="usw"}})', "Controller-reported switch uptime.", "s"),
+            table("Switch firmware", f'max by (location,site_name,name,model,version) (unpoller_device_info{{{switch_scope},type="usw"}})', "Observed switch model and firmware."),
+            table("Switch updates", f'max by (location,site_name,name) (unpoller_device_upgradable{{{switch_scope},type="usw"}})', "One means UniFi reports an available update.", threshold="warning"),
+            unifi_logs("Switch SIEM events", unifi_log_scope + ' |~ "(?i)switch|port|poe|stp|loop|link|duplex|vlan"', "Switch, port and PoE records."),
+        ], "Switch capacity, traffic, PoE, port errors, resource use, uptime and firmware.", [
+            variable("site", "unpoller_device_info", "site_name", f'{base},type="usw"'),
+            variable("switch", "unpoller_device_info", "name", f'{site},type="usw"'),
+            variable("port", "unpoller_device_port_receive_rate_bytes", "port_name", f'{site},name=~"$switch"'),
+        ]),
+        "unifi-access-points.json": make_unifi("mon-unifi-access-points", "UniFi Access Points", [
+            stat("Selected access points", f'count(max without (tag) (unpoller_device_info{{{ap_scope},type="uap",model!="ULTEPEU"}}))', "Access points in scope. The LTE modem is excluded."),
+            stat("Associated stations", f'sum(max without (tag) (unpoller_device_stations{{{ap_scope},type="uap"}}))', "Stations associated with selected access points."),
+            stat("Access point throughput", f'8 * sum(unpoller_device_rate_bytes{{{ap_scope},type="uap"}})', "Current aggregate traffic for selected access points.", "bps"),
+            stat("Updates available", f'sum(unpoller_device_upgradable{{{ap_scope},type="uap"}})', "Selected access points with an available firmware update.", threshold="warning"),
+            dual_throughput_chart("Access point throughput", [(f'sum by (name) (unpoller_device_rate_bytes{{{ap_scope},type="uap"}})', "{{name}}")], "Current traffic by access point."),
+            chart("Radio channel utilization", [(f'100 * max by (name,band,radio_name) (unpoller_device_radio_channel_utilization_total_ratio{{{ap_scope}}})', "{{name}} {{band}} GHz")], "Total channel utilization by radio.", "percent", width=24),
+            radio_band_table("Radio channels", f'max by (location,site_name,name,band,radio_name) (unpoller_device_radio_channel{{{ap_scope}}})', "Current channel per access point radio."),
+            radio_band_table("Radio transmit retries", f'max by (location,site_name,name,band,radio_name) (unpoller_device_radio_transmit_retries{{{ap_scope}}})', "Current controller-reported transmit retry count. Compare radios rather than treating this as a cumulative counter.", threshold="warning"),
+            radio_percentage_table("Radio retry percentage", f'100 * max by (location,site_name,name,band,radio_name) (unpoller_device_radio_transmit_retries{{{ap_scope}}}) / clamp_min(max by (location,site_name,name,band,radio_name) (unpoller_device_radio_transmit_retries{{{ap_scope}}}) + max by (location,site_name,name,band,radio_name) (unpoller_device_radio_transmit_packets{{{ap_scope}}}), 1)', "Retries divided by controller-reported transmit attempts plus retries. This percentage is calculated only from the available radio counters."),
+            radio_percentage_table("Wireless satisfaction", f'100 * max by (location,site_name,name,band,essid) (unpoller_device_vap_satisfaction_ratio{{{ap_scope}}} >= 0)', "Client satisfaction where UniFi provides a nonnegative value."),
+            rogue_access_points_table(site),
+            chart("Access point CPU and memory", [(f'100 * max by (name) (unpoller_device_cpu_utilization_ratio{{{ap_scope},type="uap"}})', "CPU {{name}}"), (f'100 * max by (name) (unpoller_device_memory_utilization_ratio{{{ap_scope},type="uap"}})', "memory {{name}}")], "Controller-reported access point CPU and memory utilization.", "percent", width=24),
+            table("Access point uptime", f'max by (location,site_name,name) (unpoller_device_uptime_seconds{{{ap_scope},type="uap"}})', "Controller-reported access point uptime.", "s"),
+            table("Access point firmware", f'max by (location,site_name,name,model,version) (unpoller_device_info{{{ap_scope},type="uap",model!="ULTEPEU"}})', "Observed access point model and firmware."),
+            table("Access point updates", f'max by (location,site_name,name) (unpoller_device_upgradable{{{ap_scope},type="uap"}})', "One means UniFi reports an available update.", threshold="warning"),
+            unifi_logs("Access point SIEM events", unifi_log_scope + ' |~ "(?i)access.?point|\\buap\\b|wifi|wlan|wireless|radio|rogue"', "Wireless, radio and rogue-access-point records."),
+        ], "Wireless capacity, radio utilization, stations, retries, uptime and firmware. The LTE modem is intentionally excluded.", [
+            variable("site", "unpoller_device_info", "site_name", f'{base},type="uap",model!="ULTEPEU"'),
+            variable("ap", "unpoller_device_info", "name", f'{site},type="uap",model!="ULTEPEU"'),
+        ]),
+        "unifi-protect.json": make_unifi("mon-unifi-protect", "UniFi Protect", [
+            stat("Cameras", f'sum(unpoller_protect_device_present{{{camera_scope},model_key="camera"}})', "Protect cameras returned by the controller."),
+            stat("Disconnected cameras", f'sum(unpoller_protect_device_state{{{camera_scope},model_key="camera"}} == bool 0)', "Cameras explicitly reporting disconnected state.", threshold="warning"),
+            stat("Microphones enabled", f'sum(unpoller_protect_camera_mic_enabled{{{camera_scope}}})', "Selected cameras with microphone enabled. Audio content is not collected."),
+            log_query(stat("Detection events", "", "Motion, smart-detection and smart-audio records in the selected range.", threshold="warm"), f'sum(count_over_time({camera_logs} | label_format level=detected_level |~ "(?i)motion|smartDetect|smartAudio" [$__range]))', instant=True),
+            protect_state_table(f'{camera_scope},model_key="camera"'),
+            chart("Camera network traffic", [(f'sum by (name) (rate(unpoller_client_receive_bytes_total{{{camera_scope},network="CCTV"}}[$__rate_interval]))', "receive {{name}}"), (f'sum by (name) (rate(unpoller_client_transmit_bytes_total{{{camera_scope},network="CCTV"}}[$__rate_interval]))', "transmit {{name}}")], "Network traffic for CCTV clients whose UniFi Network name matches the selected Protect camera. This is not NVR disk or application throughput.", "Bps", width=24),
+            log_query(chart("Protect event rate", [], "Protect motion, smart-detection and smart-audio event rate for the selected camera name.", "logs/s", width=24), f'sum by (unifi_application) (rate({camera_logs} | label_format level=detected_level |~ "(?i)motion|smartDetect|smartAudio" [$__auto]))', '{{unifi_application}}'),
+            table("Camera network attachment", f'max by (location,name,ip,mac,sw_name,sw_port,ap_name,wired) (unpoller_client_receive_bytes_total{{{camera_scope},network="CCTV"}} >= bool 0)', "Latest Network identity and attachment metadata for matching CCTV clients."),
+            protect_state_table(f'{base},model_key="nvr"', "NVR state"),
+            table("Protect host firmware", f'max by (location,site_name,name,type,model,version) (unpoller_device_info{{{base},type="udm"}})', "Firmware of the UDM hosting Protect. Camera firmware is not exported by the available Protect metrics."),
+            table("Protect host updates", f'max by (location,site_name,name,type) (unpoller_device_upgradable{{{base},type="udm"}})', "One means UniFi reports an available UDM update. Camera firmware update state is not exported.", threshold="warning"),
+            unifi_logs("Protect events", camera_logs + ' | label_format level=detected_level |~ "(?i)protect|camera|motion|smartDetect|smartAudio|doorbell|nvr"', "Protect event metadata without thumbnails, snapshots, video or audio payloads."),
+        ], "Protect camera state, actual CCTV network traffic and detection metadata. UnPoller does not export NVR disk or application throughput. No images, thumbnails, video or audio payloads are collected.", [variable("camera", "unpoller_protect_device_present", "name", f'{base},model_key="camera"')]),
+        "unifi-ups.json": make_unifi("mon-unifi-ups", "UniFi UPS", [
+            stat("UPS devices", f'count(max by (device_name) (unpoller_device_ups_battery_level_percent{{{base}}}))', "Observed UniFi UPS devices with battery telemetry."),
+            stat("Lowest battery level", f'min(unpoller_device_ups_battery_level_percent{{{base},device_name=~"$ups"}})', "Lowest reported charge among selected UPS devices.", "percent", "warning"),
+            stat("Shortest battery runtime", f'min(unpoller_device_ups_battery_time_remaining_seconds{{{base},device_name=~"$ups"}})', "Shortest controller-reported remaining battery runtime among selected UPS devices.", "s", "warm"),
+            stat("Current output power", f'sum(unpoller_device_ups_power_output_watts{{{base},device_name=~"$ups"}})', "Combined current output power of selected UPS devices.", "watt"),
+            chart("Battery level and load", [(f'max by (device_name) (unpoller_device_ups_battery_level_percent{{{base},device_name=~"$ups"}})', "battery {{device_name}}"), (f'max by (device_name) (unpoller_device_ups_load_percent{{{base},device_name=~"$ups"}})', "load {{device_name}}")], "Reported battery charge and load percentage per UPS.", "percent", width=24),
+            chart("Battery runtime", [(f'max by (device_name) (unpoller_device_ups_battery_time_remaining_seconds{{{base},device_name=~"$ups"}})', "{{device_name}}")], "Controller-reported remaining runtime per UPS.", "s", width=12),
+            chart("Output power", [(f'max by (device_name) (unpoller_device_ups_power_output_watts{{{base},device_name=~"$ups"}})', "{{device_name}}")], "Current output power per UPS.", "watt", width=12),
+            chart("Output voltage", [(f'max by (device_name) (unpoller_device_ups_output_voltage{{{base},device_name=~"$ups"}})', "{{device_name}}")], "Measured output voltage per UPS.", "volt", width=12),
+            chart("Output current", [(f'max by (device_name) (unpoller_device_ups_output_current_amps{{{base},device_name=~"$ups"}})', "{{device_name}}")], "Measured output current per UPS.", "amp", width=12),
+            table("UPS power budget", f'max by (location,site_name,device_name) (unpoller_device_ups_power_budget_watts{{{base},device_name=~"$ups"}})', "Configured power budget per UPS.", "watt"),
+            table("UPS BMS anomalies", f'max by (location,site_name,device_name) (unpoller_device_ups_bms_anomaly_count{{{base},device_name=~"$ups"}})', "Battery-management anomalies reported by each UPS.", threshold="warning"),
+            table("UPS battery mode", f'max by (location,site_name,device_name) (unpoller_device_ups_battery_mode{{{base},device_name=~"$ups"}})', "Controller-reported battery operating mode. The numeric mode is retained because the exporter does not provide a stable text mapping."),
+        ], "Battery, load and electrical-output telemetry for the UniFi UPS devices. All values come directly from the controller and are shown per device where possible.", [variable("ups", "unpoller_device_ups_battery_level_percent", "device_name", base)]),
+        "unifi-unas.json": make_unifi("mon-unifi-unas", "UniFi UNAS", [
+            stat("UNAS reachable", f'min(unpoller_unas_device_present{{{base}}})', "UNAS consoles returned by the API.", threshold="ready", width=6),
+            stat("CPU load", f'max(unpoller_unas_cpu_load_percent{{{base}}})', "Current console CPU load.", "percent", "percent", width=6),
+            stat("Memory use", f'100 * (1 - max(unpoller_unas_memory_available_bytes{{{base}}}) / max(unpoller_unas_memory_total_bytes{{{base}}}))', "Used memory based on available versus total.", "percent", "percent", width=6),
+            stat("Pool occupancy", f'100 * max(unpoller_unas_pool_usage_bytes{{{base}}}) / max(unpoller_unas_pool_capacity_bytes{{{base}}})', "Used versus total pool capacity.", "percent", "percent", width=6),
+            chart("Disk throughput", [(f'sum by (name,slot_id) (unpoller_unas_disk_read_kbps{{{base}}}) * 1000', "read {{name}} slot {{slot_id}}"), (f'sum by (name,slot_id) (unpoller_unas_disk_write_kbps{{{base}}}) * 1000', "write {{name}} slot {{slot_id}}")], "Per-disk read and write throughput reported by UNAS.", "Bps", width=24),
+            dual_throughput_chart("UNAS network throughput", [(f'sum by (name) (unpoller_unas_receive_kbps{{{base}}}) * 1000', "receive {{name}}"), (f'sum by (name) (unpoller_unas_transmit_kbps{{{base}}}) * 1000', "transmit {{name}}")], "Console network receive and transmit throughput reported by UNAS."),
+            chart("CPU load trend", [(f'max by (name) (unpoller_unas_cpu_load_percent{{{base}}})', "{{name}}")], "UNAS CPU utilization over time.", "percent", width=12),
+            chart("CPU temperature", [(f'max by (name) (unpoller_unas_cpu_temperature_celsius{{{base}}})', "{{name}}")], "UNAS CPU temperature over time.", "celsius", width=12),
+            table("RAID protection gap", f'max by (location,source,name,pool_id,raid_group_id,current_level,config_level) (unpoller_unas_raid_group_expected_protection{{{base}}} - unpoller_unas_raid_group_current_protection{{{base}}})', "Positive values mean current protection is below expected.", threshold="warning"),
+            chart("RAID operation progress", [(f'unpoller_unas_raid_group_progress_percent{{{base}}}', '{{location}} {{name}} {{pool_id}} {{raid_group_id}}')], "Rebuild or expansion progress.", "percent", width=12),
+            chart("Disk temperature", [(f'unpoller_unas_disk_temperature_celsius{{{base}}}', '{{location}} {{name}} slot {{slot_id}}')], "Physical disk temperature.", "celsius", width=12),
+            table("Disk health", f'min by (location,source,name,slot_id,pool_id,disk_type,state,model,serial) (unpoller_unas_disk_health_score{{{base}}})', "Health score reported by UNAS. The state label carries the appliance classification; the score remains quantitative rather than inventing local health thresholds."),
+            table("Disk media errors", f'max by (location,source,name,slot_id,pool_id,model,serial) (unpoller_unas_disk_bad_sectors{{{base}}} + unpoller_unas_disk_uncorrectable_sectors{{{base}}} + unpoller_unas_disk_smart_read_errors{{{base}}})', "Combined bad, uncorrectable and SMART read-error counts.", threshold="warning"),
+            table("Disk power-on hours", f'max by (location,source,name,slot_id,pool_id,model,serial) (unpoller_unas_disk_power_on_hours{{{base}}})', "Drive power-on time reported by UNAS.", "h"),
+            unifi_logs("UNAS SIEM events", '{cluster=~"$cluster",location=~"$location",source="unifi-siem",appliance="unas"}', "Sanitized SIEM records sent directly by UNAS."),
+        ], "UNAS console, pools, RAID, disk and network telemetry plus direct SIEM records. The current exporter and SIEM stream do not expose a reliable backup-status contract, so no backup status is inferred."),
+    }
 
 
 def state_colors(p):
@@ -156,8 +460,14 @@ def dashboards():
         trend("MariaDB slow queries", "mysql_global_status_slow_queries", "ops", True),
     ], "Monitor outcomes, rolling availability, latency and certificates. A successful scrape does not mean all monitored services are up. Database and application logs help explain failures.", [variable("monitor", "monitor_status", "monitor_id", C), variable("window", "monitor_uptime_ratio", "window", C)])
 
+    authentik_targets = (
+        f'min by (cluster,namespace,job,pod,authentik_component) ({metric("up", "job=~\"authentik|authentik-outpost\"")}) '
+        f'* on (cluster,namespace,pod) group_left(version) max by (cluster,namespace,pod,version) '
+        f'(label_replace(kube_pod_container_info{{{C},namespace=~"authentik|authentik-outpost",container=~"server|worker|proxy|ldap"}}, '
+        '"version", "$1", "image", ".*:([^:]+)$"))'
+    )
     result["authentik.json"] = make("mon-app-authentik", "Authentik", "authentik|authentik-outpost", [
-        table("Server, worker and outpost targets", f'min by (cluster,namespace,job,pod,authentik_component) ({metric("up", "job=~\"authentik|authentik-outpost\"")})', "Scrape state for each observed process. Missing targets are not healthy zeros.", threshold="ready", sort_desc=False),
+        table("Server, worker and outpost targets", authentik_targets, "Scrape state for each observed process. Version is derived from the running container image tag. Missing targets are not healthy zeros.", threshold="ready", sort_desc=False),
         trend("Server requests", "authentik_main_request_duration_seconds_count", "reqps", True),
         trend("Proxy requests", "authentik_outpost_proxy_request_duration_seconds_count", "reqps", True),
         trend("Tasks queued", "authentik_tasks_queued", labels="cluster,pod"),
@@ -216,6 +526,7 @@ def dashboards():
     values = metric("monitor_status", monitor_selector)
     monitor_dashboard = build({
         "uid": "mon-app-uptime-monitors", "title": "Uptime Kuma Monitors", "from": "now-1h", "refresh": "1m",
+        "category_title": "Monitoring Applications", "category_tag": "monitoring-applications",
         "vars": [variable("monitor", "monitor_status", "monitor_id", C), variable("monitor_type", "monitor_status", "monitor_type", C), copy.deepcopy(window)],
         "purpose": "Control-room view of Kuma monitors, with sampled status history and rolling availability. Group monitors are separate from individual monitors. Prometheus does not expose the parent-child hierarchy, so nested groups cannot be reconstructed. Monitor type and ID filters apply throughout. Missing history is never painted green.",
         "panels": [*copy.deepcopy(outcomes[:4]),
@@ -223,7 +534,7 @@ def dashboards():
             history("Monitor status history", 'sort_by_label(max by (cluster,monitor_name,monitor_id) (' + metric("monitor_status", monitor_selector + ',monitor_type!="group"') + '), "monitor_name", "cluster")', '{{monitor_name}} · {{cluster}} · #{{monitor_id}}'),
             *copy.deepcopy(outcomes[4:])],
     })
-    monitor_dashboard["tags"] = ["monitoring", "applications", "metrics"]
+    monitor_dashboard["tags"] = ["monitoring", "monitoring-applications", "applications", "metrics"]
     monitor_dashboard["templating"]["list"][0] = variable("cluster", "monitor_status", "cluster")
     monitor_dashboard["panels"][1]["targets"][0]["expr"] = 'max(clamp_min(time() - timestamp(' + metric("up", 'job="uptimekuma"') + '), 0))'
     for p in monitor_dashboard["panels"]:
@@ -305,6 +616,7 @@ def dashboards():
 def operations_center():
     spec = {
         "uid": "mon-operations-center", "title": "Operations Center", "from": "now-1h", "refresh": "1m", "vars": [],
+        "category_title": None, "category_tag": None,
         "purpose": "Fleet operations at a glance. Read left to right: cluster readiness, active incidents, service history, capacity and telemetry delivery. Green means an observed healthy signal, not guaranteed total coverage. N/A means missing evidence. Use the links for focused diagnostics.",
         "panels": [
             stat("Observed clusters", 'count(count by (cluster) (kube_node_info{cluster=~"$cluster"}))', "Clusters reporting node inventory. Compare with your expected fleet, missing clusters are not automatically detected."),
@@ -338,7 +650,7 @@ def operations_center():
     next(p for p in d["panels"] if p["title"] == "Active monitor incident details")["fieldConfig"]["defaults"]["noValue"] = "No active monitor incidents"
     d["tags"] = ["monitoring", "operations", "metrics"]
     # Explicit links work even when Grafana's tag menu is collapsed in kiosk mode.
-    for title, uid in [("Applications", "mon-app-overview"), ("Monitors", "mon-app-uptime-monitors"), ("Metrics pipeline", "mon-pipeline"), ("Logs", "mon-log-explorer"), ("Storage", "mon-storage"), ("PostgreSQL", "mon-postgres")]:
+    for title, uid in [("Applications", "mon-app-overview"), ("UniFi", "mon-unifi-overview"), ("Monitors", "mon-app-uptime-monitors"), ("Metrics pipeline", "mon-pipeline"), ("Logs", "mon-log-explorer"), ("Storage", "mon-storage"), ("PostgreSQL", "mon-postgres")]:
         d["links"].append({"type": "link", "title": title, "url": f"/d/{uid}", "includeVars": True, "keepTime": True, "targetBlank": False})
     return d
 
@@ -350,6 +662,10 @@ def main():
         print(name)
     ROOT_OUTPUT.mkdir(parents=True, exist_ok=True)
     (ROOT_OUTPUT / "operations-center.json").write_text(json.dumps(operations_center(), indent=2) + "\n")
+    UNIFI_OUTPUT.mkdir(parents=True, exist_ok=True)
+    for name, dashboard in unifi_dashboards().items():
+        (UNIFI_OUTPUT / name).write_text(json.dumps(dashboard, indent=2) + "\n")
+        print(name)
 
 
 if __name__ == "__main__":

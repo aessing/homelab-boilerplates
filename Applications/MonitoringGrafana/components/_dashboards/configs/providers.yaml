@@ -39,3 +39,13 @@ providers:
     updateIntervalSeconds: 60
     options:
       path: /var/lib/grafana/monitoring-log-dashboards
+  - name: monitoring-unifi
+    orgId: 1
+    folder: Monitoring UniFi
+    folderUid: monitoring-unifi
+    type: file
+    disableDeletion: false
+    allowUiUpdates: false
+    updateIntervalSeconds: 60
+    options:
+      path: /var/lib/grafana/monitoring-unifi-dashboards

@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "components" / "_dashboards" / "dashboards"
 DATASOURCE = {"type": "prometheus", "uid": "monitoring-metrics"}
+REFRESH_INTERVALS = ["1m", "5m", "15m", "30m", "1h"]
 VM_PVC_LABELS = 'namespace="monitoring-metrics",persistentvolumeclaim=~"victoriametrics-data-victoriametrics-.*"'
 VM_PVC_CAPACITY = f'max(kubelet_volume_stats_capacity_bytes{{{VM_PVC_LABELS}}})'
 VM_PVC_USED = f'max(kubelet_volume_stats_used_bytes{{{VM_PVC_LABELS}}})'
@@ -54,7 +55,9 @@ def thresholds(kind="status"):
     elif kind == "ready":
         values = [(None, "red"), (1, "green")]
     else:
-        values = [(None, "#8AB8FF"), (50, "#5794F2"), (85, "#1F60C4")]
+        # Quantitative panels use one stable accent. Value-dependent colors are
+        # reserved for thresholds with an explicit health meaning.
+        values = [(None, "#5794F2")]
     return {"mode": "absolute", "steps": [{"color": color, "value": value} for value, color in values]}
 
 
@@ -232,6 +235,33 @@ def intro(text):
     }
 
 
+def dashboard_links(category_title=None, category_tag=None):
+    common = {
+        "asDropdown": True,
+        "icon": "external link",
+        "includeVars": True,
+        "keepTime": True,
+        "targetBlank": False,
+        "type": "dashboards",
+    }
+    result = [
+        {
+            **common,
+            "tags": ["monitoring"],
+            "title": "Monitoring dashboards",
+            "tooltip": "Open another monitoring dashboard",
+        }
+    ]
+    if category_title and category_tag:
+        result.append({
+            **common,
+            "tags": [category_tag],
+            "title": category_title,
+            "tooltip": f"Open another dashboard in {category_title}",
+        })
+    return result
+
+
 FRESHNESS = lambda: stat(
     "Oldest observed target sample",
     'max(clamp_min(time() - timestamp(up{cluster=~"$cluster"}), 0))',
@@ -242,7 +272,7 @@ FRESHNESS = lambda: stat(
 
 DASHBOARDS = [
     {
-        "file": "00-overview.json", "uid": "mon-overview", "title": "Overview", "from": "now-1h", "refresh": "15s",
+        "file": "00-overview.json", "uid": "mon-overview", "title": "Overview", "from": "now-1h", "refresh": "1m",
         "purpose": "Start here to find the cluster or subsystem that needs attention, then follow the linked specialist dashboard.",
         "vars": [],
         "panels": [
@@ -259,7 +289,7 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "10-cluster.json", "uid": "mon-cluster", "title": "Cluster and Workloads", "from": "now-1h", "refresh": "15s",
+        "file": "10-cluster.json", "uid": "mon-cluster", "title": "Cluster and Workloads", "from": "now-1h", "refresh": "1m",
         "purpose": "Inspect Kubernetes capacity, scheduling and workload availability for a selected cluster and namespace.",
         "vars": [variable("namespace", "kube_namespace_status_phase", "namespace", 'cluster=~"$cluster"')],
         "panels": [
@@ -288,7 +318,7 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "20-node.json", "uid": "mon-node", "title": "Node Diagnostics", "from": "now-1h", "refresh": "15s",
+        "file": "20-node.json", "uid": "mon-node", "title": "Node Diagnostics", "from": "now-1h", "refresh": "1m",
         "purpose": "Diagnose host saturation, filesystem, disk, network and hardware signals without relying on SMART over USB.",
         "vars": [variable("node", "node_uname_info", "node", 'cluster=~"$cluster"')],
         "panels": [
@@ -332,7 +362,7 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "30-pod.json", "uid": "mon-pod", "title": "Pod and Container Diagnostics", "from": "now-1h", "refresh": "15s",
+        "file": "30-pod.json", "uid": "mon-pod", "title": "Pod and Container Diagnostics", "from": "now-1h", "refresh": "1m",
         "purpose": "Explain Pod availability, resource use, throttling, restarts and container termination reasons.",
         "vars": [
             variable("namespace", "kube_namespace_status_phase", "namespace", 'cluster=~"$cluster"'),
@@ -361,7 +391,7 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "40-k3s-etcd.json", "uid": "mon-k3s", "title": "K3s and etcd", "from": "now-1h", "refresh": "15s",
+        "file": "40-k3s-etcd.json", "uid": "mon-k3s", "title": "K3s and etcd", "from": "now-1h", "refresh": "1m",
         "purpose": "Inspect API server, scheduler, kubelet and native etcd control-plane behavior while retaining per-node identity.",
         "vars": [],
         "panels": [
@@ -394,7 +424,7 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "50-network.json", "uid": "mon-network", "title": "DNS and Networking", "from": "now-1h", "refresh": "15s",
+        "file": "50-network.json", "uid": "mon-network", "title": "DNS and Networking", "from": "now-1h", "refresh": "1m",
         "purpose": "Follow DNS, ingress and load-balancer metrics. This is not a synthetic end-to-end reachability test.",
         "vars": [],
         "panels": [
@@ -420,7 +450,7 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "60-storage.json", "uid": "mon-storage", "title": "Storage and Longhorn", "from": "now-1h", "refresh": "15s",
+        "file": "60-storage.json", "uid": "mon-storage", "title": "Storage and Longhorn", "from": "now-1h", "refresh": "1m",
         "purpose": "Separate logical PVC use, Longhorn physical allocation, volume health and backup freshness.",
         "vars": [
             variable("namespace", "kube_persistentvolumeclaim_info", "namespace", 'cluster=~"$cluster"'),
@@ -458,7 +488,7 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "70-postgres.json", "uid": "mon-postgres", "title": "PostgreSQL and Backups", "from": "now-1h", "refresh": "15s",
+        "file": "70-postgres.json", "uid": "mon-postgres", "title": "PostgreSQL and Backups", "from": "now-1h", "refresh": "1m",
         "purpose": "Inspect CloudNativePG cluster readiness, SQL collector health, replication and backup evidence. Backup presence does not prove restore success.",
         "vars": [
             variable("namespace", "cnpg_resource_instances_desired", "namespace", 'cluster=~"$cluster"'),
@@ -495,7 +525,7 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "80-platform.json", "uid": "mon-platform", "title": "Controllers and Certificates", "from": "now-1h", "refresh": "15s",
+        "file": "80-platform.json", "uid": "mon-platform", "title": "Controllers and Certificates", "from": "now-1h", "refresh": "1m",
         "purpose": "Inspect certificate lifecycle, metrics-server and generic infrastructure controller reconciliation.",
         "vars": [variable("component", "up", "component", 'cluster=~"$cluster",job="kubernetes-infrastructure"')],
         "panels": [
@@ -522,7 +552,7 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "90-pipeline.json", "uid": "mon-pipeline", "title": "Collection and Metrics Backend", "from": "now-1h", "refresh": "15s",
+        "file": "90-pipeline.json", "uid": "mon-pipeline", "title": "Collection and Metrics Backend", "from": "now-1h", "refresh": "1m",
         "purpose": "Decide whether dashboard data is trustworthy by following scrape, Remote Write, VictoriaMetrics and vmauth health.",
         "vars": [variable("job", "up", "job", 'cluster=~"$cluster"')],
         "panels": [
@@ -556,7 +586,7 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "100-daily.json", "uid": "mon-daily", "title": "Daily Review", "from": "now-24h", "refresh": "",
+        "file": "100-daily.json", "uid": "mon-daily", "title": "Daily Review", "from": "now-24h", "refresh": "1m",
         "purpose": "Review the previous completed day. Values describe observed samples and counter changes, not an application SLO or event archive.",
         "vars": [],
         "panels": [
@@ -577,7 +607,7 @@ DASHBOARDS = [
         ],
     },
     {
-        "file": "110-capacity.json", "uid": "mon-capacity", "title": "Capacity and Reliability", "from": "now-1h", "refresh": "15s",
+        "file": "110-capacity.json", "uid": "mon-capacity", "title": "Capacity and Reliability", "from": "now-1h", "refresh": "1m",
         "purpose": "Review 7/30/90-day trends. Forecasting requires at least seven days of sufficiently complete data and is intentionally conservative.",
         "vars": [variable("namespace", "kube_namespace_status_phase", "namespace", 'cluster=~"$cluster"')],
         "panels": [
@@ -673,6 +703,8 @@ def place(panels):
 
 def build(spec):
     cluster = variable("cluster", "up", "cluster")
+    category_title = spec.get("category_title", "Monitoring Metrics")
+    category_tag = spec.get("category_tag", "monitoring-metrics")
     panels = [intro(spec["purpose"]), FRESHNESS(), *spec["panels"]]
     for panel_id, panel_data in enumerate(place(panels), start=1):
         panel_data["id"] = panel_id
@@ -699,26 +731,16 @@ def build(spec):
         "fiscalYearStartMonth": 0,
         "graphTooltip": 1,
         "id": None,
-        "links": [{
-            "asDropdown": True,
-            "icon": "external link",
-            "includeVars": True,
-            "keepTime": True,
-            "tags": ["monitoring"],
-            "targetBlank": False,
-            "title": "Monitoring dashboards",
-            "tooltip": "Open another monitoring dashboard",
-            "type": "dashboards",
-        }],
+        "links": dashboard_links(category_title, category_tag),
         "liveNow": False,
         "panels": panels,
         "preload": False,
         "refresh": spec["refresh"],
         "schemaVersion": 41,
-        "tags": ["monitoring", "metrics", "infrastructure"],
+        "tags": ["monitoring", "metrics", category_tag],
         "templating": {"list": [cluster, *spec["vars"]]},
         "time": {"from": spec["from"], "to": spec.get("to", "now")},
-        "timepicker": {"refresh_intervals": ["15s", "30s", "1m", "5m", "15m"], "time_options": ["1h", "3h", "6h", "12h", "24h", "2d", "7d", "30d", "90d"]},
+        "timepicker": {"refresh_intervals": REFRESH_INTERVALS, "time_options": ["1h", "3h", "6h", "12h", "24h", "2d", "7d", "30d", "90d"]},
         "timezone": "browser",
         "title": spec["title"],
         "uid": spec["uid"],

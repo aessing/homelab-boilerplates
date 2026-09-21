@@ -26,13 +26,26 @@
       "icon": "external link",
       "includeVars": true,
       "keepTime": true,
+      "targetBlank": false,
+      "type": "dashboards",
       "tags": [
         "monitoring"
       ],
-      "targetBlank": false,
       "title": "Monitoring dashboards",
-      "tooltip": "Open another monitoring dashboard",
-      "type": "dashboards"
+      "tooltip": "Open another monitoring dashboard"
+    },
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": false,
+      "type": "dashboards",
+      "tags": [
+        "monitoring-metrics"
+      ],
+      "title": "Monitoring Metrics",
+      "tooltip": "Open another dashboard in Monitoring Metrics"
     }
   ],
   "liveNow": false,
@@ -497,16 +510,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -617,16 +622,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -810,16 +807,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -916,16 +905,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1022,16 +1003,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#8AB8FF",
-                "value": null
-              },
-              {
                 "color": "#5794F2",
-                "value": 50
-              },
-              {
-                "color": "#1F60C4",
-                "value": 85
+                "value": null
               }
             ]
           },
@@ -1288,12 +1261,12 @@
     }
   ],
   "preload": false,
-  "refresh": "15s",
+  "refresh": "1m",
   "schemaVersion": 41,
   "tags": [
     "monitoring",
     "metrics",
-    "infrastructure"
+    "monitoring-metrics"
   ],
   "templating": {
     "list": [
@@ -1334,11 +1307,11 @@
   },
   "timepicker": {
     "refresh_intervals": [
-      "15s",
-      "30s",
       "1m",
       "5m",
-      "15m"
+      "15m",
+      "30m",
+      "1h"
     ],
     "time_options": [
       "1h",

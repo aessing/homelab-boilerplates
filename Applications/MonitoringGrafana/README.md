@@ -13,11 +13,14 @@ validated and provisioned through the existing Grafana deployment.
 - Grafana UI: `Dashboards > Monitoring Metrics`, folder UID `monitoring-infrastructure`.
 - Datasource: **Monitoring Metrics**, using the stable Prometheus-compatible
   `monitoring-metrics` UID.
-- Visuals: stable multi-series colors for readable charts, blue
-  quantitative accents, clear independent status colors, and compact dashboard
+- Visuals: stable multi-series colors for readable charts, one consistent blue
+  quantitative accent, clear independent status colors, and compact dashboard
   headers without a Grafana logo.
-- Navigation: a tag-based Monitoring dropdown plus context-preserving table
-  drill-downs for cluster, namespace, Pod, node, PVC, job and database scope.
+- Navigation: a tag-based **Monitoring dashboards** dropdown plus one uniquely
+  tagged category dropdown named **Monitoring Metrics**, **Monitoring
+  Applications**, **Monitoring Logs** or **Monitoring UniFi**. Operations Center
+  intentionally has no category dropdown. Table drill-downs preserve the active
+  time and variable context.
 - Edition: Grafana OSS. No Enterprise license or external panel plugin required.
 
 The package does not deploy another Grafana instance. Provisioning creates the
@@ -33,7 +36,7 @@ Monitoring Logs datasources, with no new collectors or Grafana plugins:
 | Applications Overview | Namespace-filtered readiness, scrape failures, CPU, memory, restarts and logs, including applications without native metrics |
 | Uptime Kuma | Application health, event loop, MariaDB, container resources and logs |
 | Uptime Kuma Monitors | Paginated status history, rolling availability, latency and certificate lifetime |
-| Authentik | Server, worker, outpost connectivity, request load and background tasks |
+| Authentik | Server, worker and outpost connectivity with running image version, request load and background tasks |
 | Grafana and Renderer | Requests, rendering queue, browser activity, Redis and memory pressure |
 | Home Assistant and MQTT | Entity availability, automation activity, broker connectivity, traffic and VictoriaMetrics HistoryDB |
 | HomeCDN | NGINX status, connections, requests, container resources and logs |
@@ -45,6 +48,22 @@ Monitoring Logs datasources, with no new collectors or Grafana plugins:
 **Operations Center** is provisioned at Grafana's root, outside the monitoring
 folders. It summarizes cluster and node health, monitors, workloads, capacity,
 databases and telemetry delivery, with links to diagnostic dashboards.
+
+Seven dashboards are provisioned into **Monitoring UniFi** (UID
+`monitoring-unifi`): UniFi Overview, Network, Gateway and WAN, Switches, Access
+Points, Protect and UNAS. They combine the existing Monitoring Metrics and
+Monitoring Logs datasources. A visible location label keeps the deployment name
+human-readable while the technical cluster identity remains available as a
+hidden URL-backed filter. Network includes DPI, selected switch ports, PoE,
+power, rogue AP and IDS or IPS views. Gateway and WAN includes current traffic,
+outages, LTE device telemetry and rolling 30-day totals. Rolling totals are not
+calendar-month or carrier billing counters. Switch and access-point dashboards
+add focused traffic, errors, radio, resource, uptime, firmware and update views.
+Protect contains camera state, network traffic and detection metadata without
+media. NVR disk/application throughput is not exported. UNAS covers console,
+pools, RAID, disk and network throughput plus direct SIEM records. The current
+UNAS exporter and SIEM contract do not provide a reliable backup status, so the
+dashboard does not infer one. The Operations Center links to UniFi Overview.
 
 Kuma group monitors and individual monitors have separate status-history panels.
 The exporter does not provide parent-child relationships, so this is not a nested
@@ -58,7 +77,8 @@ Home Assistant's availability metric includes both `unavailable` and `unknown`
 states. The dashboard labels this explicitly. Containers without a memory limit
 show **No limit configured**, not a fabricated utilization percentage.
 
-Each application dashboard refreshes once a minute. Tables and logs use full
+All dashboards refresh once a minute. Their default window is one hour, except
+Daily Review, which opens the previous 24 hours. Tables and logs use full
 width. Cluster filters persist in the URL. The overview adds a namespace filter,
 and Uptime Kuma adds monitor ID and rolling-window filters. The log search field
 filters displayed log lines, not the volume charts. Each log view is capped at
@@ -86,7 +106,7 @@ reader Secret before using the explorer. Enable MonitoringAgent's central
 `_logs-telemetry` component so backend health panels have data. Rebuild the log
 JSON with `python3 Applications/MonitoringGrafana/scripts/build_log_dashboards.py`.
 The existing dashboard component installs both folders automatically. Each new
-dashboard refreshes every 30 seconds and opens a one-hour window. Log panels are
+dashboard refreshes every minute and opens a one-hour window. Log panels are
 full width, wrap text, and cap each query at 500 lines. Filters and time ranges
 are URL-backed. Grafana handles narrow-screen stacking and panel inspection.
 
@@ -296,7 +316,8 @@ viewport.
 ### 8. Use the report views
 
 Daily Review defaults to the rolling previous 24 hours.
-All other dashboards default to the previous hour, with longer ranges available.
+All other dashboards default to the previous hour. Every dashboard refreshes
+once a minute, with longer ranges and slower refresh intervals available.
 Choose an absolute interval when sharing a reproducible historical report.
 
 Use authorized dashboard links and **Inspect > Data > Download CSV** for panel

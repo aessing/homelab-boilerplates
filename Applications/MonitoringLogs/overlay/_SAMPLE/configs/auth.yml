@@ -1,4 +1,13 @@
 users:
+  - name: unpoller-writer
+    bearer_token: "%{WRITER_UNPOLLER_TOKEN}"
+    url_map:
+      - src_paths:
+          - "/loki/api/v1/push"
+        headers:
+          - "Authorization:"
+          - "X-Scope-OrgID:"
+        url_prefix: "http://loki:3100/"
   - name: cluster-a-writer
     bearer_token: "%{WRITER_CLUSTER_A_TOKEN}"
     url_map:

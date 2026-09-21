@@ -1,0 +1,24 @@
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: unpoller-replica-transformer
+replica:
+  name: unpoller
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: true
+    kind: Deployment
+---
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: alloy-unpoller-replica-transformer
+replica:
+  name: alloy-unpoller
+  count: 1
+fieldSpecs:
+  - path: spec/replicas
+    create: true
+    kind: StatefulSet

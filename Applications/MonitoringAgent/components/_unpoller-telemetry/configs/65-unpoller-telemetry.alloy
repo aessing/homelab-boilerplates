@@ -1,0 +1,11 @@
+prometheus.scrape "unpoller_collector" {
+  targets = [{
+    "__address__" = "alloy-unpoller.unpoller.svc:12345",
+    "job"         = "alloy-unpoller",
+    "instance"    = "alloy-unpoller",
+  }]
+  job_name        = "alloy-unpoller"
+  scrape_interval = sys.env("NORMAL_SCRAPE_INTERVAL")
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.central.receiver]
+}

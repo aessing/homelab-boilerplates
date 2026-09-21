@@ -1,4 +1,12 @@
 users:
+  - name: unpoller-writer
+    bearer_token: "%{WRITER_UNPOLLER_TOKEN}"
+    url_map:
+      - src_paths:
+          - "/api/v1/write"
+        headers:
+          - "Authorization:"
+        url_prefix: "http://victoriametrics:8428/?extra_label=cluster=example-cluster"
   - name: cluster-a-writer
     bearer_token: "%{WRITER_CLUSTER_A_TOKEN}"
     url_map:
