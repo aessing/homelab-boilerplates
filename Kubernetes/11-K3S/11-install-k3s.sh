@@ -172,6 +172,10 @@ if [ -n "${K3S_NODES_AGENTS:-}" ]; then
 fi
 K3S_STREAMING_CONNECTION_IDLE_TIMEOUT="5m"
 K3S_TERMINATED_POD_GC_THRESHOLD="10"
+# Optional per-environment kubelet reservations. Empty values preserve the
+# existing installer behavior.
+K3S_SYSTEM_RESERVED="${K3S_SYSTEM_RESERVED:-}"
+K3S_KUBE_RESERVED="${K3S_KUBE_RESERVED:-}"
 # ETCD_VERSION=$(curl -sL https://api.github.com/repos/etcd-io/etcd/releases | jq -r ".[0].name")
 
 echo ""
@@ -506,6 +510,12 @@ if exists_in_list "$K3S_NODES_SERVERS" " " "$SERVERIP"; then
     echo "  - \"max-pods=$K3S_MAX_PODS\""
     echo "  - 'streaming-connection-idle-timeout=$K3S_STREAMING_CONNECTION_IDLE_TIMEOUT'"
     echo "  - \"tls-cipher-suites=$K3S_TLS_CIPHER_SUITES\""
+    if [ -n "$K3S_SYSTEM_RESERVED" ]; then
+      echo "  - \"system-reserved=$K3S_SYSTEM_RESERVED\""
+    fi
+    if [ -n "$K3S_KUBE_RESERVED" ]; then
+      echo "  - \"kube-reserved=$K3S_KUBE_RESERVED\""
+    fi
     # Experimental Options
     echo "embedded-registry: $K3S_EMBEDDED_REGISTRY"
     # Other Options
@@ -521,6 +531,12 @@ elif exists_in_list "$K3S_NODES_AGENTS" " " "$SERVERIP"; then
     echo "  - \"max-pods=$K3S_MAX_PODS\""
     echo "  - 'streaming-connection-idle-timeout=$K3S_STREAMING_CONNECTION_IDLE_TIMEOUT'"
     echo "  - \"tls-cipher-suites=$K3S_TLS_CIPHER_SUITES\""
+    if [ -n "$K3S_SYSTEM_RESERVED" ]; then
+      echo "  - \"system-reserved=$K3S_SYSTEM_RESERVED\""
+    fi
+    if [ -n "$K3S_KUBE_RESERVED" ]; then
+      echo "  - \"kube-reserved=$K3S_KUBE_RESERVED\""
+    fi
     # Other Options
     echo "protect-kernel-defaults: true"
   } >> "$K3S_CONF"

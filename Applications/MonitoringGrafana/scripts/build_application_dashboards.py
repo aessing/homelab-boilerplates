@@ -178,7 +178,22 @@ def rogue_access_points_table(scope):
     }, {
         "id": "organize",
         "options": {
-            "excludeByName": {},
+            "excludeByName": {
+                "Time": True,
+                "Time 1": True,
+                "observation": True,
+                "location 1": True,
+                "site_name 1": True,
+                "source 1": True,
+                "name 1": True,
+                "mac 1": True,
+                "security 1": True,
+                "band 1": True,
+                "ap_mac 1": True,
+                "radio 1": True,
+                "radio_name 1": True,
+                "oui 1": True,
+            },
             "indexByName": {},
             "renameByName": {"Value #A": "Signal (dBm)", "Value #B": "Channel"},
         },
@@ -345,7 +360,7 @@ def unifi_dashboards():
         ], "Protect camera state, actual CCTV network traffic and detection metadata. UnPoller does not export NVR disk or application throughput. No images, thumbnails, video or audio payloads are collected.", [variable("camera", "unpoller_protect_device_present", "name", f'{base},model_key="camera"')]),
         "unifi-ups.json": make_unifi("mon-unifi-ups", "UniFi UPS", [
             stat("UPS devices", f'count(max by (device_name) (unpoller_device_ups_battery_level_percent{{{base}}}))', "Observed UniFi UPS devices with battery telemetry."),
-            stat("Lowest battery level", f'min(unpoller_device_ups_battery_level_percent{{{base},device_name=~"$ups"}})', "Lowest reported charge among selected UPS devices.", "percent", "warning"),
+            stat("Lowest battery level", f'min(unpoller_device_ups_battery_level_percent{{{base},device_name=~"$ups"}})', "Lowest reported charge among selected UPS devices. Red is below 20%, amber is 20% to 49.99%, and green begins at 50%.", "percent", "battery"),
             stat("Shortest battery runtime", f'min(unpoller_device_ups_battery_time_remaining_seconds{{{base},device_name=~"$ups"}})', "Shortest controller-reported remaining battery runtime among selected UPS devices.", "s", "warm"),
             stat("Current output power", f'sum(unpoller_device_ups_power_output_watts{{{base},device_name=~"$ups"}})', "Combined current output power of selected UPS devices.", "watt"),
             chart("Battery level and load", [(f'max by (device_name) (unpoller_device_ups_battery_level_percent{{{base},device_name=~"$ups"}})', "battery {{device_name}}"), (f'max by (device_name) (unpoller_device_ups_load_percent{{{base},device_name=~"$ups"}})', "load {{device_name}}")], "Reported battery charge and load percentage per UPS.", "percent", width=24),

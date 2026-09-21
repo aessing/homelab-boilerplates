@@ -1254,7 +1254,22 @@
         {
           "id": "organize",
           "options": {
-            "excludeByName": {},
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "observation": true,
+              "location 1": true,
+              "site_name 1": true,
+              "source 1": true,
+              "name 1": true,
+              "mac 1": true,
+              "security 1": true,
+              "band 1": true,
+              "ap_mac 1": true,
+              "radio 1": true,
+              "radio_name 1": true,
+              "oui 1": true
+            },
             "indexByName": {},
             "renameByName": {
               "Value #A": "Signal (dBm)",
