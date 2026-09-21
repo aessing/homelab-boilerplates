@@ -99,6 +99,11 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertEqual(alloy.count('location     = sys.env("UNPOLLER_LOCATION")'), 2)
         self.assertIn("loki.secretfilter", alloy)
         self.assertNotIn("https://", alloy)
+        self.assertIn('selector = "{cef_severity=~\\"[1-3]\\"}"', alloy)
+        self.assertIn('selector = "{cef_severity=~\\"[4-6]\\"}"', alloy)
+        self.assertIn('selector = "{cef_severity=~\\"[7-9]|10\\"}"', alloy)
+        self.assertEqual(alloy.count('values = { detected_level = "'), 3)
+        self.assertIn('values = ["detected_level_extracted"]', alloy)
         writers = next(
             d for d in self.docs
             if d["kind"] == "Secret" and d["metadata"]["name"].startswith("alloy-unpoller-writers-")
@@ -156,9 +161,8 @@ class UniFiMonitoring(unittest.TestCase):
     def test_unifi_dashboards_are_reproducible_and_provisioned(self):
         dashboards = unifi_dashboards()
         self.assertEqual(set(dashboards), {
-            "unifi-overview.json", "unifi-network.json", "unifi-gateway.json",
-            "unifi-switches.json", "unifi-access-points.json", "unifi-protect.json",
-            "unifi-unas.json",
+            "unifi-overview.json", "unifi-gateway.json", "unifi-switches.json",
+            "unifi-access-points.json", "unifi-protect.json", "unifi-ups.json", "unifi-unas.json",
         })
         for name, dashboard in dashboards.items():
             self.assertEqual((UNIFI_OUTPUT / name).read_text(), json.dumps(dashboard, indent=2) + "\n")
@@ -189,7 +193,7 @@ class UniFiMonitoring(unittest.TestCase):
         grafana = render(ROOT / "Applications" / "Grafana" / "overlay" / "_SAMPLE")
         index = objects(grafana)
         configmaps = [d for d in grafana if d["kind"] == "ConfigMap" and d["metadata"]["name"].startswith("grafana-monitoring-dashboards-unifi-")]
-        self.assertEqual(len(configmaps), 3)
+        self.assertEqual(len(configmaps), 5)
         self.assertEqual({name for cm in configmaps for name in cm["data"]}, set(dashboards))
         for configmap in configmaps:
             self.assertLess(len(json.dumps(configmap).encode()), 150 * 1024)
@@ -197,22 +201,34 @@ class UniFiMonitoring(unittest.TestCase):
         mount = next(m for m in deployment["spec"]["template"]["spec"]["containers"][0]["volumeMounts"] if m["name"] == "monitoring-unifi-dashboards")
         self.assertEqual(mount["mountPath"], "/var/lib/grafana/monitoring-unifi-dashboards")
         volume = next(v for v in deployment["spec"]["template"]["spec"]["volumes"] if v["name"] == "monitoring-unifi-dashboards")
-        self.assertEqual(len(volume["projected"]["sources"]), 3)
+        self.assertEqual(len(volume["projected"]["sources"]), 5)
         self.assertIn("folder: Monitoring UniFi", (GRAFANA / "components/_dashboards/configs/providers.yaml").read_text())
 
     def test_unifi_dashboard_queries_match_exported_metric_semantics(self):
         dashboards = unifi_dashboards()
-        overview = " ".join(target.get("expr", "") for panel in dashboards["unifi-overview.json"]["panels"] for target in panel.get("targets", []))
-        network = " ".join(target.get("expr", "") for panel in dashboards["unifi-network.json"]["panels"] for target in panel.get("targets", []))
+        overview_dashboard = dashboards["unifi-overview.json"]
+        overview = " ".join(target.get("expr", "") for panel in overview_dashboard["panels"] for target in panel.get("targets", []))
+        gateway_dashboard = dashboards["unifi-gateway.json"]
+        gateway = " ".join(target.get("expr", "") for panel in gateway_dashboard["panels"] for target in panel.get("targets", []))
         protect = dashboards["unifi-protect.json"]
 
         self.assertIn('count(max without (tag) (unpoller_device_info', overview)
-        for metric in ("receive_rate_bytes", "transmit_rate_bytes", "poe_watts"):
-            self.assertIn(f'max without (tag) (unpoller_device_port_{metric}', network)
-        self.assertIn('max without (tag) (increase(unpoller_device_port_receive_errors_total', network)
-        self.assertIn("unpoller_rogueap_channel", network)
-        self.assertIn("source,name,mac,security,band,ap_mac,radio,radio_name,oui", network)
-        self.assertNotIn("band,channel", network)
+        self.assertNotIn("unpoller_site_receive_rate_bytes", overview)
+        self.assertIn("unpoller_rogueap_channel", " ".join(
+            target.get("expr", "") for panel in dashboards["unifi-access-points.json"]["panels"] for target in panel.get("targets", [])
+        ))
+        self.assertIn("unpoller_site_receive_rate_bytes", gateway)
+        self.assertIn("unpoller_client_dpi_receive_bytes", gateway)
+        gateway_panels = {panel["title"]: panel for panel in gateway_dashboard["panels"]}
+        self.assertIn("Gateway, WAN, IDS, IPS and Network events", gateway_panels)
+        self.assertIn("ids|ips|threat|intrusion|rogue|network", gateway_panels["Gateway, WAN, IDS, IPS and Network events"]["targets"][0]["expr"])
+        self.assertEqual(gateway_panels["Gateway and WAN SIEM event volume"]["gridPos"]["w"], 24)
+
+        overview_panels = {panel["title"]: panel for panel in overview_dashboard["panels"]}
+        self.assertEqual(overview_panels["API event volume"]["gridPos"]["w"], 24)
+        self.assertIn("prometheus_remote_storage_samples_in_total", overview_panels["UniFi metric ingestion rate"]["targets"][0]["expr"])
+        self.assertIn("loki_write_sent_entries_total", overview_panels["UniFi log delivery rate"]["targets"][0]["expr"])
+        self.assertEqual(overview_dashboard["panels"][-1]["title"], "All UniFi log events")
 
         protect_panel_expressions = {
             panel["title"]: " ".join(target.get("expr", "") for target in panel.get("targets", []))
@@ -221,8 +237,10 @@ class UniFiMonitoring(unittest.TestCase):
         self.assertNotIn("unpoller_protect_sensor_", " ".join(protect_panel_expressions.values()))
         self.assertIn("unpoller_client_receive_bytes_total", protect_panel_expressions["Camera network traffic"])
         self.assertIn("count_over_time", protect_panel_expressions["Detection events"])
+        self.assertEqual(next(panel for panel in protect["panels"] if panel["title"] == "Protect event rate")["gridPos"]["w"], 24)
+        self.assertIn("unpoller_device_info", protect_panel_expressions["Protect host firmware"])
+        self.assertIn("unpoller_device_upgradable", protect_panel_expressions["Protect host updates"])
 
-        overview_panels = {panel["title"]: panel for panel in dashboards["unifi-overview.json"]["panels"]}
         for title in ("UnPoller target", "Controller collection", "UniFi Alloy target"):
             self.assertEqual(
                 overview_panels[title]["fieldConfig"]["defaults"]["thresholds"]["steps"],
@@ -251,21 +269,68 @@ class UniFiMonitoring(unittest.TestCase):
         )
         self.assertEqual(state["fieldConfig"]["defaults"]["custom"]["cellOptions"]["type"], "color-text")
 
-        network_panel_expressions = {
-            panel["title"]: " ".join(target.get("expr", "") for target in panel.get("targets", []))
-            for panel in dashboards["unifi-network.json"]["panels"]
-        }
-        dpi = network_panel_expressions["DPI traffic by category"]
-        self.assertIn("unpoller_client_dpi_receive_bytes", dpi)
-        self.assertIn("unpoller_client_dpi_transmit_bytes", dpi)
-        self.assertNotIn("unpoller_site_dpi_", dpi)
-        self.assertIn('type=~"usw|udm"', network_panel_expressions["Switching devices"])
-        network_panels = {panel["title"]: panel for panel in dashboards["unifi-network.json"]["panels"]}
-        for title in ("Switching devices", "Access points", "Stations", "Internet receive", "Internet transmit", "Switching throughput", "Observed network power"):
-            self.assertEqual(
-                network_panels[title]["fieldConfig"]["defaults"]["thresholds"]["steps"],
-                [{"color": "#5794F2", "value": None}],
-            )
+
+    def test_unifi_dashboard_details_use_available_metrics_and_consistent_layout(self):
+        dashboards = unifi_dashboards()
+        for dashboard in dashboards.values():
+            for panel in dashboard["panels"]:
+                if panel["type"] == "table":
+                    transformations = panel["transformations"]
+                    self.assertIn({"id": "organize", "options": {"excludeByName": {"Time": True}}}, transformations)
+
+        def panel(dashboard, title):
+            return next(item for item in dashboards[dashboard]["panels"] if item["title"] == title)
+
+        for dashboard, title in (
+            ("unifi-gateway.json", "Site traffic"),
+            ("unifi-gateway.json", "Internet throughput"),
+            ("unifi-gateway.json", "LTE device throughput"),
+            ("unifi-switches.json", "Port throughput"),
+            ("unifi-access-points.json", "Access point throughput"),
+            ("unifi-unas.json", "UNAS network throughput"),
+        ):
+            chart = next(item for item in dashboards[dashboard]["panels"] if item["title"] == title and item["type"] == "timeseries")
+            self.assertEqual(chart["fieldConfig"]["defaults"]["unit"], "Bps")
+            override = chart["fieldConfig"]["overrides"][0]
+            self.assertEqual(override["matcher"], {"id": "byRegexp", "options": ".* bit/s$"})
+            self.assertIn({"id": "unit", "value": "bps"}, override["properties"])
+            self.assertIn({"id": "custom.axisPlacement", "value": "right"}, override["properties"])
+
+        retries = panel("unifi-access-points.json", "Radio retry percentage")
+        expression = retries["targets"][0]["expr"]
+        self.assertIn("unpoller_device_radio_transmit_retries", expression)
+        self.assertIn("unpoller_device_radio_transmit_packets", expression)
+        self.assertEqual(retries["fieldConfig"]["defaults"]["unit"], "percent")
+        self.assertIn({"id": "unit", "value": "string"}, retries["fieldConfig"]["overrides"][0]["properties"])
+        self.assertEqual(panel("unifi-access-points.json", "Wireless satisfaction")["fieldConfig"]["defaults"]["unit"], "percent")
+        rogue = panel("unifi-access-points.json", "Rogue access points")
+        self.assertEqual(len(rogue["targets"]), 2)
+        self.assertEqual(rogue["transformations"][0], {"id": "joinByField", "options": {"byField": "observation", "mode": "outer"}})
+        self.assertIn('"location", "site_name", "source", "name", "mac", "band", "ap_mac", "radio", "radio_name"', rogue["targets"][0]["expr"])
+
+        ups = dashboards["unifi-ups.json"]
+        self.assertIn("unpoller_device_ups_battery_level_percent", " ".join(target.get("expr", "") for panel in ups["panels"] for target in panel.get("targets", [])))
+        self.assertEqual(ups["templating"]["list"][2]["name"], "ups")
+
+        switches = dashboards["unifi-switches.json"]
+        poe = panel("unifi-switches.json", "PoE draw")
+        self.assertEqual(poe["fieldConfig"]["defaults"]["custom"]["stacking"]["mode"], "normal")
+        self.assertNotIn("max_power_total", poe["targets"][0]["expr"])
+        self.assertIn("max_power_total", panel("unifi-switches.json", "Switch PoE budget")["targets"][0]["expr"])
+        speed = panel("unifi-switches.json", "Port link speed")
+        self.assertIn({"id": "unit", "value": "string"}, speed["fieldConfig"]["overrides"][0]["properties"])
+
+        unas_progress = panel("unifi-unas.json", "RAID operation progress")["gridPos"]
+        unas_temperature = panel("unifi-unas.json", "Disk temperature")["gridPos"]
+        self.assertEqual((unas_progress["y"], unas_progress["w"], unas_temperature["y"], unas_temperature["w"]), (unas_temperature["y"], 12, unas_progress["y"], 12))
+
+        for dashboard, title in (
+            ("unifi-access-points.json", "Access point SIEM events"),
+            ("unifi-gateway.json", "Gateway, WAN, IDS, IPS and Network events"),
+            ("unifi-switches.json", "Switch SIEM events"),
+            ("unifi-protect.json", "Protect events"),
+        ):
+            self.assertEqual(dashboards[dashboard]["panels"][-1]["title"], title)
 
     def test_admin01_location_is_displayed_without_changing_cluster_identity(self):
         env = (APP / "overlay" / "ADMIN01" / "configs" / "alloy.env").read_text()

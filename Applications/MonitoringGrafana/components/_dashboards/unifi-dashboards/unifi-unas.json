@@ -584,7 +584,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Console network receive and transmit throughput reported by UNAS.",
+      "description": "Console network receive and transmit throughput reported by UNAS. Byte/s is on the left axis; bit/s is on the right axis and is the primary network-rate unit.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -594,7 +594,7 @@
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
-            "axisPlacement": "auto",
+            "axisPlacement": "left",
             "drawStyle": "line",
             "fillOpacity": 18,
             "gradientMode": "opacity",
@@ -633,7 +633,24 @@
           },
           "unit": "Bps"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* bit/s$"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -669,9 +686,23 @@
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "receive {{name}}",
+          "legendFormat": "receive {{name}} Byte/s",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "8 * (sum by (name) (unpoller_unas_receive_kbps{cluster=~\"$cluster\",location=~\"$location\"}) * 1000)",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "receive {{name}} bit/s",
+          "range": true,
+          "refId": "B"
         },
         {
           "datasource": {
@@ -683,9 +714,23 @@
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "transmit {{name}}",
+          "legendFormat": "transmit {{name}} Byte/s",
           "range": true,
-          "refId": "B"
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "8 * (sum by (name) (unpoller_unas_transmit_kbps{cluster=~\"$cluster\",location=~\"$location\"}) * 1000)",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "transmit {{name}} bit/s",
+          "range": true,
+          "refId": "D"
         }
       ],
       "title": "UNAS network throughput",
@@ -968,7 +1013,17 @@
         }
       ],
       "title": "RAID protection gap",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -1028,7 +1083,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
+        "w": 12,
         "x": 0,
         "y": 40
       },
@@ -1067,85 +1122,6 @@
       ],
       "title": "RAID operation progress",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Health score reported by UNAS. The state label carries the appliance classification; the score remains quantitative rather than inventing local health thresholds.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 48
-      },
-      "id": 13,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
-          }
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "min by (location,source,name,slot_id,pool_id,disk_type,state,model,serial) (unpoller_unas_disk_health_score{cluster=~\"$cluster\",location=~\"$location\"})",
-          "format": "table",
-          "instant": true,
-          "interval": "60s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Disk health",
-      "type": "table"
     },
     {
       "datasource": {
@@ -1206,10 +1182,10 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 56
+        "x": 12,
+        "y": 40
       },
-      "id": 14,
+      "id": 13,
       "options": {
         "legend": {
           "calcs": [
@@ -1244,6 +1220,95 @@
       ],
       "title": "Disk temperature",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Health score reported by UNAS. The state label carries the appliance classification; the score remains quantitative rather than inventing local health thresholds.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "min by (location,source,name,slot_id,pool_id,disk_type,state,model,serial) (unpoller_unas_disk_health_score{cluster=~\"$cluster\",location=~\"$location\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Disk health",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -1288,7 +1353,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 64
+        "y": 56
       },
       "id": 15,
       "options": {
@@ -1326,7 +1391,17 @@
         }
       ],
       "title": "Disk media errors",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -1367,7 +1442,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 64
       },
       "id": 16,
       "options": {
@@ -1405,7 +1480,17 @@
         }
       ],
       "title": "Disk power-on hours",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "type": "logs",
@@ -1419,7 +1504,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 80
+        "y": 72
       },
       "fieldConfig": {
         "defaults": {

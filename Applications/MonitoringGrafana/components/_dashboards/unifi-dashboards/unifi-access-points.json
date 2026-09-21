@@ -323,7 +323,7 @@
               }
             ]
           },
-          "unit": "Bps"
+          "unit": "bps"
         },
         "overrides": []
       },
@@ -357,7 +357,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(unpoller_device_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$ap\",type=\"uap\"})",
+          "expr": "8 * sum(unpoller_device_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$ap\",type=\"uap\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -448,7 +448,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Current traffic by access point.",
+      "description": "Current traffic by access point. Byte/s is on the left axis; bit/s is on the right axis and is the primary network-rate unit.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -458,7 +458,7 @@
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
-            "axisPlacement": "auto",
+            "axisPlacement": "left",
             "drawStyle": "line",
             "fillOpacity": 18,
             "gradientMode": "opacity",
@@ -497,7 +497,24 @@
           },
           "unit": "Bps"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* bit/s$"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -533,9 +550,23 @@
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "{{name}}",
+          "legendFormat": "{{name}} Byte/s",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "8 * (sum by (name) (unpoller_device_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$ap\",type=\"uap\"}))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "{{name}} bit/s",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "Access point throughput",
@@ -672,7 +703,24 @@
           },
           "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "band"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -716,7 +764,17 @@
         }
       ],
       "title": "Radio channels",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -755,7 +813,24 @@
           },
           "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "band"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -799,7 +874,131 @@
         }
       ],
       "title": "Radio transmit retries",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Retries divided by controller-reported transmit attempts plus retries. This percentage is calculated only from the available radio counters.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "band"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "100 * max by (location,site_name,name,band,radio_name) (unpoller_device_radio_transmit_retries{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$ap\"}) / clamp_min(max by (location,site_name,name,band,radio_name) (unpoller_device_radio_transmit_retries{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$ap\"}) + max by (location,site_name,name,band,radio_name) (unpoller_device_radio_transmit_packets{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$ap\"}), 1)",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Radio retry percentage",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -842,15 +1041,32 @@
           },
           "unit": "percent"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "band"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 48
       },
-      "id": 11,
+      "id": 12,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -886,7 +1102,175 @@
         }
       ],
       "title": "Wireless satisfaction",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Latest signal and channel reported for each rogue AP observation. Signal and channel share the same source, AP and radio identity.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "dBm"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "band"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #B"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 56
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "label_join(max by (location,site_name,source,name,mac,security,band,ap_mac,radio,radio_name,oui) (unpoller_rogueap_rssi{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}), \"observation\", \" / \", \"location\", \"site_name\", \"source\", \"name\", \"mac\", \"band\", \"ap_mac\", \"radio\", \"radio_name\")",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": ""
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "label_join(max by (location,site_name,source,name,mac,security,band,ap_mac,radio,radio_name,oui) (unpoller_rogueap_channel{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}), \"observation\", \" / \", \"location\", \"site_name\", \"source\", \"name\", \"mac\", \"band\", \"ap_mac\", \"radio\", \"radio_name\")",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "B"
+        }
+      ],
+      "title": "Rogue access points",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "observation",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "Value #A": "Signal (dBm)",
+              "Value #B": "Channel"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -948,9 +1332,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 64
       },
-      "id": 12,
+      "id": 14,
       "options": {
         "legend": {
           "calcs": [
@@ -1039,9 +1423,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 72
       },
-      "id": 13,
+      "id": 15,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1077,7 +1461,17 @@
         }
       ],
       "title": "Access point uptime",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -1118,9 +1512,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 64
+        "y": 80
       },
-      "id": 14,
+      "id": 16,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1156,7 +1550,17 @@
         }
       ],
       "title": "Access point firmware",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -1201,9 +1605,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 88
       },
-      "id": 15,
+      "id": 17,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1239,7 +1643,62 @@
         }
       ],
       "title": "Access point updates",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Access point SIEM events",
+      "description": "Wireless, radio and rogue-access-point records.",
+      "datasource": {
+        "type": "loki",
+        "uid": "monitoring-logs"
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 24,
+        "x": 0,
+        "y": 96
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No matching UniFi events"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "monitoring-logs"
+          },
+          "editorMode": "code",
+          "expr": "{cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\"} |~ \"(?i)access.?point|\\buap\\b|wifi|wlan|wireless|radio|rogue\" |= ${search:doublequote}",
+          "queryType": "range",
+          "maxLines": 500
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "id": 18
     }
   ],
   "preload": false,

@@ -130,19 +130,38 @@ options:
     reloader.stakater.com/match: 'false'
 files:
   - unifi-overview.json=./unifi-dashboards/unifi-overview.json
-  - unifi-network.json=./unifi-dashboards/unifi-network.json
 ---
 apiVersion: builtin
 kind: ConfigMapGenerator
 metadata:
-  name: grafana-monitoring-dashboards-unifi-network
+  name: grafana-monitoring-dashboards-unifi-gateway
 behavior: create
 options:
   annotations:
     reloader.stakater.com/match: 'false'
 files:
   - unifi-gateway.json=./unifi-dashboards/unifi-gateway.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-unifi-switches
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
   - unifi-switches.json=./unifi-dashboards/unifi-switches.json
+---
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: grafana-monitoring-dashboards-unifi-access-points
+behavior: create
+options:
+  annotations:
+    reloader.stakater.com/match: 'false'
+files:
   - unifi-access-points.json=./unifi-dashboards/unifi-access-points.json
 ---
 apiVersion: builtin
@@ -155,4 +174,5 @@ options:
     reloader.stakater.com/match: 'false'
 files:
   - unifi-protect.json=./unifi-dashboards/unifi-protect.json
+  - unifi-ups.json=./unifi-dashboards/unifi-ups.json
   - unifi-unas.json=./unifi-dashboards/unifi-unas.json

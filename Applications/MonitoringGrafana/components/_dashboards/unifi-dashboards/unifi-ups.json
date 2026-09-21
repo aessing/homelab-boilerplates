@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Network inventory, traffic, DPI, switch ports, rogue access points and IDS or IPS details.",
+  "description": "Battery, load and electrical-output telemetry for the UniFi UPS devices. All values come directly from the controller and are shown per device where possible.",
   "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -73,7 +73,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "Network inventory, traffic, DPI, switch ports, rogue access points and IDS or IPS details.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
+        "content": "Battery, load and electrical-output telemetry for the UniFi UPS devices. All values come directly from the controller and are shown per device where possible.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
         "mode": "markdown"
       },
       "pluginVersion": "13.2.2",
@@ -164,7 +164,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Standalone switches plus the gateway's integrated switch. PDU and UPS devices are excluded.",
+      "description": "Observed UniFi UPS devices with battery telemetry.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -217,7 +217,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "count(max without (tag) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=~\"usw|udm\"}))",
+          "expr": "count(max by (device_name) (unpoller_device_ups_battery_level_percent{cluster=~\"$cluster\",location=~\"$location\"}))",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -226,7 +226,7 @@
           "refId": "A"
         }
       ],
-      "title": "Switching devices",
+      "title": "UPS devices",
       "type": "stat"
     },
     {
@@ -234,26 +234,30 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Observed wireless access points. The LTE modem is excluded.",
+      "description": "Lowest reported charge among selected UPS devices.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 0,
+          "decimals": 2,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "#5794F2",
+                "color": "green",
                 "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
               }
             ]
           },
-          "unit": "short"
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -287,7 +291,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "count(max without (tag) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"uap\",model!=\"ULTEPEU\"}))",
+          "expr": "min(unpoller_device_ups_battery_level_percent{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -296,7 +300,7 @@
           "refId": "A"
         }
       ],
-      "title": "Access points",
+      "title": "Lowest battery level",
       "type": "stat"
     },
     {
@@ -304,14 +308,14 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Associated stations reported for the selected sites.",
+      "description": "Shortest controller-reported remaining battery runtime among selected UPS devices.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 0,
+          "decimals": 2,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
@@ -323,7 +327,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "s"
         },
         "overrides": []
       },
@@ -357,7 +361,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(unpoller_site_stations{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "expr": "min(unpoller_device_ups_battery_time_remaining_seconds{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -366,7 +370,7 @@
           "refId": "A"
         }
       ],
-      "title": "Stations",
+      "title": "Shortest battery runtime",
       "type": "stat"
     },
     {
@@ -374,30 +378,26 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Internet drop counter increases in the selected range.",
+      "description": "Combined current output power of selected UPS devices.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "custom": {},
-          "decimals": 0,
+          "decimals": 2,
           "mappings": [],
           "noValue": "N/A",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "#5794F2",
                 "value": null
-              },
-              {
-                "color": "#FFB357",
-                "value": 1
               }
             ]
           },
-          "unit": "short"
+          "unit": "watt"
         },
         "overrides": []
       },
@@ -431,7 +431,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(increase(unpoller_site_intenet_drops_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}[$__range]))",
+          "expr": "sum(unpoller_device_ups_power_output_watts{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -440,7 +440,7 @@
           "refId": "A"
         }
       ],
-      "title": "Internet outages",
+      "title": "Current output power",
       "type": "stat"
     },
     {
@@ -448,287 +448,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Current gateway WAN receive rate.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {},
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 8
-      },
-      "id": 7,
-      "options": {
-        "colorMode": "background_solid",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum(unpoller_device_wan_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
-          "format": "time_series",
-          "instant": true,
-          "interval": "30s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Internet receive",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Current gateway WAN transmit rate.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {},
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 8
-      },
-      "id": 8,
-      "options": {
-        "colorMode": "background_solid",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum(unpoller_device_wan_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
-          "format": "time_series",
-          "instant": true,
-          "interval": "30s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Internet transmit",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Current receive plus transmit throughput for the selected device and port scope.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {},
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 8
-      },
-      "id": 9,
-      "options": {
-        "colorMode": "background_solid",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum(max without (tag) (unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\",port_name=~\"$port\"})) + sum(max without (tag) (unpoller_device_port_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\",port_name=~\"$port\"}))",
-          "format": "time_series",
-          "instant": true,
-          "interval": "30s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Switching throughput",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Actual output reported by observed UniFi UPS devices. This approximates total network power only when the monitored UPS units cover the full installation. It is not the rated PoE budget.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {},
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "watt"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 8
-      },
-      "id": 10,
-      "options": {
-        "colorMode": "background_solid",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum(unpoller_device_ups_power_output_watts{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
-          "format": "time_series",
-          "instant": true,
-          "interval": "30s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Observed network power",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Current site receive and transmit rates.",
+      "description": "Reported battery charge and load percentage per UPS.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -775,7 +495,7 @@
               }
             ]
           },
-          "unit": "Bps"
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -783,7 +503,413 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 8
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (device_name) (unpoller_device_ups_battery_level_percent{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "battery {{device_name}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (device_name) (unpoller_device_ups_load_percent{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "load {{device_name}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Battery level and load",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Controller-reported remaining runtime per UPS.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (device_name) (unpoller_device_ups_battery_time_remaining_seconds{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "{{device_name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Battery runtime",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Current output power per UPS.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (device_name) (unpoller_device_ups_power_output_watts{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "{{device_name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Output power",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Measured output voltage per UPS.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "volt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (device_name) (unpoller_device_ups_output_voltage{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "{{device_name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Output voltage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Measured output current per UPS.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "amp"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
       },
       "id": 11,
       "options": {
@@ -809,30 +935,16 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (location,site_name) (unpoller_site_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "expr": "max by (device_name) (unpoller_device_ups_output_current_amps{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "receive {{location}} {{site_name}}",
+          "legendFormat": "{{device_name}}",
           "range": true,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum by (location,site_name) (unpoller_site_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "transmit {{location}} {{site_name}}",
-          "range": true,
-          "refId": "B"
         }
       ],
-      "title": "Site traffic",
+      "title": "Output current",
       "type": "timeseries"
     },
     {
@@ -840,40 +952,19 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Per-port receive and transmit rates, deduplicated across UniFi device tags.",
+      "description": "Configured power budget per UPS.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic-by-name"
+            "mode": "thresholds"
           },
           "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
             },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "filterable": true,
+            "inspect": false
           },
           "decimals": 2,
           "mappings": [],
@@ -887,7 +978,7 @@
               }
             ]
           },
-          "unit": "Bps"
+          "unit": "watt"
         },
         "overrides": []
       },
@@ -895,24 +986,26 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 32
       },
       "id": 12,
       "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "show": false
         },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
       },
       "targets": [
         {
@@ -921,38 +1014,34 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (location,name,port_name) (max without (tag) (unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\",port_name=~\"$port\"}))",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "receive {{name}} {{port_name}}",
-          "range": true,
+          "expr": "max by (location,site_name,device_name) (unpoller_device_ups_power_budget_watts{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum by (location,name,port_name) (max without (tag) (unpoller_device_port_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\",port_name=~\"$port\"}))",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "transmit {{name}} {{port_name}}",
-          "range": true,
-          "refId": "B"
         }
       ],
-      "title": "Switch port traffic",
-      "type": "timeseries"
+      "title": "UPS power budget",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Combined error and drop increases, deduplicated across UniFi device tags.",
+      "description": "Battery-management anomalies reported by each UPS.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -990,7 +1079,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 28
+        "y": 40
       },
       "id": 13,
       "options": {
@@ -1018,7 +1107,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (location,site_name,name,port_name) (max without (tag) (increase(unpoller_device_port_receive_errors_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\",port_name=~\"$port\"}[$__range]) + increase(unpoller_device_port_transmit_errors_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\",port_name=~\"$port\"}[$__range]) + increase(unpoller_device_port_receive_dropped_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\",port_name=~\"$port\"}[$__range]) + increase(unpoller_device_port_transmit_dropped_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\",port_name=~\"$port\"}[$__range])))",
+          "expr": "max by (location,site_name,device_name) (unpoller_device_ups_bms_anomaly_count{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
           "format": "table",
           "instant": true,
           "interval": "60s",
@@ -1027,21 +1116,38 @@
           "refId": "A"
         }
       ],
-      "title": "Switch port errors and drops",
-      "type": "table"
+      "title": "UPS BMS anomalies",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Current power draw per PoE port, deduplicated across UniFi device tags.",
+      "description": "Controller-reported battery operating mode. The numeric mode is retained because the exporter does not provide a stable text mapping.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "custom": {},
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
           "decimals": 2,
           "mappings": [],
           "noValue": "N/A",
@@ -1054,41 +1160,34 @@
               }
             ]
           },
-          "unit": "watt"
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 12,
+        "h": 8,
+        "w": 24,
         "x": 0,
-        "y": 36
+        "y": 48
       },
       "id": 14,
       "options": {
-        "displayMode": "gradient",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "maxVizHeight": 300,
-        "minVizHeight": 16,
-        "minVizWidth": 8,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
           "fields": "",
-          "values": false
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "text": {},
-        "valueMode": "color"
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
       },
       "targets": [
         {
@@ -1097,577 +1196,27 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum by (location,site_name,name,port_name) (max without (tag) (unpoller_device_port_poe_watts{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\",port_name=~\"$port\"}))",
-          "format": "time_series",
+          "expr": "max by (location,site_name,device_name) (unpoller_device_ups_battery_mode{cluster=~\"$cluster\",location=~\"$location\",device_name=~\"$ups\"})",
+          "format": "table",
           "instant": true,
-          "interval": "30s",
-          "legendFormat": "{{location}} {{name}} {{port_name}}",
+          "interval": "60s",
+          "legendFormat": "",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "PoE consumption",
-      "type": "bargauge"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "DPI byte counters by category, aggregated across clients and applications.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 18,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
+      "title": "UPS battery mode",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
             }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 43
-      },
-      "id": 15,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum by (location,site_name,category) (unpoller_client_dpi_receive_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "receive {{site_name}} {{category}}",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "sum by (location,site_name,category) (unpoller_client_dpi_transmit_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "transmit {{site_name}} {{category}}",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "DPI traffic by category",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Latest rogue-AP RSSI observations per detecting access point and radio.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#FFB357",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "dBm"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 51
-      },
-      "id": 16,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
           }
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (location,site_name,source,name,mac,security,band,ap_mac,radio,radio_name,oui) (unpoller_rogueap_rssi{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
-          "format": "table",
-          "instant": true,
-          "interval": "60s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
         }
-      ],
-      "title": "Rogue access point signal",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Latest channel reported per rogue access point observation.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 59
-      },
-      "id": 17,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
-          }
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (location,site_name,source,name,mac,security,band,ap_mac,radio,radio_name,oui) (unpoller_rogueap_channel{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
-          "format": "table",
-          "instant": true,
-          "interval": "60s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Rogue access point channel",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Observed firmware versions for the selected device scope.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 67
-      },
-      "id": 18,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
-          }
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (location,site_name,name,type,model,version) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\"})",
-          "format": "table",
-          "instant": true,
-          "interval": "60s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Device firmware",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Device uptime reported by UniFi.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 75
-      },
-      "id": 19,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
-          }
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (location,site_name,name,type) (unpoller_device_uptime_seconds{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\"})",
-          "format": "table",
-          "instant": true,
-          "interval": "60s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Device uptime",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "One means UniFi reports an available update.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#FFB357",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 83
-      },
-      "id": 20,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
-          }
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (location,site_name,name,type) (unpoller_device_upgradable{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\"})",
-          "format": "table",
-          "instant": true,
-          "interval": "60s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Available device updates",
-      "type": "table"
-    },
-    {
-      "type": "logs",
-      "title": "IDS, IPS and Network events",
-      "description": "Detailed security and Network records.",
-      "datasource": {
-        "type": "loki",
-        "uid": "monitoring-logs"
-      },
-      "gridPos": {
-        "h": 13,
-        "w": 24,
-        "x": 0,
-        "y": 91
-      },
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "No matching UniFi events"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "monitoring-logs"
-          },
-          "editorMode": "code",
-          "expr": "{cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\"} |~ \"(?i)ids|ips|threat|intrusion|rogue|network\" |= ${search:doublequote}",
-          "queryType": "range",
-          "maxLines": 500
-        }
-      ],
-      "options": {
-        "showTime": true,
-        "showLabels": false,
-        "showCommonLabels": false,
-        "wrapLogMessage": true,
-        "prettifyLogMessage": true,
-        "enableLogDetails": true,
-        "dedupStrategy": "none",
-        "sortOrder": "Descending"
-      },
-      "id": 21
+      ]
     }
   ],
   "preload": false,
@@ -1751,74 +1300,16 @@
           "type": "prometheus",
           "uid": "monitoring-metrics"
         },
-        "definition": "label_values(unpoller_site_aps{cluster=~\"$cluster\",location=~\"$location\"}, site_name)",
-        "description": "Filter by site",
+        "definition": "label_values(unpoller_device_ups_battery_level_percent{cluster=~\"$cluster\",location=~\"$location\"}, device_name)",
+        "description": "Filter by ups",
         "hide": 0,
         "includeAll": true,
-        "label": "Site",
+        "label": "Ups",
         "multi": true,
-        "name": "site",
+        "name": "ups",
         "options": [],
         "query": {
-          "query": "label_values(unpoller_site_aps{cluster=~\"$cluster\",location=~\"$location\"}, site_name)",
-          "refId": "StandardVariableQuery"
-        },
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "monitoring-metrics"
-        },
-        "definition": "label_values(unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}, name)",
-        "description": "Filter by device",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Device",
-        "multi": true,
-        "name": "device",
-        "options": [],
-        "query": {
-          "query": "label_values(unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}, name)",
-          "refId": "StandardVariableQuery"
-        },
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "monitoring-metrics"
-        },
-        "definition": "label_values(unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\"}, port_name)",
-        "description": "Filter by port",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Port",
-        "multi": true,
-        "name": "port",
-        "options": [],
-        "query": {
-          "query": "label_values(unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$device\"}, port_name)",
+          "query": "label_values(unpoller_device_ups_battery_level_percent{cluster=~\"$cluster\",location=~\"$location\"}, device_name)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
@@ -1865,8 +1356,8 @@
     ]
   },
   "timezone": "browser",
-  "title": "UniFi Network",
-  "uid": "mon-unifi-network",
+  "title": "UniFi UPS",
+  "uid": "mon-unifi-ups",
   "version": 1,
   "weekStart": "monday"
 }

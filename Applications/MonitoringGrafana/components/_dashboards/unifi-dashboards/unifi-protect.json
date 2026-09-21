@@ -431,7 +431,7 @@
             "uid": "monitoring-logs"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\",unifi_application=\"UniFi Protect\"} |~ \"(?i)motion|smartDetect|smartAudio\" |~ \"${camera:regex}\" [$__range]))",
+          "expr": "sum(count_over_time({cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\",unifi_application=\"UniFi Protect\",camera=~\"$camera\"} | label_format level=detected_level |~ \"(?i)motion|smartDetect|smartAudio\" [$__range]))",
           "legendFormat": "",
           "queryType": "instant",
           "refId": "A",
@@ -540,7 +540,17 @@
         }
       ],
       "title": "Protect device state",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -712,7 +722,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
         "y": 24
       },
@@ -740,7 +750,7 @@
             "uid": "monitoring-logs"
           },
           "editorMode": "code",
-          "expr": "sum by (unifi_application) (rate({cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\",unifi_application=\"UniFi Protect\"} |~ \"(?i)motion|smartDetect|smartAudio\" |~ \"${camera:regex}\" [$__auto]))",
+          "expr": "sum by (unifi_application) (rate({cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\",unifi_application=\"UniFi Protect\",camera=~\"$camera\"} | label_format level=detected_level |~ \"(?i)motion|smartDetect|smartAudio\" [$__auto]))",
           "legendFormat": "{{unifi_application}}",
           "queryType": "range",
           "refId": "A",
@@ -827,7 +837,17 @@
         }
       ],
       "title": "Camera network attachment",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -928,7 +948,199 @@
         }
       ],
       "title": "NVR state",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Firmware of the UDM hosting Protect. Camera firmware is not exported by the available Protect metrics.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (location,site_name,name,type,model,version) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",type=\"udm\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Protect host firmware",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "One means UniFi reports an available UDM update. Camera firmware update state is not exported.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 56
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (location,site_name,name,type) (unpoller_device_upgradable{cluster=~\"$cluster\",location=~\"$location\",type=\"udm\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Protect host updates",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "type": "logs",
@@ -942,7 +1154,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 64
       },
       "fieldConfig": {
         "defaults": {
@@ -958,7 +1170,7 @@
             "uid": "monitoring-logs"
           },
           "editorMode": "code",
-          "expr": "{cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\",unifi_application=\"UniFi Protect\"} |~ \"${camera:regex}\" |~ \"(?i)protect|camera|motion|smartDetect|smartAudio|doorbell|nvr\" |= ${search:doublequote}",
+          "expr": "{cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\",unifi_application=\"UniFi Protect\",camera=~\"$camera\"} | label_format level=detected_level |~ \"(?i)protect|camera|motion|smartDetect|smartAudio|doorbell|nvr\" |= ${search:doublequote}",
           "queryType": "range",
           "maxLines": 500
         }
@@ -973,7 +1185,7 @@
         "dedupStrategy": "none",
         "sortOrder": "Descending"
       },
-      "id": 12
+      "id": 14
     }
   ],
   "preload": false,

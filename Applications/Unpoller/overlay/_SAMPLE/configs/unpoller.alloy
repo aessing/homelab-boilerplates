@@ -98,10 +98,45 @@ loki.process "syslog" {
     expression = "CEF:[^|]*\\|[^|]*\\|(?P<unifi_application>[^|]*)\\|[^|]*\\|[^|]*\\|[^|]*\\|(?P<cef_severity>[^| ]*)"
   }
 
+  // Protect's event text has a bounded camera name before "has" or "detected".
+  // Making it a label enables a camera selector without highlighting whole lines.
+  stage.regex {
+    expression = "msg=\\\"(?P<camera>.*?) (?:has|detected) "
+  }
+
   stage.labels {
     values = {
       unifi_application = "",
       cef_severity      = "",
+      camera            = "",
+    }
+  }
+
+  // UniFi's sender may attach an unclassified severity label. The explicit CEF
+  // mapping below is authoritative, so remove the conflicting incoming label.
+  stage.label_drop {
+    values = ["detected_level_extracted"]
+  }
+
+  // UniFi's CEF severity 1-3 is informational, 4-6 is a warning and 7-10
+  // requires attention. Grafana can then color Protect records by source
+  // severity instead of presenting every CEF record as an unknown warning.
+  stage.match {
+    selector = "{cef_severity=~\"[1-3]\"}"
+    stage.static_labels {
+      values = { detected_level = "info" }
+    }
+  }
+  stage.match {
+    selector = "{cef_severity=~\"[4-6]\"}"
+    stage.static_labels {
+      values = { detected_level = "warn" }
+    }
+  }
+  stage.match {
+    selector = "{cef_severity=~\"[7-9]|10\"}"
+    stage.static_labels {
+      values = { detected_level = "error" }
     }
   }
 

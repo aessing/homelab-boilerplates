@@ -183,7 +183,7 @@
               }
             ]
           },
-          "unit": "Bps"
+          "unit": "bps"
         },
         "overrides": []
       },
@@ -217,7 +217,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(unpoller_device_wan_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "expr": "8 * sum(unpoller_device_wan_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -253,7 +253,7 @@
               }
             ]
           },
-          "unit": "Bps"
+          "unit": "bps"
         },
         "overrides": []
       },
@@ -287,7 +287,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(unpoller_device_wan_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "expr": "8 * sum(unpoller_device_wan_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -946,7 +946,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Gateway WAN receive and transmit rate.",
+      "description": "Current site receive and transmit rates for the selected gateway sites. Byte/s is on the left axis; bit/s is on the right axis and is the primary network-rate unit.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -956,7 +956,7 @@
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
-            "axisPlacement": "auto",
+            "axisPlacement": "left",
             "drawStyle": "line",
             "fillOpacity": 18,
             "gradientMode": "opacity",
@@ -995,7 +995,24 @@
           },
           "unit": "Bps"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* bit/s$"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -1027,13 +1044,184 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
+          "expr": "sum by (location,site_name) (unpoller_site_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "receive {{location}} {{site_name}} Byte/s",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "8 * (sum by (location,site_name) (unpoller_site_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "receive {{location}} {{site_name}} bit/s",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (location,site_name) (unpoller_site_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "transmit {{location}} {{site_name}} Byte/s",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "8 * (sum by (location,site_name) (unpoller_site_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "transmit {{location}} {{site_name}} bit/s",
+          "range": true,
+          "refId": "D"
+        }
+      ],
+      "title": "Site traffic",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Gateway WAN receive and transmit rate. Byte/s is on the left axis; bit/s is on the right axis and is the primary network-rate unit.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* bit/s$"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
           "expr": "sum(unpoller_device_wan_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "receive",
+          "legendFormat": "receive Byte/s",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "8 * (sum(unpoller_device_wan_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "receive bit/s",
+          "range": true,
+          "refId": "B"
         },
         {
           "datasource": {
@@ -1045,9 +1233,23 @@
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "transmit",
+          "legendFormat": "transmit Byte/s",
           "range": true,
-          "refId": "B"
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "8 * (sum(unpoller_device_wan_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "transmit bit/s",
+          "range": true,
+          "refId": "D"
         }
       ],
       "title": "Internet throughput",
@@ -1058,7 +1260,136 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Current LTE device traffic. It does not prove cellular failover use or match carrier accounting.",
+      "description": "Current LTE device traffic. It does not prove cellular failover use or match carrier accounting. Byte/s is on the left axis; bit/s is on the right axis and is the primary network-rate unit.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* bit/s$"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum(unpoller_device_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"uap\"} * on (cluster,location,site_name,name) group_left() (max by (cluster,location,site_name,name) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",model=\"ULTEPEU\"})))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "LTE device Byte/s",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "8 * (sum(unpoller_device_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"uap\"} * on (cluster,location,site_name,name) group_left() (max by (cluster,location,site_name,name) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",model=\"ULTEPEU\"}))))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "LTE device bit/s",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "LTE device throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "DPI byte counters by category, aggregated across clients and applications.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1105,7 +1436,7 @@
               }
             ]
           },
-          "unit": "Bps"
+          "unit": "bytes"
         },
         "overrides": []
       },
@@ -1113,9 +1444,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 40
       },
-      "id": 15,
+      "id": 17,
       "options": {
         "legend": {
           "calcs": [
@@ -1139,16 +1470,30 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(unpoller_device_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"uap\"} * on (cluster,location,site_name,name) group_left() (max by (cluster,location,site_name,name) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",model=\"ULTEPEU\"})))",
+          "expr": "sum by (location,site_name,category) (unpoller_client_dpi_receive_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "LTE device",
+          "legendFormat": "receive {{site_name}} {{category}}",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "sum by (location,site_name,category) (unpoller_client_dpi_transmit_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "transmit {{site_name}} {{category}}",
+          "range": true,
+          "refId": "B"
         }
       ],
-      "title": "LTE device throughput",
+      "title": "DPI traffic by category",
       "type": "timeseries"
     },
     {
@@ -1202,9 +1547,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 48
       },
-      "id": 16,
+      "id": 18,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1240,7 +1585,17 @@
         }
       ],
       "title": "WAN interfaces",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -1289,9 +1644,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 56
       },
-      "id": 17,
+      "id": 19,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1327,86 +1682,17 @@
         }
       ],
       "title": "WAN availability",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "monitoring-metrics"
-      },
-      "description": "Observed UDM and LTE modem firmware.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "N/A",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#5794F2",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 48
-      },
-      "id": 18,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Value"
-          }
-        ]
-      },
-      "targets": [
+      "type": "table",
+      "transformations": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "monitoring-metrics"
-          },
-          "editorMode": "code",
-          "expr": "max by (location,site_name,name,type,model,version) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"udm\"} or unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",model=\"ULTEPEU\"})",
-          "format": "table",
-          "instant": true,
-          "interval": "60s",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
         }
-      ],
-      "title": "Gateway and LTE firmware",
-      "type": "table"
+      ]
     },
     {
       "datasource": {
@@ -1447,9 +1733,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 64
       },
-      "id": 19,
+      "id": 20,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1485,7 +1771,106 @@
         }
       ],
       "title": "Gateway and LTE uptime",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Observed UDM and LTE modem firmware.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 72
+      },
+      "id": 21,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (location,site_name,name,type,model,version) (unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",type=\"udm\"} or unpoller_device_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",model=\"ULTEPEU\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Gateway and LTE firmware",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -1530,9 +1915,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 64
+        "y": 80
       },
-      "id": 20,
+      "id": 22,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1568,7 +1953,158 @@
         }
       ],
       "title": "Gateway and LTE updates",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "monitoring-logs"
+      },
+      "description": "Incoming UDM and UNAS SIEM records per second for the selected location.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "logs/s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 88
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "monitoring-logs"
+          },
+          "editorMode": "code",
+          "expr": "sum by (location,appliance) (rate({cluster=~\"$cluster\",location=~\"$location\",source=\"unifi-siem\"}[$__auto]))",
+          "legendFormat": "{{location}} {{appliance}}",
+          "queryType": "range",
+          "refId": "A",
+          "maxLines": 500
+        }
+      ],
+      "title": "Gateway and WAN SIEM event volume",
+      "type": "timeseries"
+    },
+    {
+      "type": "logs",
+      "title": "Gateway, WAN, IDS, IPS and Network events",
+      "description": "Gateway, WAN, LTE, IDS, IPS and Network records.",
+      "datasource": {
+        "type": "loki",
+        "uid": "monitoring-logs"
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 24,
+        "x": 0,
+        "y": 96
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No matching UniFi events"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "monitoring-logs"
+          },
+          "editorMode": "code",
+          "expr": "{cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\"} |~ \"(?i)gateway|wan|internet|lte|failover|dhcp|dns|dpi|ids|ips|threat|intrusion|rogue|network\" |= ${search:doublequote}",
+          "queryType": "range",
+          "maxLines": 500
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "id": 24
     }
   ],
   "preload": false,

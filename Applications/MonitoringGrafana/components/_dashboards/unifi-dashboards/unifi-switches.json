@@ -164,7 +164,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Standalone switches in the selected scope. The UDM integrated switch is summarized on UniFi Network.",
+      "description": "Standalone switches in the selected scope. The UDM integrated switch is covered by the Gateway and WAN dashboard.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -253,7 +253,7 @@
               }
             ]
           },
-          "unit": "Bps"
+          "unit": "bps"
         },
         "overrides": []
       },
@@ -287,7 +287,7 @@
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "sum(unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"}) + sum(unpoller_device_port_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"})",
+          "expr": "8 * (sum(unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"}) + sum(unpoller_device_port_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"}))",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -448,7 +448,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Per-port switch traffic.",
+      "description": "Per-port switch traffic. Byte/s is on the left axis; bit/s is on the right axis and is the primary network-rate unit.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -458,7 +458,7 @@
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
-            "axisPlacement": "auto",
+            "axisPlacement": "left",
             "drawStyle": "line",
             "fillOpacity": 18,
             "gradientMode": "opacity",
@@ -497,7 +497,24 @@
           },
           "unit": "Bps"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* bit/s$"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -533,9 +550,23 @@
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "receive {{name}} {{port_name}}",
+          "legendFormat": "receive {{name}} {{port_name}} Byte/s",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "8 * (sum by (name,port_name) (unpoller_device_port_receive_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"}))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "receive {{name}} {{port_name}} bit/s",
+          "range": true,
+          "refId": "B"
         },
         {
           "datasource": {
@@ -547,9 +578,23 @@
           "format": "time_series",
           "instant": false,
           "interval": "30s",
-          "legendFormat": "transmit {{name}} {{port_name}}",
+          "legendFormat": "transmit {{name}} {{port_name}} Byte/s",
           "range": true,
-          "refId": "B"
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "8 * (sum by (name,port_name) (unpoller_device_port_transmit_rate_bytes{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",port_name=~\"$port\"}))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "transmit {{name}} {{port_name}} bit/s",
+          "range": true,
+          "refId": "D"
         }
       ],
       "title": "Port throughput",
@@ -560,7 +605,7 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
-      "description": "Current PoE draw compared with the controller-reported maximum power value.",
+      "description": "Current PoE consumption by switch. Series are stacked so the total PoE load remains visible; switch budgets are shown separately below.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -589,7 +634,7 @@
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "none"
+              "mode": "normal"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -648,24 +693,99 @@
           "legendFormat": "PoE draw {{name}}",
           "range": true,
           "refId": "A"
+        }
+      ],
+      "title": "PoE draw",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Controller-reported maximum PoE budget per switch.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "watt"
         },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
+      },
+      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "monitoring-metrics"
           },
           "editorMode": "code",
-          "expr": "max by (name) (unpoller_device_max_power_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",type=\"usw\"})",
-          "format": "time_series",
-          "instant": false,
-          "interval": "30s",
-          "legendFormat": "reported budget {{name}}",
-          "range": true,
-          "refId": "B"
+          "expr": "max by (location,site_name,name) (unpoller_device_max_power_total{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\",name=~\"$switch\",type=\"usw\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
         }
       ],
-      "title": "PoE draw and switch budget",
-      "type": "timeseries"
+      "title": "Switch PoE budget",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -710,9 +830,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 32
       },
-      "id": 9,
+      "id": 10,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -748,7 +868,17 @@
         }
       ],
       "title": "Port errors and drops",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -783,15 +913,32 @@
           },
           "unit": "bps"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "port_num"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 40
       },
-      "id": 10,
+      "id": 11,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -827,7 +974,17 @@
         }
       ],
       "title": "Port link speed",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -889,9 +1046,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 48
       },
-      "id": 11,
+      "id": 12,
       "options": {
         "legend": {
           "calcs": [
@@ -980,9 +1137,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 56
       },
-      "id": 12,
+      "id": 13,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1018,7 +1175,17 @@
         }
       ],
       "title": "Switch uptime",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -1059,9 +1226,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 64
       },
-      "id": 13,
+      "id": 14,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1097,7 +1264,17 @@
         }
       ],
       "title": "Switch firmware",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -1142,9 +1319,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 64
+        "y": 72
       },
-      "id": 14,
+      "id": 15,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1180,7 +1357,62 @@
         }
       ],
       "title": "Switch updates",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Switch SIEM events",
+      "description": "Switch, port and PoE records.",
+      "datasource": {
+        "type": "loki",
+        "uid": "monitoring-logs"
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 24,
+        "x": 0,
+        "y": 80
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No matching UniFi events"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "monitoring-logs"
+          },
+          "editorMode": "code",
+          "expr": "{cluster=~\"$cluster\",location=~\"$location\",source=~\"unifi-siem|unpoller-api\"} |~ \"(?i)switch|port|poe|stp|loop|link|duplex|vlan\" |= ${search:doublequote}",
+          "queryType": "range",
+          "maxLines": 500
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "id": 16
     }
   ],
   "preload": false,

@@ -52,7 +52,11 @@ spec:
               - configMap:
                   name: grafana-monitoring-dashboards-unifi-core
               - configMap:
-                  name: grafana-monitoring-dashboards-unifi-network
+                  name: grafana-monitoring-dashboards-unifi-gateway
+              - configMap:
+                  name: grafana-monitoring-dashboards-unifi-switches
+              - configMap:
+                  name: grafana-monitoring-dashboards-unifi-access-points
               - configMap:
                   name: grafana-monitoring-dashboards-unifi-services
         - name: monitoring-dashboard-provider
