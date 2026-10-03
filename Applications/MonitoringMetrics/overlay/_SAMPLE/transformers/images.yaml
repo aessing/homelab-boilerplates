@@ -5,7 +5,7 @@ metadata:
   name: victoriametrics-image-transformer
 imageTag:
   name: victoriametrics/victoria-metrics
-  newTag: v1.152.0
+  newTag: v1.153.0
 
 ---
 apiVersion: builtin
@@ -14,4 +14,4 @@ metadata:
   name: vmauth-image-transformer
 imageTag:
   name: victoriametrics/vmauth
-  newTag: v1.152.0
+  newTag: v1.153.0

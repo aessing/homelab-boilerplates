@@ -160,6 +160,19 @@ Configure notifications in the web interface:
 - Webhooks
 - And many more...
 
+## MariaDB Major Upgrades
+
+The current target is MariaDB 13.0.2 with Uptime Kuma 2.5.5. Before upgrading an existing 12.3.3 database:
+
+1. Stop Uptime Kuma during the maintenance window. Create a consistent logical database dump including routines, events and triggers. Preserve the application data directory, database credentials, user grants and the previous manifests separately.
+2. Restore the dump into a separate database and verify the application can log in, read monitoring history and write data. Keep the production data directory intact during this test.
+3. Upgrade the existing database through the StatefulSet. `MARIADB_AUTO_UPGRADE=1` lets the official image migrate required system tables. Its automatic system-table backup is not a complete application backup. The startup probe allows about ten minutes for initialization and migration, adjust this budget before rollout if a representative test needs longer.
+4. Wait for the database to become ready, then restart Uptime Kuma and verify login, monitors, history, status pages and new writes. Check database and application logs from the upgrade start. If recovery is needed, restore the complete pre-upgrade backup into a separate data directory using the previous MariaDB version. Reverting only the image tag is not a verified rollback after a major migration.
+
+An isolated ARM64 test on 2026-10-03 verified the 12.3.3 → 13.0.2 upgrade with the official image, UID/GID 999 and Uptime Kuma 2.5.5. It covered schema initialization, login, monitor writes and restoring the pre-upgrade logical dump back into a fresh 12.3.3 database. This test used a small synthetic dataset. It does not replace a backup and restore test of the actual installation.
+
+See the [MariaDB 13.0.2 release notes](https://mariadb.com/docs/release-notes/community-server/13.0/13.0.2) and the [official image upgrade behavior](https://hub.docker.com/_/mariadb).
+
 ## Troubleshooting
 
 ### Check deployment status

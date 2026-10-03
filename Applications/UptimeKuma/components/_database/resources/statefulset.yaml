@@ -51,6 +51,8 @@ spec:
               cpu: 0.5
               memory: 768Mi
           env:
+            - name: MARIADB_AUTO_UPGRADE
+              value: '1'
             - name: MARIADB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -83,7 +85,8 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             successThreshold: 1
-            failureThreshold: 30
+            # Allow system-table upgrades to finish before restarting the database.
+            failureThreshold: 120
           readinessProbe:
             exec:
               command: ['/usr/local/bin/healthcheck.sh', '--connect', '--innodb_initialized']

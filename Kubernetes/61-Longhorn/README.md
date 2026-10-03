@@ -114,6 +114,19 @@ Each overlay customizes:
    kustomize build overlay/<cluster-name> | kubectl apply --server-side -f -
    ```
 
+## Upgrade to Longhorn 1.13
+
+Longhorn 1.13 requires Kubernetes 1.34 or newer. V1 volumes can be upgraded directly from Longhorn 1.12.x. V2 volumes require the upgrade path documented by Longhorn, including 1.12.2 where applicable.
+
+The HelmChart uses `failurePolicy: abort` to prevent the K3s Helm controller from uninstalling Longhorn after an upgrade failure. For existing installations, apply and verify this setting before changing the chart version.
+
+Before upgrading, confirm healthy volumes, successful external backups and a tested restore. An internal snapshot alone does not prove external backup recovery. Check that the new global manager can be scheduled and review the release's network policy changes. Let the chart manage its CSI component versions rather than overriding individual sidecars.
+
+Upgrade one cluster at a time. Verify the manager, CSI components, volume health and application read/write access before continuing. Longhorn does not support downgrading after a successful upgrade.
+
+- [Longhorn 1.13 release notes](https://github.com/longhorn/longhorn/releases/tag/v1.13.0)
+- [Upgrade with the Helm controller](https://longhorn.io/docs/1.13.0/deploy/upgrade/longhorn-manager/)
+
 ## RecurringJobs Overview
 
 Longhorn uses RecurringJobs to automate volume maintenance:

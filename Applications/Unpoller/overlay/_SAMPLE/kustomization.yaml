@@ -11,7 +11,7 @@ buildMetadata:
 labels:
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 5.2.7
+      app.kubernetes.io/version: 5.5.0
 
 resources:
   - ../../base

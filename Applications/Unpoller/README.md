@@ -1,6 +1,6 @@
 # UniFi Monitoring
 
-UnPoller v5.2.7 and a dedicated Grafana Alloy v1.19.2 instance collect UniFi
+UnPoller v5.5.0 and a dedicated Grafana Alloy v1.20.1 instance collect UniFi
 Network, Protect and UNAS telemetry on ADMIN01. Metrics are written to the
 existing VictoriaMetrics path. UDM and UNAS SIEM records, plus supported API
 events, are written to the existing Loki path.
@@ -16,7 +16,7 @@ DNS suffix, CA material and secrets belong in a Git-ignored environment overlay.
 | --- | --- | --- | --- |
 | Network API | Inventory, health, clients, ports, PoE, WAN, traffic, DPI, rogue APs, alarms and anomalies | VictoriaMetrics and Loki | Exact fields depend on controller and firmware |
 | Protect API | Device state and supported event metadata | VictoriaMetrics and Loki | Thumbnails, snapshots, video and audio payloads are disabled |
-| UNAS API | Console, network I/O, pools, RAID, disks and shares | VictoriaMetrics | UnPoller v5.2.7 does not export UNAS API events |
+| UNAS API | Console, network I/O, pools, RAID, disks and shares | VictoriaMetrics | UNAS API events are not configured in this deployment |
 | UDM SIEM | Available security and system records, including IDS detail where emitted | Loki | Direct Syslog to the Alloy LoadBalancer |
 | UNAS SIEM | Available storage and system records | Loki | Does not imply complete Drive file auditing |
 
@@ -59,8 +59,9 @@ Replace the documentation values in these files:
 | `patches/network-policy-alloy.yaml` | Exact backend Service IPs |
 | `patches/syslog-service.yaml` | `10.0.1.20` and the exact UDM and UNAS source `/32` ranges |
 
-Network and Protect read credentials are mounted as read-only files. UnPoller
-v5.2.7 does not resolve a `file://` password for the UNAS input, so the
+Network and Protect read credentials are mounted as read-only files. The
+deployment retains the environment-based UNAS password setup introduced for
+v5.2.7, which did not resolve a `file://` password for that input. The
 Deployment injects `unas_password` from the same Kubernetes Secret as
 `UP_UNAS_DEFAULT_PASS`. The value stays out of the ConfigMap and command line.
 
