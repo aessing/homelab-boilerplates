@@ -34,6 +34,10 @@ cd boilerplates
 
 ## Support
 
+Manufacturer usage statistics and automatic diagnostic reports are disabled in
+the Homelab configuration. See the [vendor telemetry policy](docs/vendor-telemetry.md)
+for supported controls, runtime-only preferences, and verification limits.
+
 For further information about this project, how to [contribute](.github/CONTRIBUTING.md), or how to get in touch, please have a look at the [support document](.github/SUPPORT.md). The repository also contains information about [security related topics](.github/SECURITY.md) and [licensing](LICENSE).
 
 You can view a quick project overview on [GitHub Pages](https://aessing.github.io/boilerplates/).

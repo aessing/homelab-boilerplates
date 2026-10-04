@@ -37,6 +37,7 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - run
+            - --disable-reporting
             - --stability.level=public-preview
             - --server.http.listen-addr=0.0.0.0:12345
             - --storage.path=/var/lib/alloy/data
