@@ -136,6 +136,11 @@ individual `private` socket. systemd can replace that socket during a restart,
 leaving an individual socket bind mount disconnected. Mounting its directory
 keeps replacement sockets visible without changing container capabilities.
 
+The diskstats collector reads udev metadata through the existing read-only host
+root mount with `--path.udev.data=/host/root/run/udev/data`. Its udev path is
+independent of `--path.rootfs`, so the default container path would omit device
+properties even when numeric disk statistics are collected successfully.
+
 The log Alloy Pod has supplemental group `4` (`adm` on the supported Ubuntu
 nodes) to read group-readable maintenance logs such as `/var/log/ufw.log`.
 Check the actual group and permissions when using another distribution and
