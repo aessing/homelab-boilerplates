@@ -578,3 +578,8 @@ and [Ubuntu's AppArmor parser documentation](https://manpages.ubuntu.com/manpage
 - [Ubuntu Security Notices](https://ubuntu.com/security/notices)
 - [Auditd Documentation](https://linux.die.net/man/8/auditd)
 - [AppArmor Wiki](https://gitlab.com/apparmor/apparmor/-/wikis/home)
+
+## October 2026 maintenance results
+
+See the [maintenance record](maintenance-2026-10.md) for completed host work,
+staged K3s binaries, verification limits and remaining operational items.
