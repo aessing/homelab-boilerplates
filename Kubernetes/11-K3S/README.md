@@ -209,6 +209,29 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable INSTALL_K3S_EXEC="serv
 curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable INSTALL_K3S_EXEC="agent" sh -s -
 ```
 
+### Install the Stable Binary Without Restarting K3s
+
+For an explicitly approved installation without activating the new binary:
+
+```bash
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable INSTALL_K3S_SKIP_START=true INSTALL_K3S_EXEC="server" sh -s -
+```
+
+Use `server` only for an existing server. Verify that its service has no additional
+command-line options and that required settings are retained in
+`/etc/rancher/k3s/config.yaml`. The installer rewrites the service and environment
+file even when `INSTALL_K3S_SKIP_START=true`. Preserve any existing exported
+K3S, containerd, datastore or proxy settings if the host uses them. Do not run the
+full host/cluster installation script again to update the binary.
+
+Check `/usr/local/bin/k3s --version` after installation. The existing process
+continues to run the previous version until a separately approved K3s service
+restart. `kubectl get nodes` reports that running version. Verify that the service
+PID and start time, retained configuration and node readiness did not change.
+No host reboot is required just to install the binary. Do not start or restart
+K3s when the maintenance request forbids restarts. See the
+[official upgrade documentation](https://docs.k3s.io/upgrades/manual).
+
 ### Update Order
 
 When updating a multi-node cluster, follow this sequence:
