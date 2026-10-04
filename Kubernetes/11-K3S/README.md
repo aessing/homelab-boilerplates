@@ -134,6 +134,24 @@ LoadBalancer.
 
 ## Troubleshooting
 
+### Empty optional CoreDNS imports
+
+K3s imports optional `*.override` and `*.server` files from the
+`kube-system/coredns-custom` ConfigMap. Without matching files, CoreDNS can log
+repeated warnings although DNS resolution continues to work.
+
+The optional `resources/coredns-custom.yaml` supplies comment-only files for
+both imports. It introduces no DNS directives and does not replace the managed
+Corefile. Review the current ConfigMap and target context first, then apply:
+
+```bash
+kubectl --context <cluster> apply --server-side --field-manager=coredns-empty-imports -f resources/coredns-custom.yaml
+```
+
+Preserve existing custom files and do not force ownership conflicts. Check
+CoreDNS readiness, DNS resolution and fresh logs after the projected files
+become visible. See the [K3s custom import documentation](https://docs.k3s.io/advanced#coredns-custom-configuration-imports).
+
 ### Check cluster status
 
 ```bash

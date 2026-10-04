@@ -8,3 +8,4 @@ spec:
   chart: longhorn
   helmVersion: v3
   bootstrap: false
+  failurePolicy: abort

@@ -131,6 +131,17 @@ Pod NetworkPolicies. Protect it using node/network firewall rules, accounting
 for the Pod or node source IP seen after NAT. Do not expose it publicly.
 There is no LoadBalancer or Ingress for the agent.
 
+The systemd collector mounts `/run/systemd` read-only, rather than binding the
+individual `private` socket. systemd can replace that socket during a restart,
+leaving an individual socket bind mount disconnected. Mounting its directory
+keeps replacement sockets visible without changing container capabilities.
+
+The log Alloy Pod has supplemental group `4` (`adm` on the supported Ubuntu
+nodes) to read group-readable maintenance logs such as `/var/log/ufw.log`.
+Check the actual group and permissions when using another distribution and
+adjust the overlay if necessary. Host file ownership and permissions are not
+changed, and container capabilities remain dropped.
+
 ## Deployment
 
 Run these commands from `Applications/MonitoringAgent`.

@@ -104,6 +104,23 @@ kustomize build overlay/my-environment
 kustomize build overlay/my-environment | kubectl apply --server-side -f -
 ```
 
+## Upgrading to 0.147.0
+
+Before rolling out the server image, verify the installed `@scrypted/core`
+plugin version in the Scrypted console. Server releases from 0.145.0 require
+Core 0.3.149 or newer. When the Core endpoint is accessed, the server can
+automatically install a missing or older Core plugin from npm.
+
+Back up the persistent Scrypted volume and confirm that its restore path works
+before the upgrade. Include any automatic Core installation in the rollout
+scope and ensure npm is reachable. Plugin versions live on the persistent
+volume, so changing or reverting the server image does not restore them.
+After the rollout, verify the Core version, camera streams, snapshots and
+configured HomeKit or UniFi Protect integrations in the console.
+
+See the [server version requirement](https://github.com/koush/scrypted/commit/eed2dab4a09b3311484635881556ba29ad50d0df)
+and [Core installation behavior](https://github.com/koush/scrypted/blob/v0.147.0/server/src/runtime.ts#L226-L236).
+
 ## Configuration
 
 ### Key Placeholder Values

@@ -5,7 +5,7 @@ metadata:
   name: loki-image-transformer
 imageTag:
   name: grafana/loki
-  newTag: 3.7.7
+  newTag: 3.7.8
 
 ---
 apiVersion: builtin
@@ -14,4 +14,4 @@ metadata:
   name: vmauth-image-transformer
 imageTag:
   name: victoriametrics/vmauth
-  newTag: v1.152.0
+  newTag: v1.153.0
