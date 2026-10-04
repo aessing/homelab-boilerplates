@@ -274,7 +274,15 @@ fresh installation is known to be trusted. Copy the complete `Linux` directory,
 including its maintenance helpers, before running `21-harden-ubuntu.sh`.
 The script applies the shared unattended-upgrades mail/logging policy, the
 Ubuntu Pro AppArmor repair and the host maintenance policy. It creates no
-additional configuration backups and leaves existing backup files untouched.
+additional configuration backups and preserves unrelated backup files.
+The maintenance helper may remove the known unused resolver artifact
+`/etc/.resolv.conf.systemd-resolved.bak` only after its exact safety checks.
+
+The shared host maintenance helper 43 already runs after USBGuard activation.
+It verifies unused rkhunter artifacts and maintains exact exceptions for active
+USBGuard SHM mappings before scheduled scans, without extra backups or service
+restarts. For later focused maintenance, use helper 43's `--check` and `--apply`
+modes as described in the [shared policy](README.md#shared-host-maintenance-policy).
 
 The full hardening workflow is for a new installation. It upgrades packages,
 changes system policy and deliberately restarts configured services. Review and

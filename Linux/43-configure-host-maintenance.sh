@@ -314,3 +314,7 @@ if __name__ == '__main__':
         print('Maintenance failed: ' + str(error), file=sys.stderr)
         sys.exit(1)
 PYTHON
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+/usr/bin/python3 -I "$SCRIPT_DIR/45-clean-rkhunter-artifacts.py" "$mode"
+/usr/bin/python3 -I "$SCRIPT_DIR/46-configure-rkhunter-usbguard.py" "$mode"

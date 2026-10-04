@@ -18,6 +18,8 @@ Linux/
 ├── 42-remove-dumbledore-smartmontools.sh # Remove unsupported SMART tooling
 ├── 43-configure-host-maintenance.sh # Targeted fwupd, rkhunter and SSH policy
 ├── 44-update-host-packages.sh # Checked package upgrade and cleanup
+├── 45-clean-rkhunter-artifacts.py # Verify and remove unused scanner artifacts
+├── 46-configure-rkhunter-usbguard.py # Exact active USBGuard scanner policy
 └── environments/
     └── _SAMPLE.env           # Template environment configuration
 ```
@@ -94,7 +96,7 @@ The script will:
 - Apply all hardening configurations
 - Apply the shared unattended logging, Ubuntu Pro AppArmor and host maintenance policies
 - Initialize an absent rkhunter baseline only for this trusted new installation
-- Preserve an existing rkhunter baseline and any existing backup files
+- Preserve an existing rkhunter baseline and unrelated backup files
 - Log all actions to `21-harden-ubuntu.log`
 
 ### 4. Post-Installation Steps
@@ -114,8 +116,9 @@ After the script completes:
    ```
 
 3. **Verify the resulting system** before putting it into service. The script
-   creates no additional configuration backups and does not delete existing
-   backup files. Read the script log, check SSH access and review any remaining
+   creates no additional configuration backups and preserves unrelated
+   backup files. Helper 45 may remove the known unused resolver artifact
+   `/etc/.resolv.conf.systemd-resolved.bak` after its exact safety checks. Read the script log, check SSH access and review any remaining
    security warnings before accepting the installation.
 
 ## Environment File Configuration
@@ -417,6 +420,23 @@ port merely because a known process owns its socket.
 Validate the process, package hash and destination before a narrow exception.
 Do not use a global port whitelist or refresh the rkhunter baseline to hide an
 unexplained warning.
+
+Helper 43 then runs helpers 45 and 46 with the same `--check` or `--apply` mode.
+Check mode reports planned changes without removing artifacts or installing
+policy. Apply removes only verified, unused resolver and libqb/USBGuard SHM
+artifacts. Legacy blkid files are device-discovery caches, not filesystem data.
+They are removed only after validating their content, proving that the modern
+cache is present and confirming that configuration and running processes do
+not use the old paths. Unknown files and active mappings are retained.
+
+The USBGuard helper verifies the active process and its mapped SHM files before
+recording exact paths in the rkhunter policy. It installs a policy refresh before
+the existing vendor cron scan, so newly created mappings are checked again.
+It uses no path globs or blanket hidden-file exceptions. Existing file-property
+baselines and unrelated backups are preserved. The known unused resolver
+artifact `/etc/.resolv.conf.systemd-resolved.bak` is the explicitly verified
+cleanup exception. These focused helpers create no additional backups and restart no service. New-host hardening already invokes helper 43
+after activating USBGuard, so do not duplicate that integration.
 
 An existing rkhunter APT hook with `APT_AUTOGEN` enabled can automatically update
 its file-property baseline during a package purge. This occurred during the
