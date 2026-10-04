@@ -60,6 +60,8 @@ outages, LTE device telemetry and rolling 30-day totals. Rolling totals are not
 calendar-month or carrier billing counters. Per-modem LTE panels show carrier
 connection, active failover versus normal standby, RSSI/RSRP signal strength,
 RSRQ signal quality, operator/modem details and receive/transmit channels.
+The channel table keeps the combined cluster/location/site/modem identity visible
+when only one channel is reported. Missing channel values remain empty.
 These are controller-reported states, not an active Internet or failover test.
 Missing telemetry remains N/A. Switch and access-point dashboards
 add focused traffic, errors, radio, resource, uptime, firmware and update views.

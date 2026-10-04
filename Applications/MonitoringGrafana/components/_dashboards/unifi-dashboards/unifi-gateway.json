@@ -946,6 +946,182 @@
         "type": "prometheus",
         "uid": "monitoring-metrics"
       },
+      "description": "Controller-reported modem connection to the carrier. Connected does not prove Internet reachability.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Disconnected",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Connected",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 25,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster,location,site_name,name) (unpoller_device_lte_connected{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "{{cluster}} / {{location}} / {{site_name}} / {{name}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "LTE carrier connection",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Controller-reported failover activity. Active means LTE is carrying traffic; Standby is normal readiness, not an error. This is not a synthetic failover test.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Standby",
+                  "color": "#5794F2"
+                },
+                "1": {
+                  "text": "Active",
+                  "color": "#FFB357"
+                }
+              }
+            }
+          ],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 26,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster,location,site_name,name) (unpoller_device_lte_failover{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "{{cluster}} / {{location}} / {{site_name}} / {{name}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "LTE failover activity",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
       "description": "Current site receive and transmit rates for the selected gateway sites. Byte/s is on the left axis; bit/s is on the right axis and is the primary network-rate unit.",
       "fieldConfig": {
         "defaults": {
@@ -1018,7 +1194,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 20
       },
       "id": 14,
       "options": {
@@ -1175,7 +1351,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 28
       },
       "id": 15,
       "options": {
@@ -1332,7 +1508,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 36
       },
       "id": 16,
       "options": {
@@ -1382,6 +1558,216 @@
         }
       ],
       "title": "LTE device throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Controller-reported RSSI and reference-signal power per modem. Missing samples remain gaps.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "dBm"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 44
+      },
+      "id": 27,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster,location,site_name,name) (unpoller_device_lte_rssi_dbm{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "RSSI {{cluster}} / {{location}} / {{site_name}} / {{name}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster,location,site_name,name) (unpoller_device_lte_rsrp_dbm{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "RSRP {{cluster}} / {{location}} / {{site_name}} / {{name}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "LTE signal strength",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Controller-reported reference-signal quality per modem, separate from signal strength.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "dB"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 44
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster,location,site_name,name) (unpoller_device_lte_rsrq_db{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "RSRQ {{cluster}} / {{location}} / {{site_name}} / {{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "LTE signal quality",
       "type": "timeseries"
     },
     {
@@ -1444,7 +1830,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 52
       },
       "id": 17,
       "options": {
@@ -1547,7 +1933,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 60
       },
       "id": 18,
       "options": {
@@ -1644,7 +2030,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 68
       },
       "id": 19,
       "options": {
@@ -1733,7 +2119,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 64
+        "y": 76
       },
       "id": 20,
       "options": {
@@ -1822,7 +2208,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 84
       },
       "id": 21,
       "options": {
@@ -1915,7 +2301,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 80
+        "y": 92
       },
       "id": 22,
       "options": {
@@ -1955,6 +2341,269 @@
       "title": "Gateway and LTE updates",
       "type": "table",
       "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Controller-reported operator, radio technology, band and modem state. Configured failover mode is separate from current failover activity.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "string"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 100
+      },
+      "id": 29,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Modem"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max by (cluster,location,site_name,name,operator,rat,band,mode,lte_state,failover_mode) (unpoller_device_lte_info{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "LTE modem information",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true
+            },
+            "indexByName": {
+              "cluster": 0,
+              "location": 1,
+              "site_name": 2,
+              "name": 3,
+              "operator": 4,
+              "rat": 5,
+              "band": 6,
+              "mode": 7,
+              "lte_state": 8,
+              "failover_mode": 9
+            },
+            "renameByName": {
+              "cluster": "Cluster",
+              "location": "Location",
+              "site_name": "Site",
+              "name": "Modem",
+              "operator": "Operator",
+              "rat": "RAT",
+              "band": "Band",
+              "mode": "Mode",
+              "lte_state": "State",
+              "failover_mode": "Failover mode"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Controller-reported receive and transmit channel numbers per modem. Missing values remain N/A, not zero.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 108
+      },
+      "id": 30,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Modem identity"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "label_join(max by (cluster,location,site_name,name) (unpoller_device_lte_rx_channel{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}), \"modem\", \" / \", \"cluster\", \"location\", \"site_name\", \"name\")",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "label_join(max by (cluster,location,site_name,name) (unpoller_device_lte_tx_channel{cluster=~\"$cluster\",location=~\"$location\",site_name=~\"$site\"}), \"modem\", \" / \", \"cluster\", \"location\", \"site_name\", \"name\")",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "B"
+        }
+      ],
+      "title": "LTE receive and transmit channels",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "modem",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "cluster 1": true,
+              "location 1": true,
+              "site_name 1": true,
+              "name 1": true
+            },
+            "indexByName": {
+              "modem": 0,
+              "cluster": 1,
+              "location": 2,
+              "site_name": 3,
+              "name": 4,
+              "Value #A": 5,
+              "Value #B": 6
+            },
+            "renameByName": {
+              "modem": "Modem identity",
+              "cluster": "Cluster",
+              "location": "Location",
+              "site_name": "Site",
+              "name": "Modem",
+              "Value #A": "Receive channel",
+              "Value #B": "Transmit channel"
+            }
+          }
+        },
         {
           "id": "organize",
           "options": {
@@ -2025,7 +2674,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 88
+        "y": 116
       },
       "id": 23,
       "options": {
@@ -2073,7 +2722,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 96
+        "y": 124
       },
       "fieldConfig": {
         "defaults": {
