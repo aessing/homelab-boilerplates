@@ -310,7 +310,7 @@ def unifi_dashboards():
     switch_port_scope = f'{switch_scope},port_name=~"$port"'
     ap_scope = f'{site},name=~"$ap"'
     lte_info = f'max by (cluster,location,site_name,name) (unpoller_device_info{{{site},model="ULTEPEU"}})'
-    return {
+    result = {
         "unifi-overview.json": make_unifi("mon-unifi-overview", "UniFi Overview", [
             stat("UnPoller target", f'min(up{{{base},job="unpoller"}})', "Reachability of the UnPoller Prometheus endpoint. This does not prove controller login success.", threshold="ready"),
             stat("Controller collection", f'min(unpoller_controller_up{{{base}}})', "Lowest reported controller status.", threshold="ready"),
@@ -442,6 +442,14 @@ def unifi_dashboards():
             unifi_logs("UNAS SIEM events", '{cluster=~"$cluster",location=~"$location",source="unifi-siem",appliance="unas"}', "Sanitized SIEM records sent directly by UNAS."),
         ], "UNAS console, pools, RAID, disk and network telemetry plus direct SIEM records. The current exporter and SIEM stream do not expose a reliable backup-status contract, so no backup status is inferred."),
     }
+
+    # Keep panel IDs stable while placing LTE telemetry beside its WAN context.
+    gateway = result["unifi-gateway.json"]
+    panels = {p["id"]: p for p in gateway["panels"]}
+    order = [*range(1, 14), 25, 26, 14, 15, 16, 27, 28,
+             *range(17, 23), 29, 30, 23, 24]
+    gateway["panels"] = place([panels[panel_id] for panel_id in order])
+    return result
 
 
 def state_colors(p):
