@@ -346,6 +346,11 @@ if ! grep -iq "Raspberry" /sys/firmware/devicetree/base/model 2>/dev/null; then
 fi
 
 echo ""
+# Preserve an existing rkhunter baseline before any package hook can refresh it.
+if [ -f "$RKHUNTER_CONF" ]; then
+  sed -i 's/^APT_AUTOGEN=.*/APT_AUTOGEN="no"/' "$RKHUNTER_CONF"
+fi
+
 echo " - Updating APT cache"
 $APT update
 
@@ -426,16 +431,6 @@ for deb_install in $PACKAGE_INSTALL; do
 done
 
 echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$APT_CONF_UNATTENDED"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-    cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
-
-echo ""
 echo " - Change configuration"
 bash "$SCRIPT_DIR/41-configure-unattended-logging.sh" --apply
 
@@ -483,14 +478,6 @@ echo ""
 echo "# -----------------------------------------------------------------------------"
 echo "# FSTAB ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
-
-echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$FSTAB_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-    cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-done
 
 echo ""
 echo " - Remove floppy from FSTAB"
@@ -572,16 +559,6 @@ for deb_install in $PACKAGE_INSTALL; do
   echo ""
   echo "   - Installing $deb_install"
   $APT -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install "$deb_install"
-done
-
-echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$SYSSTAT_DEFAULT"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
 done
 
 echo ""
@@ -891,16 +868,6 @@ for deb_install in $PACKAGE_INSTALL; do
 done
 
 echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$COREDUMP_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
-
-echo ""
 echo " - Ensure COREDUMP storage is disabled"
 sed -i 's/^#\?Storage=.*/Storage=none/' "$COREDUMP_CONF"
 
@@ -978,16 +945,6 @@ echo ""
 echo "# -----------------------------------------------------------------------------"
 echo "# CONFIGS AND LIMITS ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
-
-echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$LIMITS_CONF $SYSTEM_CONF $USER_CONF $LOGINDEFS_CONF /etc/init.d/rc /etc/profile /etc/bash.bashrc /etc/environment $LOGIND_CONF $LOGINDEFS_CONF $ADDUSER_CONF $USERADD_CONF $COMMONPASSWD_CONF $COMMONAUTH_CONF $FAILLOCK_CONF $COMMONACCOUNT_CONF $PAM_CONF_LOGIN $SYSTEM_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
 
 echo ""
 echo " - Setting soft and hard limits"
@@ -1184,16 +1141,6 @@ for deb_install in $PACKAGE_INSTALL; do
 done
 
 echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$PAM_CONF_SU"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
-
-echo ""
 echo " - Configuring SUDO"
 if ! grep -qER '^Defaults.*use_pty$' /etc/sudo*; then
   echo "Defaults use_pty" > "$SUDOERSD/90_hardening_use_pty"
@@ -1248,16 +1195,6 @@ for deb_install in $PACKAGE_INSTALL; do
   echo ""
   echo "   - Installing $deb_install"
   $APT -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install "$deb_install"
-done
-
-echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$SSH_CONF /etc/ssh/moduli $SSHD_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
 done
 
 echo ""
@@ -1393,16 +1330,6 @@ for deb_install in $PACKAGE_INSTALL; do
 done
 
 echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$UFW_DEFAULT $UFW_CONF_BEFORE $UFW_CONF_BEFORE6 $UFW_CONF_AFTER $UFW_CONF_AFTER6"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
-
-echo ""
 echo " - Enabling UFW"
 sed -i 's/IPV6=.*/IPV6=no/' "$UFW_DEFAULT"
 sed -i 's/IPT_SYSCTL=.*/IPT_SYSCTL=\/etc\/sysctl\.conf/' "$UFW_DEFAULT"
@@ -1490,16 +1417,6 @@ echo "# TIMESYNCD ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$TIMESYNCD_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
-
-echo ""
 echo " - Set timezone"
 timedatectl set-timezone "$TIMEZONE"
 
@@ -1522,16 +1439,6 @@ echo ""
 echo "# -----------------------------------------------------------------------------"
 echo "# RESOLVED ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
-
-echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$RESOLVED_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
 
 echo ""
 echo " - Configuring RESOLVED"
@@ -1568,16 +1475,6 @@ for deb_install in $PACKAGE_INSTALL; do
 done
 
 echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$RSYSLOG_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
-
-echo ""
 echo " - Disable incoming logs"
 sed -i -e "s/^module(load=\"imudp\")\s*.*/#&/g" "$RSYSLOG_CONF"
 sed -i -e "s/^input(type=\"imudp\" port=*.*/#&/g" "$RSYSLOG_CONF"
@@ -1609,16 +1506,6 @@ echo "# JOURNALD ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$JOURNALD_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
-
-echo ""
 echo " - Configuring journaling daemon"
 sed -i "s/.*Storage\s*=\s*.*/Storage=persistent/g" "$JOURNALD_CONF"
 sed -i "s/.*Compress\s*=\s*.*/Compress=yes/g" "$JOURNALD_CONF"
@@ -1646,16 +1533,6 @@ for deb_install in $PACKAGE_INSTALL; do
   echo ""
   echo "   - Installing $deb_install"
   $APT -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install "$deb_install"
-done
-
-echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$LOGROTATE_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
 done
 
 echo ""
@@ -1699,16 +1576,6 @@ echo ""
 echo "# -----------------------------------------------------------------------------"
 echo "# MOTD ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
-
-echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$ISSUE_CONF $ISSUENET_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
 
 echo ""
 echo " - Setting welcome messages"
@@ -1761,16 +1628,6 @@ for deb_install in $PACKAGE_INSTALL; do
   echo ""
   echo "   - Installing $deb_install"
   $APT -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install "$deb_install"
-done
-
-echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="/etc/rsyslog.d/50-default.conf"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
 done
 
 echo ""
@@ -1850,16 +1707,6 @@ echo "# ROOT ($(date '+%F %T.%N'))"
 echo "# -----------------------------------------------------------------------------"
 
 echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$SECURITYACCESS_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
-
-echo ""
 echo " - Allow root login only from localhost"
 if ! grep -E '^\+\s:\sroot\s:\s127.0.0.1$|^:root:127.0.0.1' "$SECURITYACCESS_CONF"; then
   sed -i 's/^#\?.*root.*:.*127.0.0.1$/+:root:127.0.0.1/' "$SECURITYACCESS_CONF"
@@ -1905,23 +1752,13 @@ for deb_install in $PACKAGE_INSTALL; do
 done
 
 echo ""
-echo " - Backing up original config files"
-CONFIG_FILES="$RKHUNTER_CONF"
-for CONFIG_FILE in $CONFIG_FILES
-do
-  if [ -f "$CONFIG_FILE" ]; then
-      cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-  fi
-done
-
-echo ""
 echo " - Configuring RKHUNTER"
 sed -i 's/^CRON_DAILY_RUN=.*/CRON_DAILY_RUN="yes"/' "$RKHUNTER_CONF"
-sed -i 's/^APT_AUTOGEN=.*/APT_AUTOGEN="yes"/' "$RKHUNTER_CONF"
+sed -i 's/^APT_AUTOGEN=.*/APT_AUTOGEN="no"/' "$RKHUNTER_CONF"
 
 echo ""
-echo " - Update file properties database"
-rkhunter --propupd
+echo " - Preserve existing file properties database"
+echo "   Baseline initialization is restricted to a trusted new installation."
 
 # -------------------------------------------------------------------------------------
 
@@ -1954,6 +1791,13 @@ echo " - Activate USBGUARD"
 systemctl daemon-reload
 systemctl enable usbguard.service
 systemctl restart usbguard.service
+
+# Match the firmware model, not a hostname list, for Pi 5-only fwupd policy.
+HOST_MAINTENANCE_ARGS=(--apply)
+if grep -aq '^Raspberry Pi 5' /sys/firmware/devicetree/base/model 2>/dev/null; then
+  HOST_MAINTENANCE_ARGS+=(--disable-flashrom)
+fi
+bash "$SCRIPT_DIR/43-configure-host-maintenance.sh" "${HOST_MAINTENANCE_ARGS[@]}"
 
 # -------------------------------------------------------------------------------------
 
@@ -2099,16 +1943,6 @@ if [ "$PSAD_ENABLE" = "true" ]; then
   done
 
   echo ""
-  echo " - Backing up original config files"
-  CONFIG_FILES="$PSAD_DL $PSAD_CONF"
-  for CONFIG_FILE in $CONFIG_FILES
-  do
-    if [ -f "$CONFIG_FILE" ]; then
-        cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-    fi
-  done
-
-  echo ""
   echo " - Configuring danger levels by IP"
   echo "127.0.0.1    0;" >> "$PSAD_DL"
   echo "$SERVERIP    0;" >> "$PSAD_DL"
@@ -2164,16 +1998,6 @@ if [ "$AUDIT_ENABLE" = "true" ]; then
     echo ""
     echo "   - Installing $deb_install"
     $APT -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install "$deb_install"
-  done
-
-  echo ""
-  echo " - Backing up original config files"
-  CONFIG_FILES="$AUDITD_CONF"
-  for CONFIG_FILE in $CONFIG_FILES
-  do
-    if [ -f "$CONFIG_FILE" ]; then
-        cp "$CONFIG_FILE" "$CONFIG_FILE.hardening-backup"
-    fi
   done
 
   echo ""
@@ -3061,6 +2885,12 @@ else
 fi
 
 echo ""
+echo " - Repair retained Ubuntu Pro policy before loading APPARMOR"
+if [ -f /etc/apparmor.d/ubuntu_pro_esm_cache ]; then
+  bash "$SCRIPT_DIR/22-repair-ubuntu-pro-apparmor.sh" --apply
+fi
+
+echo ""
 echo " - Enabling and starting APPARMOR"
 systemctl daemon-reload
 systemctl enable apparmor.service
@@ -3168,9 +2998,24 @@ for deb_clean in $(dpkg -l | grep '^rc' | awk '{print $2}'); do
 done
 
 echo ""
-echo " - Clean APT"
-$APT clean
-$APT autoremove
+echo " - Remove unused packages, protecting the running kernel"
+RUNNING_KERNEL_PATTERN="^linux-.*-$(uname -r | sed 's/\./\\./g')$"
+AUTOREMOVE_PLAN="$($APT -o "APT::NeverAutoRemove::=$RUNNING_KERNEL_PATTERN" --simulate autoremove)"
+printf '%s\n' "$AUTOREMOVE_PLAN"
+$APT -o "APT::NeverAutoRemove::=$RUNNING_KERNEL_PATTERN" autoremove
+
+echo ""
+echo " - Remove obsolete APT archive files"
+$APT autoclean
+
+# Existing baselines are evidence. Do not overwrite them during a repair.
+if [ ! -e /var/lib/rkhunter/db/rkhunter.dat ]; then
+  echo ""
+  echo " - Initialize RKHUNTER baseline for this trusted new installation"
+  rkhunter --propupd
+else
+  echo " - Existing RKHUNTER baseline retained"
+fi
 
 echo ""
 echo " - Secure cfg-files in /boot"
@@ -3216,11 +3061,9 @@ echo " - Reboot"
 echo "   Please reboot your system to activate all changes."
 
 echo ""
-echo " - Cleanup backup files"
-echo "   After the hardening script has finished and you have verified that everything"
-echo "   is working as expected, you should remove the backup files with the following"
-echo "   command:"
-echo "   find /etc -name \"*.hardening-backup\" -type f -exec rm -f \"{}\" \;"
+echo " - Backups"
+echo "   No additional backup files were created by this script."
+echo "   Pre-existing backup files remain untouched."
 
 # -------------------------------------------------------------------------------------
 

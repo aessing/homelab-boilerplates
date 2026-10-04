@@ -265,3 +265,35 @@ Finally, reboot the Raspberry Pi to apply the changes:
 ```bash
 sudo reboot
 ```
+
+
+## Complete the New Host Setup
+
+Continue with [the Linux hardening workflow](README.md#quick-start) after the
+fresh installation is known to be trusted. Copy the complete `Linux` directory,
+including its maintenance helpers, before running `21-harden-ubuntu.sh`.
+The script applies the shared unattended-upgrades mail/logging policy, the
+Ubuntu Pro AppArmor repair and the host maintenance policy. It creates no
+additional configuration backups and leaves existing backup files untouched.
+
+The full hardening workflow is for a new installation. It upgrades packages,
+changes system policy and deliberately restarts configured services. Review and
+schedule the documented reboot separately. Do not rerun it for routine repairs
+or package maintenance on an existing K3s node.
+
+An absent rkhunter baseline is initialized only at the end of this trusted new
+installation. Existing baselines are preserved. On an existing host, investigate
+missing or changed baseline data instead of using `rkhunter --propupd` to silence
+warnings. The existing twelve homelab hosts do not expose SMART. Do not install
+SMART tooling or run SMART probes on those hosts.
+
+Use [the focused maintenance workflow](README.md#focused-maintenance-on-existing-hosts)
+for existing nodes. Package upgrades and cleanup require their own explicit
+maintenance authorization and do not include a node reboot.
+Use [`44-update-host-packages.sh`](44-update-host-packages.sh) for the separate
+upgrade, checked `autoremove` and `autoclean` sequence described in the
+[package maintenance instructions](README.md#package-upgrades-and-cleanup).
+
+The hardening script identifies a Raspberry Pi 5 from its firmware model and
+passes `--disable-flashrom` to the host maintenance helper only for that model.
+Do not apply this model-specific policy to other Raspberry Pi models.

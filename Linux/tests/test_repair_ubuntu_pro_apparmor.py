@@ -36,6 +36,13 @@ VENDOR = CURRENT.replace(
     '    @{PROC}/sys/kernel/osrelease r,\n',
     '    @{PROC}/sys/kernel/osrelease r,\n    /sys/firmware/dmi/entries/0-0/raw r,\n', 1
 )
+NEWS = '''profile ubuntu_pro_apt_news flags=(attach_disconnected) {
+  include <abstractions/base>
+  /opt/site/news-cache r,
+}
+'''
+ESM_LABELS = set(HELPER.RULES) | {'ubuntu_pro_esm_cache//unrelated'}
+ALL_LABELS = ESM_LABELS | {'ubuntu_pro_apt_news'}
 
 
 class PolicyRepairTests(unittest.TestCase):
@@ -113,6 +120,12 @@ class FileReplacementTests(unittest.TestCase):
         self.profile.chmod(0o640)
         self.vendor.write_text(VENDOR)
         self.vendor.chmod(0o640)
+        self.news = self.policy_dir / 'ubuntu_pro_apt_news'
+        self.news_vendor = self.policy_dir / 'ubuntu_pro_apt_news.dpkg-dist'
+        self.news.write_text(NEWS)
+        self.news.chmod(0o640)
+        self.news_vendor.write_text(NEWS)
+        self.news_vendor.chmod(0o640)
         self.candidate_dir = self.policy_dir / '.candidate'
         self.candidate_dir.mkdir(mode=0o700)
         self.original_lstat = Path.lstat
@@ -133,16 +146,35 @@ class FileReplacementTests(unittest.TestCase):
     def root_fstat(self, fd):
         return self.root_metadata(self.original_fstat(fd))
 
-    def run_helper(self, mode, parser_action=None):
+    def run_helper(self, mode, parser_action=None, missing_news_label=False):
+        loaded = set()
+
+        def parse(path, apply=False):
+            if parser_action:
+                parser_action(path, apply=apply)
+            if apply:
+                if path == self.news:
+                    if not missing_news_label:
+                        loaded.add('ubuntu_pro_apt_news')
+                else:
+                    loaded.update(ESM_LABELS)
+
+        def expected_md5(profile=None):
+            return hashlib.md5((NEWS if profile == self.news else VENDOR).encode()).hexdigest()
+
         with (
             patch.object(HELPER, 'PROFILE', self.profile),
             patch.object(HELPER, 'VENDOR', self.vendor),
-            patch.object(HELPER, 'installed_md5', return_value=hashlib.md5(VENDOR.encode()).hexdigest()),
+            patch.object(HELPER, 'NEWS_PROFILE', self.news),
+            patch.object(HELPER, 'NEWS_VENDOR', self.news_vendor),
+            patch.object(HELPER, 'installed_md5', side_effect=expected_md5),
+            patch.object(HELPER, 'profile_names', side_effect=lambda path, required: {'ubuntu_pro_apt_news'} if path == self.news else ESM_LABELS),
+            patch.object(HELPER, 'loaded_profile_names', side_effect=lambda: set(loaded)),
             patch.object(HELPER.os, 'geteuid', return_value=0),
             patch.object(Path, 'lstat', lambda path, *args, **kwargs: self.root_lstat(path, *args, **kwargs)),
             patch.object(HELPER.os, 'fstat', self.root_fstat),
             patch.object(HELPER.os, 'fchown'),
-            patch.object(HELPER, 'run_parser', side_effect=parser_action) as parser,
+            patch.object(HELPER, 'run_parser', side_effect=parse) as parser,
         ):
             HELPER.main(mode, self.candidate_dir)
             return parser.call_args_list
@@ -153,8 +185,10 @@ class FileReplacementTests(unittest.TestCase):
         self.assertEqual(self.profile.read_text(), CURRENT)
         self.assertEqual(self.profile.stat().st_ino, before.st_ino)
         self.assertEqual(self.profile.stat().st_mode, before.st_mode)
-        self.assertEqual(len(calls), 1)
-        self.assertNotIn('apply', calls[0].kwargs)
+        self.assertEqual(len(calls), 2)
+        self.assertTrue(all('apply' not in call.kwargs for call in calls))
+        self.assertEqual(calls[1].args[0], self.news)
+        self.assertEqual(self.news.read_text(), NEWS)
 
     def test_apply_replaces_only_after_validation_and_preserves_permissions(self):
         before = self.profile.stat()
@@ -163,15 +197,19 @@ class FileReplacementTests(unittest.TestCase):
             if not apply:
                 self.assertEqual(self.profile.read_text(), CURRENT)
             else:
-                self.assertEqual(path, self.profile)
-                self.assertIn('/sys/firmware/devicetree/base/model r,', path.read_text())
+                self.assertIn(path, [self.profile, self.news])
+                if path == self.profile:
+                    self.assertIn('/sys/firmware/devicetree/base/model r,', path.read_text())
+                else:
+                    self.assertEqual(path.read_text(), NEWS)
 
         calls = self.run_helper('--apply', inspect)
-        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(calls), 4)
         self.assertEqual(calls[-1].kwargs, {'apply': True})
         self.assertEqual(self.profile.stat().st_mode, before.st_mode)
         self.assertNotEqual(self.profile.stat().st_ino, before.st_ino)
         self.assertEqual(self.vendor.read_text(), VENDOR)
+        self.assertEqual(self.news.read_text(), NEWS)
 
     def test_parser_failure_keeps_original(self):
         def fail(path, apply=False):
@@ -196,6 +234,43 @@ class FileReplacementTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'does not match'):
             self.run_helper('--apply')
         self.assertEqual(self.profile.read_text(), CURRENT)
+
+    def test_wrong_news_package_hash_is_rejected_before_parser_or_replace(self):
+        self.news_vendor.write_text(NEWS + '# Unverified vendor change.\n')
+        with self.assertRaisesRegex(ValueError, 'APT News vendor policy does not match'):
+            self.run_helper('--apply')
+        self.assertEqual(self.profile.read_text(), CURRENT)
+        self.assertEqual(self.news.read_text(), NEWS)
+
+    def test_active_news_vendor_file_without_dpkg_dist_is_accepted(self):
+        self.news_vendor.unlink()
+        self.run_helper('--apply')
+        self.assertEqual(self.news.read_text(), NEWS)
+
+    def test_changed_news_during_validation_is_not_overwritten(self):
+        changed = NEWS + '# Administrator changed news policy.\n'
+
+        def change(path, apply=False):
+            if not apply and path == self.news:
+                self.news.write_text(changed)
+
+        with self.assertRaisesRegex(ValueError, 'changed during validation'):
+            self.run_helper('--apply', change)
+        self.assertEqual(self.profile.read_text(), CURRENT)
+        self.assertEqual(self.news.read_text(), changed)
+
+    def test_news_file_inode_and_permissions_are_preserved_on_apply(self):
+        before = self.news.stat()
+        self.run_helper('--apply')
+        after = self.news.stat()
+        self.assertEqual(self.news.read_text(), NEWS)
+        self.assertEqual(after.st_ino, before.st_ino)
+        self.assertEqual(after.st_mode, before.st_mode)
+
+    def test_missing_news_kernel_label_after_reload_is_an_error(self):
+        with self.assertRaisesRegex(RuntimeError, 'did not load required policy labels: ubuntu_pro_apt_news'):
+            self.run_helper('--apply', missing_news_label=True)
+        self.assertEqual(self.news.read_text(), NEWS)
 
     def test_changed_permissions_during_validation_are_not_overwritten(self):
         def change(path, apply=False):
@@ -240,6 +315,23 @@ class CommandTests(unittest.TestCase):
             HELPER.run_parser(Path('/policy'), apply=True)
             self.assertEqual(run.call_args.args[0],
                              ['/usr/sbin/apparmor_parser', '-r', '-K', '--jobs=1', '-b', '/etc/apparmor.d', '/policy'])
+
+    def test_parser_names_verify_mandatory_label_and_include_children(self):
+        with patch.object(HELPER.subprocess, 'run', return_value=types.SimpleNamespace(stdout='\n'.join(sorted(ALL_LABELS))+'\n')) as run:
+            self.assertEqual(HELPER.profile_names(Path('/policy'), set(HELPER.RULES)), ALL_LABELS)
+            self.assertEqual(run.call_args.args[0],
+                             ['/usr/sbin/apparmor_parser', '-N', '-K', '--jobs=1', '-b', '/etc/apparmor.d', '/policy'])
+        with patch.object(HELPER.subprocess, 'run', return_value=types.SimpleNamespace(stdout='ubuntu_pro_esm_cache\n')):
+            with self.assertRaisesRegex(ValueError, 'Parser did not find required policy labels'):
+                HELPER.profile_names(Path('/policy'), set(HELPER.RULES))
+
+    def test_kernel_labels_preserve_child_names_and_strip_mode_suffix(self):
+        with tempfile.TemporaryDirectory() as directory:
+            loaded = Path(directory) / 'profiles'
+            loaded.write_text(''.join(label+' (enforce)\n' for label in sorted(ALL_LABELS)))
+            with patch.object(HELPER, 'LOADED_PROFILES', loaded):
+                self.assertEqual(HELPER.loaded_profile_names(), ALL_LABELS)
+                HELPER.verify_loaded_profiles(ALL_LABELS)
 
 
 if __name__ == '__main__':

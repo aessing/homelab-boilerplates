@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Restore two Ubuntu Pro firmware read rules without replacing local policy.
+# Restore official firmware read rules and load both Ubuntu Pro policies.
 set -euo pipefail
 export PATH='/usr/sbin:/usr/bin:/sbin:/bin'
 export LC_ALL=C LANG=C
@@ -14,7 +14,7 @@ case "${1:---check}" in
   --check|--apply) mode="${1:---check}" ;;
   --help|-h)
     echo "Usage: $0 [--check|--apply]"
-    echo 'Check is the default. Apply repairs and reloads only ubuntu_pro_esm_cache.'
+    echo 'Check is the default. Apply repairs ESM rules and reloads only ESM/APT News policies.'
     exit 0
     ;;
   *) echo "Usage: $0 [--check|--apply]" >&2; exit 2 ;;
@@ -50,6 +50,9 @@ from pathlib import Path
 
 PROFILE = Path('/etc/apparmor.d/ubuntu_pro_esm_cache')
 VENDOR = Path('/etc/apparmor.d/ubuntu_pro_esm_cache.dpkg-dist')
+NEWS_PROFILE = Path('/etc/apparmor.d/ubuntu_pro_apt_news')
+NEWS_VENDOR = Path('/etc/apparmor.d/ubuntu_pro_apt_news.dpkg-dist')
+LOADED_PROFILES = Path('/sys/kernel/security/apparmor/profiles')
 PARSER = '/usr/sbin/apparmor_parser'
 ANCHOR = '@{PROC}/sys/kernel/osrelease r,'
 RULES = {
@@ -132,14 +135,14 @@ def read_root_file(path):
     return content, metadata
 
 
-def installed_md5():
+def installed_md5(profile=PROFILE):
     result = subprocess.run(
         ['/usr/bin/dpkg-query', '-W', '-f=${db:Status-Status}\n${Conffiles}', 'ubuntu-pro-client'],
         check=True, text=True, capture_output=True, timeout=15)
     lines = result.stdout.splitlines()
     if not lines or lines[0] != 'installed':
         raise ValueError('ubuntu-pro-client is not installed')
-    matches = [re.fullmatch(r'\s*' + re.escape(str(PROFILE)) + r' ([0-9a-f]{32})', line)
+    matches = [re.fullmatch(r'\s*' + re.escape(str(profile)) + r' ([0-9a-f]{32})', line)
                for line in lines[1:]]
     hashes = [match.group(1) for match in matches if match]
     if len(hashes) != 1:
@@ -151,6 +154,33 @@ def run_parser(path, apply=False):
     subprocess.run(
         [PARSER, '-r' if apply else '-Q', '-K', '--jobs=1', '-b', str(PROFILE.parent), str(path)],
         check=True, timeout=120)
+
+
+def profile_names(path, required):
+    result = subprocess.run(
+        [PARSER, '-N', '-K', '--jobs=1', '-b', str(PROFILE.parent), str(path)],
+        check=True, text=True, capture_output=True, timeout=120)
+    names = set(result.stdout.splitlines())
+    if not required <= names:
+        raise ValueError('Parser did not find required policy labels: ' + ', '.join(sorted(required - names)))
+    return names
+
+
+def loaded_profile_names():
+    return {line.rsplit(' (', 1)[0] for line in LOADED_PROFILES.read_text().splitlines()}
+
+
+def verify_loaded_profiles(expected):
+    missing = expected - loaded_profile_names()
+    if missing:
+        raise RuntimeError('Targeted reload did not load required policy labels: ' + ', '.join(sorted(missing)))
+
+
+def verify_unchanged(path, original, metadata):
+    latest, latest_metadata = read_root_file(path)
+    identity = lambda item: (item.st_dev, item.st_ino, item.st_mode, item.st_uid, item.st_gid)
+    if latest != original or identity(latest_metadata) != identity(metadata):
+        raise ValueError('Policy changed during validation, refusing reload/replacement: ' + str(path))
 
 
 def main(mode, repair_dir):
@@ -171,6 +201,13 @@ def main(mode, repair_dir):
         vendor = original
     if hashlib.md5(vendor, usedforsecurity=False).hexdigest() != expected_md5:
         raise ValueError('Vendor policy does not match the installed package conffile hash')
+    news_original, news_metadata = read_root_file(NEWS_PROFILE)
+    try:
+        news_vendor, _ = read_root_file(NEWS_VENDOR)
+    except FileNotFoundError:
+        news_vendor = news_original
+    if hashlib.md5(news_vendor, usedforsecurity=False).hexdigest() != installed_md5(NEWS_PROFILE):
+        raise ValueError('APT News vendor policy does not match the installed package conffile hash')
     candidate_text, additions = repair_profile(original.decode('utf-8'), vendor.decode('utf-8'))
     candidate = repair_dir / PROFILE.name
     fd = os.open(candidate, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
@@ -181,14 +218,16 @@ def main(mode, repair_dir):
         os.fchmod(handle.fileno(), stat.S_IMODE(metadata.st_mode))
         os.fsync(handle.fileno())
     run_parser(candidate)
+    run_parser(NEWS_PROFILE)
+    expected_names = profile_names(candidate, set(RULES)) | profile_names(NEWS_PROFILE, {'ubuntu_pro_apt_news'})
+    missing_loaded = expected_names - loaded_profile_names()
     print(f'Validated policy, missing official rules: {additions}')
+    print('Missing loaded policy labels: ' + (', '.join(sorted(missing_loaded)) or 'none'))
     if mode == '--check':
         print('Check complete. No policy file or loaded profile was changed.')
         return
-    latest, latest_metadata = read_root_file(PROFILE)
-    identity = lambda item: (item.st_dev, item.st_ino, item.st_mode, item.st_uid, item.st_gid)
-    if latest != original or identity(latest_metadata) != identity(metadata):
-        raise ValueError('Policy changed during validation, refusing replacement')
+    verify_unchanged(PROFILE, original, metadata)
+    verify_unchanged(NEWS_PROFILE, news_original, news_metadata)
     if additions:
         os.replace(candidate, PROFILE)
         directory_fd = os.open(PROFILE.parent, os.O_RDONLY | os.O_DIRECTORY)
@@ -198,11 +237,15 @@ def main(mode, repair_dir):
             os.close(directory_fd)
     try:
         run_parser(PROFILE, apply=True)
+        run_parser(NEWS_PROFILE, apply=True)
+        verify_unchanged(NEWS_PROFILE, news_original, news_metadata)
+        verify_loaded_profiles(expected_names)
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
         raise RuntimeError('The on-disk policy is repaired but its targeted reload failed. '
                            'The loaded policy is not verified. Review the parser error and '
                            'rerun --apply after resolving it.') from error
-    print('Applied and reloaded only profiles declared in ubuntu_pro_esm_cache.')
+    print('Applied ESM repairs and verified loaded labels from only ESM/APT News policies. '
+          'The APT News policy file was preserved.')
 
 
 if __name__ == '__main__':

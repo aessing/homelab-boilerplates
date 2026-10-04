@@ -16,6 +16,8 @@ Linux/
 ├── 31-install-nut-client.sh  # NUT (Network UPS Tools) client setup
 ├── 41-configure-unattended-logging.sh # Disable update mail, retain logging
 ├── 42-remove-dumbledore-smartmontools.sh # Remove unsupported SMART tooling
+├── 43-configure-host-maintenance.sh # Targeted fwupd, rkhunter and SSH policy
+├── 44-update-host-packages.sh # Checked package upgrade and cleanup
 └── environments/
     └── _SAMPLE.env           # Template environment configuration
 ```
@@ -90,6 +92,9 @@ The script will:
 
 - Validate the environment file
 - Apply all hardening configurations
+- Apply the shared unattended logging, Ubuntu Pro AppArmor and host maintenance policies
+- Initialize an absent rkhunter baseline only for this trusted new installation
+- Preserve an existing rkhunter baseline and any existing backup files
 - Log all actions to `21-harden-ubuntu.log`
 
 ### 4. Post-Installation Steps
@@ -108,11 +113,10 @@ After the script completes:
    sudo reboot
    ```
 
-3. **Clean up backup files** after verifying everything works:
-
-   ```bash
-   sudo find /etc -name "*.hardening-backup" -type f -exec rm -f "{}" \;
-   ```
+3. **Verify the resulting system** before putting it into service. The script
+   creates no additional configuration backups and does not delete existing
+   backup files. Read the script log, check SSH access and review any remaining
+   security warnings before accepting the installation.
 
 ## Environment File Configuration
 
@@ -308,8 +312,11 @@ journalctl -t upssched-cmd -f
 
 ### Focused Maintenance on Existing Hosts
 
-Do not rerun the full hardening script for these repairs. The maintenance helpers
-do not create backups, restart workloads, or trigger upgrades.
+Do not rerun the full hardening script on existing cluster nodes. The focused
+configuration helpers create no backups and do not trigger package upgrades or
+node reboots. They may reload the specific policy named in their documentation. Apply the
+fwupd plugin configuration with a separate controlled fwupd service restart,
+then verify that the actual NVMe devices remain visible and no SPI errors recur. Package maintenance is a separate, explicitly authorized step.
 
 Disable unattended-upgrades mail on each host and keep update results in the
 existing local log, journal and Loki pipeline:
@@ -346,10 +353,84 @@ clears failed `smartmontools.service` or `smartd.service` states after their uni
 files are gone. It makes no disk or hardware queries. Removing this package does
 not prove disk health, use kernel and storage logs for nodes without SMART support.
 
+### Package Upgrades and Cleanup
+
+```bash
+sudo bash Linux/44-update-host-packages.sh --check
+sudo bash Linux/44-update-host-packages.sh --apply
+```
+
+`--check` uses the currently cached package indexes and reports both simulations.
+`--apply` refreshes indexes, performs an upgrade with new dependencies allowed
+and package removals forbidden, then simulates and validates `autoremove` before
+removing unused packages. It finishes with `autoclean` and package-state checks.
+The helper rejects an autoremove plan containing the running kernel or the
+listed core host/storage dependencies. It preserves local dpkg configuration,
+uses bounded lock waits and lowers CPU/I/O priority. Review any held-back or
+phased packages instead of silently switching to `dist-upgrade`.
+
+The helper sets needrestart to list-only mode and never reboots a node. Package
+maintainer scripts can still restart their own services during an upgrade.
+Use the approved maintenance window, check cluster/volume health after each
+batch and schedule any reported reboot separately. The full new-installation
+hardening script retains its separate `dist-upgrade` path. See the
+[APT reference](https://manpages.ubuntu.com/manpages/noble/man8/apt-get.8.html),
+[needrestart reference](https://manpages.ubuntu.com/manpages/noble/man1/needrestart.1.html)
+and [Canonical's service-restart explanation](https://discourse.ubuntu.com/t/needrestart-changes-in-ubuntu-24-04-service-restarts/44671).
+
+### Ubuntu Pro AppArmor Policy Repair
+
+```bash
+sudo bash Linux/22-repair-ubuntu-pro-apparmor.sh --check
+sudo bash Linux/22-repair-ubuntu-pro-apparmor.sh --apply
+```
+
+The helper verifies the installed vendor hashes, adds only the two official
+firmware-read rules to the retained ESM policy and preserves APT News byte for
+byte. It parses both files, reloads only their profiles and verifies all expected
+labels in the kernel, including child profiles. It needs no Pro subscription
+and does not attach the host. Missing or changed vendor input is an error.
+
+### Shared Host Maintenance Policy
+
+```bash
+sudo bash Linux/43-configure-host-maintenance.sh --check
+sudo bash Linux/43-configure-host-maintenance.sh --apply
+```
+
+On a **Raspberry Pi 5**, add `--disable-flashrom` to either command to disable the
+unused fwupd Flashrom plugin on the existing homelab hosts. The helper verifies the firmware model before
+accepting that option. Other models use the normal command without this flag.
+The full hardening script selects the flag from the firmware model automatically.
+This is not a reason to disable firmware updates globally.
+
+The helper makes the already effective `PermitRootLogin no` visible in the SSH
+main file to rkhunter 1.4.6, preserving the complete effective SSH configuration.
+It disables rkhunter APT_AUTOGEN while preserving its scheduled checks and
+existing file-property database. It removes quotes only from the unsupported
+`WEB_CMD="/bin/false"` setting, retaining the disabled download command. An exact
+`ALLOWHIDDENFILE=/etc/.updated` exception is added only after verifying the
+root-owned, regular systemd timestamp marker against its complete expected
+content and mode. Unknown content is an error, and no broad path exception is
+added. It does not modify USBGuard or trust a suspicious
+port merely because a known process owns its socket.
+Validate the process, package hash and destination before a narrow exception.
+Do not use a global port whitelist or refresh the rkhunter baseline to hide an
+unexplained warning.
+
 An existing rkhunter APT hook with `APT_AUTOGEN` enabled can automatically update
 its file-property baseline during a package purge. This occurred during the
-smartmontools purge on dumbledore. Do not run `rkhunter --propupd` manually to
-silence warnings, investigate changed files before accepting a new baseline.
+smartmontools purge on dumbledore. The shared policy disables that automatic
+baseline regeneration. Investigate changed files before accepting a new baseline.
+The full hardening script initializes a missing baseline only at the end of a
+trusted new installation. It preserves every existing baseline. A missing
+baseline on an existing host must be investigated, not treated as proof of a
+clean installation. See the [rkhunter reference](https://manpages.ubuntu.com/manpages/noble/man8/rkhunter.8.html).
+
+The existing twelve homelab nodes do not expose SMART according to the operator.
+Do not install SMART tools or run SMART probes on them. Check bounded kernel and
+K3s logs, storage paths, temperature/voltage indicators and I/O metrics instead.
+For different new hardware, confirm its capabilities separately.
 
 ### Check Script Logs
 
@@ -389,18 +470,14 @@ sudo aureport --summary
 sudo systemctl status aidecheck.timer
 ```
 
-### Restore from Backup
+### Backup Policy
 
-If something goes wrong, backup files are saved with `.hardening-backup` extension:
-
-```bash
-# List all backup files
-find /etc -name "*.hardening-backup" -type f
-
-# Restore a specific file
-sudo cp /etc/ssh/sshd_config.hardening-backup /etc/ssh/sshd_config
-sudo systemctl restart ssh
-```
+Do not create additional backups, volume snapshots or restore tests for this
+maintenance workflow. Reuse the single nightly Longhorn/PostgreSQL backup-status
+check for the update cycle and report missing or failed evidence. Those backups
+do not by themselves prove that host configuration files are recoverable.
+Pre-existing `.hardening-backup` files are left untouched, the current hardening
+script no longer creates them.
 
 ## Security Considerations
 
