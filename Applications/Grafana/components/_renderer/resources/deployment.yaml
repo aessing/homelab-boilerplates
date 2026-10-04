@@ -39,10 +39,10 @@ spec:
             readOnlyRootFilesystem: false
           resources:
             requests:
-              cpu: 0.1
+              cpu: 0.5
               memory: 128Mi
             limits:
-              cpu: 1
+              cpu: 2
               memory: 512Mi
           env:
             - name: AUTH_TOKEN

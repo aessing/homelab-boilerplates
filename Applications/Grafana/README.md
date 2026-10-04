@@ -281,6 +281,18 @@ kubectl cnpg status grafana-database -n grafana
 
 ### Check renderer status
 
+The renderer requests 500m CPU and can use up to two cores. This provides
+headroom for Chromium and Grafana frontend startup. A one-core limit caused
+measured CPU throttling and 30-second panel timeouts in the homelab. With two
+cores, the same panel rendered its actual data within the unchanged timeout.
+
+When rendering times out, inspect browser startup and request failures together
+with historical cAdvisor throttling and memory metrics for the same Pod and
+time window. A newly restarted Pod's idle counters do not explain a previous
+failed render. Keep resource changes within node capacity and verify the
+finished panel or dashboard image. Do not treat an HTTP health response or a
+PNG containing only Loading as a successful render.
+
 ```bash
 kubectl logs -n grafana -l app.kubernetes.io/name=grafana-renderer
 ```
