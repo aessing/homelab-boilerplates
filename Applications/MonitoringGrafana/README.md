@@ -57,7 +57,11 @@ human-readable while the technical cluster identity remains available as a
 hidden URL-backed filter. Network includes DPI, selected switch ports, PoE,
 power, rogue AP and IDS or IPS views. Gateway and WAN includes current traffic,
 outages, LTE device telemetry and rolling 30-day totals. Rolling totals are not
-calendar-month or carrier billing counters. Switch and access-point dashboards
+calendar-month or carrier billing counters. Per-modem LTE panels show carrier
+connection, active failover versus normal standby, RSSI/RSRP signal strength,
+RSRQ signal quality, operator/modem details and receive/transmit channels.
+These are controller-reported states, not an active Internet or failover test.
+Missing telemetry remains N/A. Switch and access-point dashboards
 add focused traffic, errors, radio, resource, uptime, firmware and update views.
 Protect contains camera state, network traffic and detection metadata without
 media. NVR disk/application throughput is not exported. UNAS covers console,
