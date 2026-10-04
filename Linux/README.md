@@ -14,6 +14,8 @@ Linux/
 ├── 21-harden-ubuntu.sh       # Comprehensive hardening script
 ├── 22-repair-ubuntu-pro-apparmor.sh # Targeted Ubuntu Pro firmware policy repair
 ├── 31-install-nut-client.sh  # NUT (Network UPS Tools) client setup
+├── 41-configure-unattended-logging.sh # Disable update mail, retain logging
+├── 42-remove-dumbledore-smartmontools.sh # Remove unsupported SMART tooling
 └── environments/
     └── _SAMPLE.env           # Template environment configuration
 ```
@@ -201,6 +203,7 @@ sudo ./21-harden-ubuntu.sh <server-name>
 - Removes unnecessary/insecure packages
 - Installs security tools (debsums, haveged, rkhunter, etc.)
 - Enables unattended security updates
+- Disables unattended-upgrades mail and enables syslog logging
 
 #### Kernel Hardening
 
@@ -302,6 +305,51 @@ journalctl -t upssched-cmd -f
 ---
 
 ## Troubleshooting
+
+### Focused Maintenance on Existing Hosts
+
+Do not rerun the full hardening script for these repairs. The maintenance helpers
+do not create backups, restart workloads, or trigger upgrades.
+
+Disable unattended-upgrades mail on each host and keep update results in the
+existing local log, journal and Loki pipeline:
+
+```bash
+sudo bash Linux/41-configure-unattended-logging.sh --apply
+bash Linux/41-configure-unattended-logging.sh --check
+```
+
+The helper writes `/etc/apt/apt.conf.d/99zz-homelab-unattended-upgrades` with an
+empty `Unattended-Upgrade::Mail` and `Unattended-Upgrade::SyslogEnable "true"`.
+It checks the effective APT configuration, including overrides from other files.
+The setting applies on the next unattended-upgrades run, without a service restart.
+Existing `/var/log/unattended-upgrades/` files remain available. Verify journal
+collection separately in Loki because enabling syslog does not configure a collector.
+The [unattended-upgrades configuration reference](https://github.com/mvo5/unattended-upgrades#supported-options)
+documents both settings.
+
+```bash
+journalctl -t unattended-upgrade --since today
+```
+
+On **dumbledore only**, remove smartmontools because the node's storage does not
+expose SMART:
+
+```bash
+sudo bash Linux/42-remove-dumbledore-smartmontools.sh --check
+sudo bash Linux/42-remove-dumbledore-smartmontools.sh --apply
+```
+
+The helper verifies the hostname and simulates the purge before changing anything.
+It refuses a plan that changes other packages, does not use autoremove, and only
+clears failed `smartmontools.service` or `smartd.service` states after their unit
+files are gone. It makes no disk or hardware queries. Removing this package does
+not prove disk health, use kernel and storage logs for nodes without SMART support.
+
+An existing rkhunter APT hook with `APT_AUTOGEN` enabled can automatically update
+its file-property baseline during a package purge. This occurred during the
+smartmontools purge on dumbledore. Do not run `rkhunter --propupd` manually to
+silence warnings, investigate changed files before accepting a new baseline.
 
 ### Check Script Logs
 

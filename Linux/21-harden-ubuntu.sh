@@ -437,11 +437,7 @@ done
 
 echo ""
 echo " - Change configuration"
-if ! grep '^Unattended-Upgrade::Mail\b' /etc/apt/apt.conf.d/*; then
-  echo 'Unattended-Upgrade::Mail "root";' >> "$APT_CONF_UNATTENDED"
-else
-  sed -i 's/.*Unattended-Upgrade::Mail\b.*/Unattended-Upgrade::Mail "root";/g' "$(grep -l 'Unattended-Upgrade::Mail "root";' /etc/apt/apt.conf.d/*)"
-fi
+bash "$SCRIPT_DIR/41-configure-unattended-logging.sh" --apply
 
 if ! grep '^Unattended-Upgrade::Remove-Unused-Kernel-Packages\b' /etc/apt/apt.conf.d/*; then
   echo 'Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";' >> "$APT_CONF_UNATTENDED"
@@ -459,12 +455,6 @@ if ! grep '^Unattended-Upgrade::Remove-Unused-Dependencies\b' /etc/apt/apt.conf.
   echo 'Unattended-Upgrade::Remove-Unused-Dependencies "true";' >> "$APT_CONF_UNATTENDED"
 else
   sed -i 's/.*Unattended-Upgrade::Remove-Unused-Dependencies\b.*/Unattended-Upgrade::Remove-Unused-Dependencies "true";/g' "$(grep -l 'Unattended-Upgrade::Remove-Unused-Dependencies "true";' /etc/apt/apt.conf.d/*)"
-fi
-
-if ! grep '^Unattended-Upgrade::SyslogEnable\b.*' /etc/apt/apt.conf.d/*; then
-  echo 'Unattended-Upgrade::SyslogEnable "true";' >> "$APT_CONF_UNATTENDED"
-else
-  sed -i 's/.*Unattended-Upgrade::SyslogEnable\b.*/Unattended-Upgrade::SyslogEnable "true";/g' "$(grep -l 'Unattended-Upgrade::SyslogEnable "true";' /etc/apt/apt.conf.d/*)"
 fi
 
 echo ""
