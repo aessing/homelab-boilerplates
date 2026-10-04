@@ -12,6 +12,7 @@ Linux/
 ├── 11-install-raspberry.md   # Installation guide for Raspberry Pi
 ├── 11-install-ubuntu.md      # Installation guide for standard servers
 ├── 21-harden-ubuntu.sh       # Comprehensive hardening script
+├── 22-repair-ubuntu-pro-apparmor.sh # Targeted Ubuntu Pro firmware policy repair
 ├── 31-install-nut-client.sh  # NUT (Network UPS Tools) client setup
 └── environments/
     └── _SAMPLE.env           # Template environment configuration
@@ -375,6 +376,55 @@ sudo pro enable esm-apps
 sudo pro enable esm-infra
 sudo pro enable livepatch  # Only on supported kernels (amd64)
 ```
+
+### Repair retained Ubuntu Pro AppArmor policy
+
+An Ubuntu Pro package update can leave a new `ubuntu_pro_esm_cache.dpkg-dist`
+beside a retained local policy. If that retained policy lacks the upstream
+firmware read rules, the cache process can be denied access to the hardware
+model. The dedicated helper adds only these two official read rules:
+
+- `/sys/firmware/devicetree/base/model` in `ubuntu_pro_esm_cache`.
+- `/sys/firmware/dmi/entries/0-0/raw` in the related
+  `ubuntu_pro_esm_cache_systemd_detect_virt` profile declared in the same file.
+
+Run the check first, then explicitly apply the reviewed repair:
+
+```bash
+sudo bash ./22-repair-ubuntu-pro-apparmor.sh --check
+sudo bash ./22-repair-ubuntu-pro-apparmor.sh --apply
+```
+
+Omitting the option also selects `--check`. Both modes require root, the
+installed `ubuntu-pro-client` package, Python 3 and `apparmor_parser`. No
+environment file or credentials are read. The helper checks the `.dpkg-dist`
+against the installed package's conffile hash and verifies both rules in their
+proper scopes. If `.dpkg-dist` is absent, the active file must itself match the
+installed package hash. Unrecognized or ambiguous profile structures stop the
+repair.
+
+Existing policy content and local override files are preserved. The check
+compiles a private temporary candidate with `-Q -K --jobs=1`, using the existing
+AppArmor include directory, without replacing files or loading kernel policy.
+The temporary candidate is removed on exit. The helper creates no backup,
+snapshot or original-file copy.
+
+Apply rechecks the original file and its permissions before an atomic
+replacement, preserves ownership and mode, and reloads only the repaired file
+and the other profiles declared in that same policy file. It creates no
+additional rules on a repeated run.
+If the targeted reload fails after replacement, the helper reports the repaired
+on-disk state separately from the unverified loaded state. Resolve that parser
+error and rerun `--apply`.
+
+The helper is not called automatically by the hardening script. It does not
+replace the entire vendor profile, enforce all host profiles, modify
+`ubuntu_pro_apt_news`, or change AppArmor's global mode. Verify the original
+denied operation and fresh logs after applying. A parser check alone does not
+prove that the application's hardware read succeeds.
+
+References: [Canonical's firmware-access regression test](https://github.com/canonical/ubuntu-pro-client/blob/main/sru/release-37/test-apparmor-firmware-access.sh)
+and [Ubuntu's AppArmor parser documentation](https://manpages.ubuntu.com/manpages/noble/man8/apparmor_parser.8.html).
 
 ## Related Resources
 
