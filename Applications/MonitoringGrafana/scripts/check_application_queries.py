@@ -20,7 +20,7 @@ def main():
     def check(item):
         title, panel, target = item
         expr = target["expr"]
-        replacements = {"$__rate_interval": "5m", "$__range": "1h", "$__auto": "5m", "$cluster": ".*", "$namespace": APP_NAMESPACES, "$monitor": ".*", "$monitor_type": ".*", "$cnpg_cluster": ".*", "$window": "1d", '${search:doublequote}': '""'}
+        replacements = {"$__rate_interval": "5m", "$__range": "1h", "$__auto": "5m", "$cluster": ".*", "$namespace": APP_NAMESPACES, "$monitor": ".*", "$monitor_type": ".*", "$battery": ".*", "$cnpg_cluster": ".*", "$window": "1d", '${search:doublequote}': '""'}
         for key, value in sorted(replacements.items(), key=lambda item: -len(item[0])):
             expr = expr.replace(key, value)
         is_log = target["datasource"]["type"] == "loki"
@@ -42,7 +42,7 @@ def main():
 
     items = [(d["title"], p["title"], t) for d in [*dashboards().values(), operations_center()] for p in d["panels"] for t in p.get("targets", [])]
     failures = 0
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    with ThreadPoolExecutor(max_workers=2) as pool:
         for result in pool.map(check, items):
             print(json.dumps(result), flush=True)
             failures += result[2] != "success"
