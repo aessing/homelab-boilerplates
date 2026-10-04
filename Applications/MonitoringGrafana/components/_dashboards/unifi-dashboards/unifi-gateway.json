@@ -2529,7 +2529,7 @@
         "sortBy": [
           {
             "desc": false,
-            "displayName": "Modem"
+            "displayName": "Modem identity"
           }
         ]
       },
@@ -2579,21 +2579,22 @@
             "excludeByName": {
               "Time": true,
               "Time 1": true,
-              "modem": true,
               "cluster 1": true,
               "location 1": true,
               "site_name 1": true,
               "name 1": true
             },
             "indexByName": {
-              "cluster": 0,
-              "location": 1,
-              "site_name": 2,
-              "name": 3,
-              "Value #A": 4,
-              "Value #B": 5
+              "modem": 0,
+              "cluster": 1,
+              "location": 2,
+              "site_name": 3,
+              "name": 4,
+              "Value #A": 5,
+              "Value #B": 6
             },
             "renameByName": {
+              "modem": "Modem identity",
               "cluster": "Cluster",
               "location": "Location",
               "site_name": "Site",

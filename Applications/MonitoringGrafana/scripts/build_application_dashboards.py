@@ -270,15 +270,16 @@ def lte_panels(scope):
         target = query(expr, interval="60s", instant=True, fmt="table")
         target["refId"] = ref
         channels["targets"].append(target)
+    # The join key identifies transmit-only rows whose receive-side labels are empty.
     channels["transformations"] = [{"id": "joinByField", "options": {"byField": "modem", "mode": "outer"}}, {
         "id": "organize", "options": {
-            "excludeByName": {"Time": True, "Time 1": True, "modem": True, "cluster 1": True, "location 1": True, "site_name 1": True, "name 1": True},
-            "indexByName": {"cluster": 0, "location": 1, "site_name": 2, "name": 3, "Value #A": 4, "Value #B": 5},
-            "renameByName": {"cluster": "Cluster", "location": "Location", "site_name": "Site", "name": "Modem", "Value #A": "Receive channel", "Value #B": "Transmit channel"},
+            "excludeByName": {"Time": True, "Time 1": True, "cluster 1": True, "location 1": True, "site_name 1": True, "name 1": True},
+            "indexByName": {"modem": 0, "cluster": 1, "location": 2, "site_name": 3, "name": 4, "Value #A": 5, "Value #B": 6},
+            "renameByName": {"modem": "Modem identity", "cluster": "Cluster", "location": "Location", "site_name": "Site", "name": "Modem", "Value #A": "Receive channel", "Value #B": "Transmit channel"},
         },
     }]
     channels["fieldConfig"]["defaults"]["decimals"] = 0
-    channels["options"]["sortBy"] = [{"desc": False, "displayName": "Modem"}]
+    channels["options"]["sortBy"] = [{"desc": False, "displayName": "Modem identity"}]
     panels.append(channels)
     return panels
 
