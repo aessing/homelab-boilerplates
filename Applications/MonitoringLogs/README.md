@@ -238,6 +238,18 @@ changes, and never remove the PVC to repair configuration or authentication.
 - **HTTP 404:** Check hostname, method and allowlisted path.
 - **HTTP 502/503:** Check readiness, Service endpoints, NetworkPolicies and disk.
 - **Retention does not remove data:** Check compactor logs and retention metrics.
+- **Cache generation numbers report deletion unavailable:** With
+  `deletion_mode: disabled`, the compactor rejects the delete-cache generation
+  lookup. Loki can periodically log this even while ingestion and queries work.
+  This is [documented log noise](https://grafana.com/docs/loki/latest/operations/troubleshooting/troubleshoot-operations/)
+  when deletion is intentionally disabled. Keep that policy unless log deletion
+  is actually required, rather than enabling it to silence the message.
+- **WAL corruption counter is nonzero:** Separate historical replay corruption
+  from an active replay or disk failure. Check readiness, replay completion,
+  fresh ingestion and queries, available disk space, and new WAL errors.
+  A cumulative counter alone is not evidence of a current outage. Do not delete
+  the WAL or PVC to clear it, since damaged historical entries may already be
+  unrecoverable and deletion can discard recoverable data.
 - **Certificate pending:** Check issuer, DNS and challenge status. Keep TLS
   verification enabled.
 

@@ -91,7 +91,8 @@ spec:
               mountPath: /var/lib/node_exporter/textfile_collector
               readOnly: true
             - name: systemd-private
-              mountPath: /run/systemd/private
+              # Keep replacement sockets visible after systemd restarts.
+              mountPath: /run/systemd
               readOnly: true
         - name: maintenance-collector
           image: busybox:1.37.0
@@ -140,8 +141,8 @@ spec:
             type: Directory
         - name: systemd-private
           hostPath:
-            path: /run/systemd/private
-            type: Socket
+            path: /run/systemd
+            type: Directory
         - name: textfile-collector
           emptyDir:
             medium: Memory
