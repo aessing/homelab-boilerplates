@@ -286,6 +286,17 @@ headroom for Chromium and Grafana frontend startup. A one-core limit caused
 measured CPU throttling and 30-second panel timeouts in the homelab. With two
 cores, the same panel rendered its actual data within the unchanged timeout.
 
+The renderer requests 512Mi memory and has a 1536Mi limit. Full dashboard
+exports need more memory than idle health checks or individual panels. A
+previous full export exhausted a 512Mi limit, and a successful export with
+a 1Gi limit left almost no memory headroom. Verify peak usage and restart
+counts during a complete export before assuming capacity for concurrent jobs.
+
+`BROWSER_READINESS_TIMEOUT=45s` keeps the browser's readiness checks enabled
+while allowing larger dashboards to finish. The outer Grafana request timeout
+must exceed this browser budget. Verify that all panels contain their data,
+not just that the renderer returned an image.
+
 When rendering times out, inspect browser startup and request failures together
 with historical cAdvisor throttling and memory metrics for the same Pod and
 time window. A newly restarted Pod's idle counters do not explain a previous

@@ -115,6 +115,11 @@ Edit `overlay/my-environment/patches/helmchartconfig.yaml` to set:
 - Entrypoints configuration
 - Additional arguments
 
+The sample requests 150m CPU and 128Mi memory per Traefik pod, with limits of
+750m CPU and 256Mi memory. The reduced CPU request releases scheduling
+reservation while retaining the existing burst limit. Verify request latency
+and throttling under representative ingress traffic before reducing limits.
+
 ### 5. Configure Dashboard Authentication
 
 For basic auth, edit `overlay/my-environment/secrets/secret-dashboard-auth.env`:

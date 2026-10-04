@@ -12,7 +12,14 @@ Linux/
 ├── 11-install-raspberry.md   # Installation guide for Raspberry Pi
 ├── 11-install-ubuntu.md      # Installation guide for standard servers
 ├── 21-harden-ubuntu.sh       # Comprehensive hardening script
+├── 22-repair-ubuntu-pro-apparmor.sh # Targeted Ubuntu Pro firmware policy repair
 ├── 31-install-nut-client.sh  # NUT (Network UPS Tools) client setup
+├── 41-configure-unattended-logging.sh # Disable update mail, retain logging
+├── 42-remove-dumbledore-smartmontools.sh # Remove unsupported SMART tooling
+├── 43-configure-host-maintenance.sh # Targeted fwupd, rkhunter and SSH policy
+├── 44-update-host-packages.sh # Checked package upgrade and cleanup
+├── 45-clean-rkhunter-artifacts.py # Verify and remove unused scanner artifacts
+├── 46-configure-rkhunter-usbguard.py # Exact active USBGuard scanner policy
 └── environments/
     └── _SAMPLE.env           # Template environment configuration
 ```
@@ -87,6 +94,9 @@ The script will:
 
 - Validate the environment file
 - Apply all hardening configurations
+- Apply the shared unattended logging, Ubuntu Pro AppArmor and host maintenance policies
+- Initialize an absent rkhunter baseline only for this trusted new installation
+- Preserve an existing rkhunter baseline and unrelated backup files
 - Log all actions to `21-harden-ubuntu.log`
 
 ### 4. Post-Installation Steps
@@ -105,11 +115,11 @@ After the script completes:
    sudo reboot
    ```
 
-3. **Clean up backup files** after verifying everything works:
-
-   ```bash
-   sudo find /etc -name "*.hardening-backup" -type f -exec rm -f "{}" \;
-   ```
+3. **Verify the resulting system** before putting it into service. The script
+   creates no additional configuration backups and preserves unrelated
+   backup files. Helper 45 may remove the known unused resolver artifact
+   `/etc/.resolv.conf.systemd-resolved.bak` after its exact safety checks. Read the script log, check SSH access and review any remaining
+   security warnings before accepting the installation.
 
 ## Environment File Configuration
 
@@ -200,6 +210,7 @@ sudo ./21-harden-ubuntu.sh <server-name>
 - Removes unnecessary/insecure packages
 - Installs security tools (debsums, haveged, rkhunter, etc.)
 - Enables unattended security updates
+- Disables unattended-upgrades mail and enables syslog logging
 
 #### Kernel Hardening
 
@@ -302,6 +313,145 @@ journalctl -t upssched-cmd -f
 
 ## Troubleshooting
 
+### Focused Maintenance on Existing Hosts
+
+Do not rerun the full hardening script on existing cluster nodes. The focused
+configuration helpers create no backups and do not trigger package upgrades or
+node reboots. They may reload the specific policy named in their documentation. Apply the
+fwupd plugin configuration with a separate controlled fwupd service restart,
+then verify that the actual NVMe devices remain visible and no SPI errors recur. Package maintenance is a separate, explicitly authorized step.
+
+Disable unattended-upgrades mail on each host and keep update results in the
+existing local log, journal and Loki pipeline:
+
+```bash
+sudo bash Linux/41-configure-unattended-logging.sh --apply
+bash Linux/41-configure-unattended-logging.sh --check
+```
+
+The helper writes `/etc/apt/apt.conf.d/99zz-homelab-unattended-upgrades` with an
+empty `Unattended-Upgrade::Mail` and `Unattended-Upgrade::SyslogEnable "true"`.
+It checks the effective APT configuration, including overrides from other files.
+The setting applies on the next unattended-upgrades run, without a service restart.
+Existing `/var/log/unattended-upgrades/` files remain available. Verify journal
+collection separately in Loki because enabling syslog does not configure a collector.
+The [unattended-upgrades configuration reference](https://github.com/mvo5/unattended-upgrades#supported-options)
+documents both settings.
+
+```bash
+journalctl -t unattended-upgrade --since today
+```
+
+On **dumbledore only**, remove smartmontools because the node's storage does not
+expose SMART:
+
+```bash
+sudo bash Linux/42-remove-dumbledore-smartmontools.sh --check
+sudo bash Linux/42-remove-dumbledore-smartmontools.sh --apply
+```
+
+The helper verifies the hostname and simulates the purge before changing anything.
+It refuses a plan that changes other packages, does not use autoremove, and only
+clears failed `smartmontools.service` or `smartd.service` states after their unit
+files are gone. It makes no disk or hardware queries. Removing this package does
+not prove disk health, use kernel and storage logs for nodes without SMART support.
+
+### Package Upgrades and Cleanup
+
+```bash
+sudo bash Linux/44-update-host-packages.sh --check
+sudo bash Linux/44-update-host-packages.sh --apply
+```
+
+`--check` uses the currently cached package indexes and reports both simulations.
+`--apply` refreshes indexes, performs an upgrade with new dependencies allowed
+and package removals forbidden, then simulates and validates `autoremove` before
+removing unused packages. It finishes with `autoclean` and package-state checks.
+The helper rejects an autoremove plan containing the running kernel or the
+listed core host/storage dependencies. It preserves local dpkg configuration,
+uses bounded lock waits and lowers CPU/I/O priority. Review any held-back or
+phased packages instead of silently switching to `dist-upgrade`.
+
+The helper sets needrestart to list-only mode and never reboots a node. Package
+maintainer scripts can still restart their own services during an upgrade.
+Use the approved maintenance window, check cluster/volume health after each
+batch and schedule any reported reboot separately. The full new-installation
+hardening script retains its separate `dist-upgrade` path. See the
+[APT reference](https://manpages.ubuntu.com/manpages/noble/man8/apt-get.8.html),
+[needrestart reference](https://manpages.ubuntu.com/manpages/noble/man1/needrestart.1.html)
+and [Canonical's service-restart explanation](https://discourse.ubuntu.com/t/needrestart-changes-in-ubuntu-24-04-service-restarts/44671).
+
+### Ubuntu Pro AppArmor Policy Repair
+
+```bash
+sudo bash Linux/22-repair-ubuntu-pro-apparmor.sh --check
+sudo bash Linux/22-repair-ubuntu-pro-apparmor.sh --apply
+```
+
+The helper verifies the installed vendor hashes, adds only the two official
+firmware-read rules to the retained ESM policy and preserves APT News byte for
+byte. It parses both files, reloads only their profiles and verifies all expected
+labels in the kernel, including child profiles. It needs no Pro subscription
+and does not attach the host. Missing or changed vendor input is an error.
+
+### Shared Host Maintenance Policy
+
+```bash
+sudo bash Linux/43-configure-host-maintenance.sh --check
+sudo bash Linux/43-configure-host-maintenance.sh --apply
+```
+
+On a **Raspberry Pi 5**, add `--disable-flashrom` to either command to disable the
+unused fwupd Flashrom plugin on the existing homelab hosts. The helper verifies the firmware model before
+accepting that option. Other models use the normal command without this flag.
+The full hardening script selects the flag from the firmware model automatically.
+This is not a reason to disable firmware updates globally.
+
+The helper makes the already effective `PermitRootLogin no` visible in the SSH
+main file to rkhunter 1.4.6, preserving the complete effective SSH configuration.
+It disables rkhunter APT_AUTOGEN while preserving its scheduled checks and
+existing file-property database. It removes quotes only from the unsupported
+`WEB_CMD="/bin/false"` setting, retaining the disabled download command. An exact
+`ALLOWHIDDENFILE=/etc/.updated` exception is added only after verifying the
+root-owned, regular systemd timestamp marker against its complete expected
+content and mode. Unknown content is an error, and no broad path exception is
+added. It does not modify USBGuard or trust a suspicious
+port merely because a known process owns its socket.
+Validate the process, package hash and destination before a narrow exception.
+Do not use a global port whitelist or refresh the rkhunter baseline to hide an
+unexplained warning.
+
+Helper 43 then runs helpers 45 and 46 with the same `--check` or `--apply` mode.
+Check mode reports planned changes without removing artifacts or installing
+policy. Apply removes only verified, unused resolver and libqb/USBGuard SHM
+artifacts. Legacy blkid files are device-discovery caches, not filesystem data.
+They are removed only after validating their content, proving that the modern
+cache is present and confirming that configuration and running processes do
+not use the old paths. Unknown files and active mappings are retained.
+
+The USBGuard helper verifies the active process and its mapped SHM files before
+recording exact paths in the rkhunter policy. It installs a policy refresh before
+the existing vendor cron scan, so newly created mappings are checked again.
+It uses no path globs or blanket hidden-file exceptions. Existing file-property
+baselines and unrelated backups are preserved. The known unused resolver
+artifact `/etc/.resolv.conf.systemd-resolved.bak` is the explicitly verified
+cleanup exception. These focused helpers create no additional backups and restart no service. New-host hardening already invokes helper 43
+after activating USBGuard, so do not duplicate that integration.
+
+An existing rkhunter APT hook with `APT_AUTOGEN` enabled can automatically update
+its file-property baseline during a package purge. This occurred during the
+smartmontools purge on dumbledore. The shared policy disables that automatic
+baseline regeneration. Investigate changed files before accepting a new baseline.
+The full hardening script initializes a missing baseline only at the end of a
+trusted new installation. It preserves every existing baseline. A missing
+baseline on an existing host must be investigated, not treated as proof of a
+clean installation. See the [rkhunter reference](https://manpages.ubuntu.com/manpages/noble/man8/rkhunter.8.html).
+
+The existing twelve homelab nodes do not expose SMART according to the operator.
+Do not install SMART tools or run SMART probes on them. Check bounded kernel and
+K3s logs, storage paths, temperature/voltage indicators and I/O metrics instead.
+For different new hardware, confirm its capabilities separately.
+
 ### Check Script Logs
 
 ```bash
@@ -340,18 +490,14 @@ sudo aureport --summary
 sudo systemctl status aidecheck.timer
 ```
 
-### Restore from Backup
+### Backup Policy
 
-If something goes wrong, backup files are saved with `.hardening-backup` extension:
-
-```bash
-# List all backup files
-find /etc -name "*.hardening-backup" -type f
-
-# Restore a specific file
-sudo cp /etc/ssh/sshd_config.hardening-backup /etc/ssh/sshd_config
-sudo systemctl restart ssh
-```
+Do not create additional backups, volume snapshots or restore tests for this
+maintenance workflow. Reuse the single nightly Longhorn/PostgreSQL backup-status
+check for the update cycle and report missing or failed evidence. Those backups
+do not by themselves prove that host configuration files are recoverable.
+Pre-existing `.hardening-backup` files are left untouched, the current hardening
+script no longer creates them.
 
 ## Security Considerations
 
@@ -375,6 +521,55 @@ sudo pro enable esm-apps
 sudo pro enable esm-infra
 sudo pro enable livepatch  # Only on supported kernels (amd64)
 ```
+
+### Repair retained Ubuntu Pro AppArmor policy
+
+An Ubuntu Pro package update can leave a new `ubuntu_pro_esm_cache.dpkg-dist`
+beside a retained local policy. If that retained policy lacks the upstream
+firmware read rules, the cache process can be denied access to the hardware
+model. The dedicated helper adds only these two official read rules:
+
+- `/sys/firmware/devicetree/base/model` in `ubuntu_pro_esm_cache`.
+- `/sys/firmware/dmi/entries/0-0/raw` in the related
+  `ubuntu_pro_esm_cache_systemd_detect_virt` profile declared in the same file.
+
+Run the check first, then explicitly apply the reviewed repair:
+
+```bash
+sudo bash ./22-repair-ubuntu-pro-apparmor.sh --check
+sudo bash ./22-repair-ubuntu-pro-apparmor.sh --apply
+```
+
+Omitting the option also selects `--check`. Both modes require root, the
+installed `ubuntu-pro-client` package, Python 3 and `apparmor_parser`. No
+environment file or credentials are read. The helper checks the `.dpkg-dist`
+against the installed package's conffile hash and verifies both rules in their
+proper scopes. If `.dpkg-dist` is absent, the active file must itself match the
+installed package hash. Unrecognized or ambiguous profile structures stop the
+repair.
+
+Existing policy content and local override files are preserved. The check
+compiles a private temporary candidate with `-Q -K --jobs=1`, using the existing
+AppArmor include directory, without replacing files or loading kernel policy.
+The temporary candidate is removed on exit. The helper creates no backup,
+snapshot or original-file copy.
+
+Apply rechecks the original file and its permissions before an atomic
+replacement, preserves ownership and mode, and reloads only the repaired file
+and the other profiles declared in that same policy file. It creates no
+additional rules on a repeated run.
+If the targeted reload fails after replacement, the helper reports the repaired
+on-disk state separately from the unverified loaded state. Resolve that parser
+error and rerun `--apply`.
+
+The helper is not called automatically by the hardening script. It does not
+replace the entire vendor profile, enforce all host profiles, modify
+`ubuntu_pro_apt_news`, or change AppArmor's global mode. Verify the original
+denied operation and fresh logs after applying. A parser check alone does not
+prove that the application's hardware read succeeds.
+
+References: [Canonical's firmware-access regression test](https://github.com/canonical/ubuntu-pro-client/blob/main/sru/release-37/test-apparmor-firmware-access.sh)
+and [Ubuntu's AppArmor parser documentation](https://manpages.ubuntu.com/manpages/noble/man8/apparmor_parser.8.html).
 
 ## Related Resources
 
