@@ -29,6 +29,9 @@ spec:
       securityContext:
         runAsUser: 0
         runAsGroup: 0
+        # Ubuntu maintenance logs are group-readable by adm (GID 4).
+        supplementalGroups:
+          - 4
         seccompProfile:
           type: RuntimeDefault
       containers:

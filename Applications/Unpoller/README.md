@@ -158,6 +158,17 @@ unpoller_prometheus_cache_age_seconds{cluster="ADMIN01"}
 
 ## Rollback and incident handling
 
+UnPoller v5.5.0 has a PDU metric-export type mismatch: its PDU exporter passes
+`unifi.FlexBool` values for cycle-enabled and relay-state metrics, while the
+Prometheus export switch does not handle that type. The INFO summary's `Err`
+count can therefore represent missing PDU state samples rather than an
+authentication failure. Compare actual exported metric families and the
+version-specific [PDU source](https://github.com/unpoller/unpoller/blob/v5.5.0/pkg/promunifi/pdu.go)
+and [collector source](https://github.com/unpoller/unpoller/blob/v5.5.0/pkg/promunifi/collector.go).
+Do not enable `report_errors` to diagnose this in production, since invalid
+metrics can make the complete scrape fail. Use a supported fixed release when
+available and keep the missing metric classes explicit meanwhile.
+
 - Stop new SIEM traffic on UDM and UNAS first if ingestion is unsafe or noisy.
 - Scale `alloy-unpoller` and UnPoller to zero only when collection must stop.
 - Revert backend writer entries after producers are stopped. Revoking a token
