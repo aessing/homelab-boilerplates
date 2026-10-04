@@ -180,16 +180,21 @@ Replace these placeholders in the patch files:
 | `###LOAD_BALANCER_IP_RO###` | `cluster-loadbalancer.yaml` | IP for read-only service |
 | `###LOAD_BALANCER_IP_R###` | `cluster-loadbalancer.yaml` | IP for replica service |
 | `###PVC_SIZE###` | `cluster-resources.yaml` | Storage size (e.g., `16Gi`) |
-| `###MEMORY_REQUEST###` | `cluster-resources.yaml` | Memory request (e.g., `1024Mi`) |
-| `###CPU_REQUEST###` | `cluster-resources.yaml` | CPU request (e.g., `0.5`) |
-| `###MEMORY_LIMIT###` | `cluster-resources.yaml` | Memory limit (e.g., `2048Mi`) |
-| `###CPU_LIMIT###` | `cluster-resources.yaml` | CPU limit (e.g., `1`) |
 | `###SHARED_BUFFERS###` | `cluster-resources.yaml` | PostgreSQL shared_buffers (~25% of RAM) |
 | `###NAME_OF_ORGANISATION###` | `certificate.yaml` | Organization name for TLS cert |
 | `###FQDN###` | `certificate.yaml` | External domain name |
 | `###CLUSTER_FQDN###` | `certificate.yaml` | Cluster internal domain |
 | `###BUCKET###` | `object-store.yaml` | S3 bucket name |
 | `###ENDPOINT_URL###` | `object-store.yaml` | S3 endpoint URL |
+
+The sample resource patch requests 1Gi memory and 500m CPU per instance, with
+limits of 2Gi memory and two CPU cores. This profile provides memory headroom
+for the HOME01 database, whose observed working-set peak approached its old
+1Gi limit. Other existing clusters retain their own resource patches. Keep
+the same profile across a cluster's instances so a promoted replica has enough
+capacity. Buffer and page-cache use can differ from RSS, so do not reduce
+database limits using RSS alone. The `shared_buffers` placeholder remains an
+independent database setting and is not changed automatically with the limit.
 
 ## Adding Databases and Roles
 

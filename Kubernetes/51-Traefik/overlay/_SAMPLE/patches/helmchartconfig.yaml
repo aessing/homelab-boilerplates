@@ -8,6 +8,13 @@ spec:
     deployment:
       enabled: true
       replicas: ###NUMBER_OF_REPLICAS(3)###
+    resources:
+      requests:
+        cpu: 150m
+        memory: 128Mi
+      limits:
+        cpu: 750m
+        memory: 256Mi
     ingressClass:
       enabled: true
       isDefaultClass: true

@@ -118,6 +118,14 @@ Edit the patch files in your overlay's `patches/` directory:
 | `ingressroute.yaml` | External hostname for web access |
 | `version.yaml` | Authentik version to deploy |
 
+The sample server requests 768Mi memory and 100m CPU, with limits of 1536Mi
+and one CPU core. The worker requests 512Mi and 150m, with limits of 1Gi and
+one core. These values provide headroom above the measured workload and are
+initial sizing values, not a universal requirement. Keep the chart's startup
+probes enabled and verify worker health, successful login, startup memory and
+background tasks after a change. A low idle CPU rate does not capture startup
+or concurrent authentication bursts.
+
 ### 4. Deploy
 
 Build and apply the manifests:

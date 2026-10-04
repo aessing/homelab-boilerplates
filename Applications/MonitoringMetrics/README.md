@@ -31,7 +31,7 @@ overlay/
 - Allowlisted API paths, internal-IP ingress restrictions and default-deny
   network policies. VictoriaMetrics has no direct ingress.
 - Compressed storage with a default retention of 90 days.
-- A 50 GiB initial PVC and a 10 GiB minimum-free-space threshold.
+- A 300 GiB initial PVC and a 10 GiB minimum-free-space threshold.
 
 This is a single-instance backend. Storage replication does not provide
 application-level high availability or replace a backup. Scrape intervals are
@@ -217,7 +217,7 @@ sample payload at a steady ingestion rate, not necessarily all disk use, and
 does not halve ingestion CPU or memory. Lowering retention can delete existing
 history. Make that change deliberately through an overlay patch.
 
-The 50 GiB default is a starting capacity, not a guarantee that 90 days will
+The 300 GiB sample default is a starting capacity, not a guarantee that 90 days will
 fit. Measure daily growth, active series and ingestion rate before projecting
 retention capacity. Monitor the 10 GiB free-space reserve, writes stop when the
 configured threshold is reached.
@@ -252,3 +252,19 @@ rollout failures.
 
 Inspect logs locally and redact credentials or infrastructure details before
 sharing them.
+
+
+### Capacity sizing example
+
+The 300 GiB sample PVC covers a measured 90-day retention scenario with up to
+31 additional days for monthly partitions and at least 20 percent free space
+for merges. The observed average was approximately 1.2 GiB per day. Recalculate
+for the actual metric cardinality, scrape interval and ingestion rate before
+using this capacity elsewhere.
+
+Resize an existing installation through the PVC with its Longhorn StorageClass
+configured for expansion. Verify the PVC, PV and mounted filesystem capacity
+and query health afterwards. The StatefulSet claim template is immutable on an
+existing controller. Updating the repository template sets the size for new
+claims, while the existing claim must be expanded separately. Do not delete a
+PVC or recreate a workload solely to expand its mounted volume.

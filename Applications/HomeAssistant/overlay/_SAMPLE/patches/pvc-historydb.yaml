@@ -1,4 +1,4 @@
 ---
 - op: replace
   path: /spec/volumeClaimTemplates/0/spec/resources/requests/storage
-  value: "32Gi"
+  value: "64Gi"
