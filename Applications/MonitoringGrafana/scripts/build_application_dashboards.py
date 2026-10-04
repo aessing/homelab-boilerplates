@@ -6,6 +6,7 @@ from pathlib import Path
 
 from build_dashboards import build, chart, stat, table, gauge, mapped_table, variable, panel, query, place, DASHBOARDS
 from build_log_dashboards import logs, log_query
+from build_battery_dashboard import battery_dashboard
 
 OUTPUT = Path(__file__).resolve().parents[1] / "components/_dashboards/application-dashboards"
 C = 'cluster=~"$cluster"'
@@ -557,11 +558,13 @@ def dashboards():
         trend("Render queue", "grafana_rendering_queue_size"),
         trend("Active browser instances", "browser_instances_active", extra='job="grafana-renderer"'),
         trend("Completed render observations", "browser_render_duration_count", "ops", True, 'job="grafana-renderer"'),
-        stat("Redis reachable", f'min({metric("redis_up", "job=\"integrations/redis\"")})', "Exporter connectivity to Grafana Redis.", threshold="ready"),
+        stat("Redis reachable", f'min({metric("redis_up", "job=\"integrations/redis\"")})', "Exporter connectivity to Grafana Redis.", threshold="ready", width=12),
         trend("Redis memory", "redis_memory_used_bytes", "bytes", extra='job="integrations/redis"'),
         trend("Redis operations", "redis_commands_processed_total", "ops", True, 'job="integrations/redis"'),
         trend("Redis evictions", "redis_evicted_keys_total", "ops", True, 'job="integrations/redis"'),
     ], "Grafana request load, renderer activity, Redis and resource pressure. Container memory includes the renderer. Queue growth and restarts help explain slow dashboards and failed renders.")
+    redis_reachable = next(p for p in result["grafana.json"]["panels"] if p["title"] == "Redis reachable")
+    redis_reachable["gridPos"]["h"] = 8
 
     result["home-assistant.json"] = make("mon-app-homeassistant", "Home Assistant and MQTT", "homeassistant", [
         stat("Core scrape healthy", f'min({metric("up", "job=\"homeassistant\"")})', "Prometheus endpoint reachability, not health of every integration.", threshold="ready"),
@@ -686,6 +689,7 @@ def dashboards():
     result["postgresql.json"]["templating"]["list"][0] = variable("cluster", "cnpg_resource_instances_desired", "cluster")
     # Expand All to the discovered database namespaces, never every namespace.
     result["postgresql.json"]["templating"]["list"][1]["allValue"] = ""
+    result["device-batteries.json"] = battery_dashboard()
     return {name: reset_layout(d) for name, d in result.items()}
 
 
