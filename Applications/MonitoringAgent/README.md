@@ -17,6 +17,7 @@ components/
   _central-telemetry/         Optional backend self-monitoring
   _etcd/                      Optional native K3s etcd metrics
   _logs/                      Per-node Pod, journal and selected host log collection
+  _logs-high-memory/          Optional separate log collector for selected nodes
   _logs-events/               Cluster-wide Kubernetes Event collection
 overlay/
   _SAMPLE/                    Complete example for the central cluster
@@ -467,6 +468,44 @@ Historical retention belongs to MonitoringMetrics. Ninety days is usually
 sufficient for incident investigation and short-term trends. Use 180 days for
 six-month comparisons. Shortening retention can delete existing history and
 does not reduce collector CPU or memory consumption.
+
+### Higher log memory on selected nodes
+
+The optional `_logs-high-memory` component adds `alloy-logs-high-memory`, a
+separate DaemonSet and Service using the same workload files, collection config,
+ServiceAccount and credentials as `_logs`. It raises only the memory limit to
+768Mi. The memory request stays 192Mi and CPU stays 100m request / 250m limit.
+Other nodes keep the normal 384Mi limit.
+
+Enable it after `_logs` in your overlay. Uncomment both optional node-list
+patches shown in `_SAMPLE/kustomization.yaml` and replace
+`example-high-memory-node` with the target node's `kubernetes.io/hostname` value
+in both patch files. Keep the lists identical. The normal DaemonSet excludes
+these hostnames and the high-memory DaemonSet includes them, so each node has
+one collector. Target each patch with its component label, as shown in the
+sample, rather than the original resource name.
+
+The component labels and DaemonSet selectors are distinct. The three existing
+NetworkPolicies accept both components while preserving the overlay's exact
+egress destinations. The shared metrics discovery also includes both component
+labels, so the additional collector keeps the same monitoring target set.
+The original DaemonSet's immutable selector stays unchanged.
+
+Migrate one node at a time. First apply the normal DaemonSet's node exclusion
+and wait until its old Pod on the selected node has fully terminated. Then
+create the high-memory DaemonSet. Both variants use `/var/lib/alloy-logs` on
+the host and must not run simultaneously on the same node. The exclusion
+changes the normal Pod template, so its existing RollingUpdate also replaces
+the other normal collectors one at a time. Their resource values stay unchanged.
+Apply the selector changes to NetworkPolicies and the shared metrics ConfigMap
+as part of the migration, then check both DaemonSet rollouts and scrape health.
+
+Check the actual namespace quota before migration. Each selected node adds
+384Mi to the steady-state memory limits. The three-node sample budget becomes
+2720Mi within its 3072Mi quota, but an overlapping old 384Mi collector would
+raise it to 3104Mi. Live usage can differ from the sample. Keep surge disabled
+and remove the old selected-node Pod before creating its replacement. A direct
+Pod resize does not change the DaemonSet template and is lost on Pod recreation.
 
 ## Troubleshooting
 

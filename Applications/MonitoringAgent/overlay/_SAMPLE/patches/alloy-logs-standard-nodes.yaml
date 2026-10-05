@@ -1,0 +1,5 @@
+---
+- op: replace
+  path: /spec/template/spec/affinity/nodeAffinity/requiredDuringSchedulingIgnoredDuringExecution/nodeSelectorTerms/0/matchExpressions/0/values
+  value:
+    - example-high-memory-node
