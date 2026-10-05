@@ -82,6 +82,7 @@ options:
 files:
   - grafana.json=./application-dashboards/grafana.json
   - home-assistant.json=./application-dashboards/home-assistant.json
+  - device-batteries.json=./application-dashboards/device-batteries.json
   - homecdn.json=./application-dashboards/homecdn.json
 ---
 apiVersion: builtin

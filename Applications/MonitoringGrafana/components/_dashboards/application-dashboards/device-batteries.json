@@ -1,0 +1,1170 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(87, 148, 242, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Home Assistant battery sensors. Healthy >20%, warning >10% to 20%, critical 0% to 10%. Counts are distinct battery entities, not guaranteed unique physical devices. Predicted charge and trip-end estimates are excluded. Unknown means missing, unavailable, invalid or stale telemetry. Inventory uses battery sensors seen in the last 30 days that still have an availability entity. Never-observed battery sensors and voltage-only devices are not covered.",
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": false,
+      "type": "dashboards",
+      "tags": [
+        "monitoring"
+      ],
+      "title": "Monitoring dashboards",
+      "tooltip": "Open another monitoring dashboard"
+    },
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": false,
+      "type": "dashboards",
+      "tags": [
+        "monitoring-applications"
+      ],
+      "title": "Monitoring Applications",
+      "tooltip": "Open another dashboard in Monitoring Applications"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "description": "Dashboard purpose, navigation guidance and data-state semantics.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "Home Assistant battery sensors. Healthy >20%, warning >10% to 20%, critical 0% to 10%. Counts are distinct battery entities, not guaranteed unique physical devices. Predicted charge and trip-end estimates are excluded. Unknown means missing, unavailable, invalid or stale telemetry. Inventory uses battery sensors seen in the last 30 days that still have an availability entity. Never-observed battery sensors and voltage-only devices are not covered.\n\nGreen, amber and red indicate explicit status. Blue is quantitative emphasis. N/A means missing or unsupported data, never healthy zero.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "13.2.2",
+      "title": "About this dashboard",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Distinct battery entities in the selected scope. Several battery entities can belong to one physical device.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "No battery telemetry",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "count(((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Observed batteries",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Batteries above 20% with valid current telemetry.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "No battery telemetry",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "count((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) > 20) or (0 * count(((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Healthy (>20%)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Above 10% and at most 20%. Critical batteries are counted separately.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "No battery telemetry",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "count(((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) > 10 and (min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) <= 20)) or (0 * count(((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Warning (10\u201320%)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "At most 10%, including empty batteries at 0%.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "No battery telemetry",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "count((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) <= 10) or (0 * count(((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Almost empty (\u226410%)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Known battery entities without valid current charge. Check Home Assistant availability and scrape health.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "No battery telemetry",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "count((((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) unless on (cluster,entity) (min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)))) or (0 * count(((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Unknown / unavailable",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Lowest valid current charge. Missing values never become 0%.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "No valid charge",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "#FFB357",
+                "value": 10.000001
+              },
+              {
+                "color": "green",
+                "value": 20.000001
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 4
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "min((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Lowest battery",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Warning, critical and unknown batteries first. Unknown is a status, not a charge of 0%.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 1,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Unknown / unavailable",
+                  "color": "text"
+                }
+              }
+            }
+          ],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "#FFB357",
+                "value": 10.000001
+              },
+              {
+                "color": "green",
+                "value": 20.000001
+              }
+            ]
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Battery"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "((label_replace(((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) or (-1 * (((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) unless on (cluster,entity) (min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))) > 20, \"status\", \"Healthy\", \"entity\", \".*\") or label_replace(((((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) or (-1 * (((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) unless on (cluster,entity) (min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))) <= 20) > 10), \"status\", \"Warning\", \"entity\", \".*\") or label_replace(((((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) or (-1 * (((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) unless on (cluster,entity) (min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))) <= 10) >= 0), \"status\", \"Critical\", \"entity\", \".*\") or label_replace(((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) or (-1 * (((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) unless on (cluster,entity) (min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))) < 0, \"status\", \"Unknown\", \"entity\", \".*\")) * on (cluster,entity) group_left(area) (max by (cluster,entity,area) (homeassistant_entity_info{cluster=~\"$cluster\",job=\"homeassistant\"}) or on (cluster,entity) (0 * ((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) + 1))) <= 20",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Batteries needing attention",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true
+            },
+            "indexByName": {
+              "friendly_name": 0,
+              "area": 1,
+              "Value": 2,
+              "status": 3,
+              "entity": 4,
+              "cluster": 5
+            },
+            "renameByName": {
+              "friendly_name": "Device / battery",
+              "area": "Area",
+              "Value": "Battery",
+              "status": "Status",
+              "entity": "Entity",
+              "cluster": "Cluster"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Current percentage, status, area and entity. Lowest charge first. Use column filters to narrow the list.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 1,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Unknown / unavailable",
+                  "color": "text"
+                }
+              }
+            }
+          ],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "#FFB357",
+                "value": 10.000001
+              },
+              {
+                "color": "green",
+                "value": 20.000001
+              }
+            ]
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Battery"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "(label_replace(((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) or (-1 * (((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) unless on (cluster,entity) (min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))) > 20, \"status\", \"Healthy\", \"entity\", \".*\") or label_replace(((((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) or (-1 * (((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) unless on (cluster,entity) (min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))) <= 20) > 10), \"status\", \"Warning\", \"entity\", \".*\") or label_replace(((((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) or (-1 * (((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) unless on (cluster,entity) (min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))) <= 10) >= 0), \"status\", \"Critical\", \"entity\", \".*\") or label_replace(((min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) or (-1 * (((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) unless on (cluster,entity) (min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))))) < 0, \"status\", \"Unknown\", \"entity\", \".*\")) * on (cluster,entity) group_left(area) (max by (cluster,entity,area) (homeassistant_entity_info{cluster=~\"$cluster\",job=\"homeassistant\"}) or on (cluster,entity) (0 * ((0 * max by (cluster,entity) (last_over_time(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}[30d])) + 1) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1)) + 1))",
+          "format": "table",
+          "instant": true,
+          "interval": "60s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "All device batteries",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true
+            },
+            "indexByName": {
+              "friendly_name": 0,
+              "area": 1,
+              "Value": 2,
+              "status": 3,
+              "entity": 4,
+              "cluster": 5
+            },
+            "renameByName": {
+              "friendly_name": "Device / battery",
+              "area": "Area",
+              "Value": "Battery",
+              "status": "Status",
+              "entity": "Entity",
+              "cluster": "Cluster"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Sampled charge history. Unavailable periods remain gaps. Select individual battery sensors to compare trends.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "N/A",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "(min by (cluster,entity) (((homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} >= 0 and homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} <= 100) and (time() - timestamp(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) < 120) and on (cluster,entity) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"} == 1) and on (cluster) (min by (cluster) (up{cluster=~\"$cluster\",job=\"homeassistant\"}) == 1))) * on (cluster,entity) group_left(friendly_name) (0 * max by (cluster,entity,friendly_name) (homeassistant_entity_available{cluster=~\"$cluster\",job=\"homeassistant\",entity=~\"$battery\",entity!~\".*_(predicted_battery_level|trip_end_battery_level)\"}) + 1))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "30s",
+          "legendFormat": "{{friendly_name}} \u00b7 {{cluster}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Battery history",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "All observed Home Assistant targets must report up=1. Missing targets cannot be inferred.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "No scrape telemetry",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 44
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "min(up{cluster=~\"$cluster\",job=\"homeassistant\"})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "30s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Home Assistant scrape healthy",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "monitoring-metrics"
+      },
+      "description": "Age of currently visible Home Assistant scrape telemetry. This is not the time of the device's last radio transmission. Battery samples older than 120 seconds are unknown.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "No scrape telemetry",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FFB357",
+                "value": 90
+              },
+              {
+                "color": "red",
+                "value": 180
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 44
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "monitoring-metrics"
+          },
+          "editorMode": "code",
+          "expr": "max(clamp_min(time() - timestamp(up{cluster=~\"$cluster\",job=\"homeassistant\"}), 0))",
+          "format": "time_series",
+          "instant": true,
+          "interval": "15s",
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Oldest Home Assistant scrape sample",
+      "type": "stat"
+    }
+  ],
+  "preload": false,
+  "refresh": "1m",
+  "schemaVersion": 41,
+  "tags": [
+    "monitoring",
+    "metrics",
+    "monitoring-applications"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(homeassistant_sensor_battery_percent{job=\"homeassistant\"}, cluster)",
+        "description": "Filter by cluster",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": true,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(homeassistant_sensor_battery_percent{job=\"homeassistant\"}, cluster)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "monitoring-metrics"
+        },
+        "definition": "label_values(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\"}, entity)",
+        "description": "Filter by battery",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Battery sensor",
+        "multi": true,
+        "name": "battery",
+        "options": [],
+        "query": {
+          "query": "label_values(homeassistant_sensor_battery_percent{cluster=~\"$cluster\",job=\"homeassistant\"}, entity)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h"
+    ],
+    "time_options": [
+      "1h",
+      "3h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d",
+      "90d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Device Batteries",
+  "uid": "mon-app-device-batteries",
+  "version": 1,
+  "weekStart": "monday"
+}

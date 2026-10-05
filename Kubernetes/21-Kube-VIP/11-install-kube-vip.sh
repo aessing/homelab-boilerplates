@@ -168,7 +168,9 @@ for ip in $K3S_NODES_SERVERS; do
   fi
 done
 
-KVVERSION=$(curl -sL https://api.github.com/repos/kube-vip/kube-vip/releases | jq -r ".[0].name")
+# GitHub's latest endpoint excludes draft and prerelease releases.
+KVVERSION=$(curl -fsSL https://api.github.com/repos/kube-vip/kube-vip/releases/latest | \
+  jq -er 'select(.draft == false and .prerelease == false) | .tag_name | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))')
 
 # -------------------------------------------------------------------------------------
 

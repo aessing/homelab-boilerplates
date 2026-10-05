@@ -115,6 +115,11 @@ Edit `overlay/my-environment/patches/helmchartconfig.yaml` to set:
 - Entrypoints configuration
 - Additional arguments
 
+The sample requests 150m CPU and 128Mi memory per Traefik pod, with limits of
+750m CPU and 256Mi memory. The reduced CPU request releases scheduling
+reservation while retaining the existing burst limit. Verify request latency
+and throttling under representative ingress traffic before reducing limits.
+
 ### 5. Configure Dashboard Authentication
 
 For basic auth, edit `overlay/my-environment/secrets/secret-dashboard-auth.env`:
@@ -139,7 +144,7 @@ Edit `overlay/my-environment/patches/version.yaml`:
 ```yaml
 - op: replace
   path: /spec/version
-  value: v37.3.0
+  value: v41.6.1
 ```
 
 ### 7. Deploy Traefik
@@ -167,6 +172,15 @@ kubectl get ingressroutes -n traefik-system
 # Check certificates
 kubectl get certificates -n traefik-system
 ```
+
+## Upgrading an Existing Installation
+
+Helm does not update CRDs in a chart's `crds/` directory during upgrades. Updating the HelmChart version alone can leave older Traefik schemas installed. Follow the [official chart upgrade notes](https://github.com/traefik/traefik-helm-chart#upgrading) and review the CRDs from the exact target chart before changing the HelmChart.
+
+1. Compare the existing `traefik.io` CRDs with the target chart. Check stored versions and schema compatibility. Include Hub CRDs only when Hub is actually enabled, since `helm template --include-crds` can include unused Hub definitions.
+2. Preview the required CRD changes with a server dry run. Resolve field ownership explicitly. Do not force conflicts or delete and recreate existing CRDs. For a reviewed schema-only change, a narrow JSON patch can test the current resource version and previous schema before replacing the intended field.
+3. Update the required compatible CRD schemas and wait for `Established` before applying the new HelmChart version through the existing K3s HelmChart controller.
+4. Verify the deployed chart, controller readiness, existing routing resources, a working TLS route and fresh logs. A deployed chart alone does not prove that its CRDs were upgraded.
 
 ## Included Middlewares
 

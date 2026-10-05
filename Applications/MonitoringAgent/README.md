@@ -131,6 +131,22 @@ Pod NetworkPolicies. Protect it using node/network firewall rules, accounting
 for the Pod or node source IP seen after NAT. Do not expose it publicly.
 There is no LoadBalancer or Ingress for the agent.
 
+The systemd collector mounts `/run/systemd` read-only, rather than binding the
+individual `private` socket. systemd can replace that socket during a restart,
+leaving an individual socket bind mount disconnected. Mounting its directory
+keeps replacement sockets visible without changing container capabilities.
+
+The diskstats collector reads udev metadata through the existing read-only host
+root mount with `--path.udev.data=/host/root/run/udev/data`. Its udev path is
+independent of `--path.rootfs`, so the default container path would omit device
+properties even when numeric disk statistics are collected successfully.
+
+The log Alloy Pod has supplemental group `4` (`adm` on the supported Ubuntu
+nodes) to read group-readable maintenance logs such as `/var/log/ufw.log`.
+Check the actual group and permissions when using another distribution and
+adjust the overlay if necessary. Host file ownership and permissions are not
+changed, and container capabilities remain dropped.
+
 ## Deployment
 
 Run these commands from `Applications/MonitoringAgent`.
@@ -410,21 +426,31 @@ metrics. Prefer those over deprecated CNPG collector backup timestamps.
 
 | Component | CPU request / limit | Memory request / limit |
 | --- | --- | --- |
-| Alloy, once per cluster | 0 / 500m | 0 / 512Mi |
+| Alloy, once per cluster | 200m / 750m | 512Mi / 768Mi |
 | kube-state-metrics, once per cluster | 0 / 200m | 0 / 128Mi |
-| node-exporter, per node | 0 / 100m | 0 / 64Mi |
-| Log Alloy, per node | 0 / 250m | 0 / 256Mi |
+| node-exporter, per node | 0 / 250m | 0 / 64Mi |
+| Maintenance collector, per node | 0 / 50m | 0 / 32Mi |
+| Log Alloy, per node | 100m / 250m | 192Mi / 384Mi |
 
-CPU and memory requests are explicitly zero, so these containers reserve no
-scheduling capacity. Omitting requests while keeping limits would make Kubernetes
-default requests to the limits. This increases overcommit and eviction risk
+Alloy metrics and logs reserve scheduling capacity through positive requests.
+Exporters retain explicitly zero requests, so they reserve no scheduling
+capacity. Omitting requests while keeping limits would make Kubernetes default
+requests to the limits. Zero requests increase overcommit and eviction risk
 under node pressure. PVC storage requests remain unchanged. Limits cap usage and can
 cause throttling or OOM restarts. These are starting budgets, not measured
 capacity guarantees. Observe a representative workload and backlog recovery
 before reducing them further. Adjust namespace quotas along with any increases.
-The agent namespace permits 2 CPU and 2 GiB of limits. This covers all three
-components on a three-node cluster and a temporary kube-state-metrics rollout.
+The sample agent namespace permits 3 CPU and 3 GiB of limits. The three-node
+sample uses 2600m CPU and 2336Mi memory limits in steady state, leaving room for
+one additional exporter or log-agent Pod. Roll out DaemonSets separately,
+including when a cluster overlay enables surge Pods.
 This quota does not reserve CPU or memory.
+
+The node-exporter 250m and maintenance-collector 50m CPU limits provide a test
+budget for collector bursts. High throttled-period ratios at low average CPU
+do not prove lost application performance. Compare absolute throttled time,
+scrape duration, failed collectors and restarts before and after the rollout.
+Their existing requests and memory limits remain unchanged.
 
 The Remote Write queue is capped at four shards to reduce memory overhead.
 The 2 GiB WAL survives Pod replacement and can retain unsent samples for up to

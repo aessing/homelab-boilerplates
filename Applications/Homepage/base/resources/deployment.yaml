@@ -61,6 +61,8 @@ spec:
               value: '1000'
             - name: LOG_TARGETS
               value: stdout
+            - name: NEXT_TELEMETRY_DISABLED
+              value: '1'
           ports:
             - name: http
               containerPort: 3000

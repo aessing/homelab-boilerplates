@@ -6,6 +6,7 @@ from pathlib import Path
 
 from build_dashboards import build, chart, stat, table, gauge, mapped_table, variable, panel, query, place, DASHBOARDS
 from build_log_dashboards import logs, log_query
+from build_battery_dashboard import battery_dashboard
 
 OUTPUT = Path(__file__).resolve().parents[1] / "components/_dashboards/application-dashboards"
 C = 'cluster=~"$cluster"'
@@ -231,6 +232,59 @@ def protect_state_table(scope, title="Protect device state"):
     return result
 
 
+def lte_panels(scope):
+    identity = "cluster,location,site_name,name"
+    legend = "{{cluster}} / {{location}} / {{site_name}} / {{name}}"
+    panels = []
+    for title, metric_name, description, states in [
+        ("LTE carrier connection", "connected", "Controller-reported modem connection to the carrier. Connected does not prove Internet reachability.", {"0": {"text": "Disconnected", "color": "red"}, "1": {"text": "Connected", "color": "green"}}),
+        ("LTE failover activity", "failover", "Controller-reported failover activity. Active means LTE is carrying traffic; Standby is normal readiness, not an error. This is not a synthetic failover test.", {"0": {"text": "Standby", "color": "#5794F2"}, "1": {"text": "Active", "color": "#FFB357"}}),
+    ]:
+        result = stat(title, f'max by ({identity}) (unpoller_device_lte_{metric_name}{{{scope}}})', description, width=12)
+        result["targets"][0]["legendFormat"] = legend
+        result["options"].update({"graphMode": "none", "textMode": "value_and_name"})
+        result["fieldConfig"]["defaults"]["mappings"] = [{"type": "value", "options": states}]
+        result["fieldConfig"]["defaults"]["thresholds"]["steps"] = [{"color": states["0"]["color"], "value": None}, {"color": states["1"]["color"], "value": 1}]
+        panels.append(result)
+    panels.extend([
+        chart("LTE signal strength", [
+            (f'max by ({identity}) (unpoller_device_lte_rssi_dbm{{{scope}}})', "RSSI " + legend),
+            (f'max by ({identity}) (unpoller_device_lte_rsrp_dbm{{{scope}}})', "RSRP " + legend),
+        ], "Controller-reported RSSI and reference-signal power per modem. Missing samples remain gaps.", "dBm"),
+        chart("LTE signal quality", [(f'max by ({identity}) (unpoller_device_lte_rsrq_db{{{scope}}})', "RSRQ " + legend)], "Controller-reported reference-signal quality per modem, separate from signal strength.", "dB"),
+    ])
+    info_labels = identity + ",operator,rat,band,mode,lte_state,failover_mode"
+    info = table("LTE modem information", f'max by ({info_labels}) (unpoller_device_lte_info{{{scope}}})', "Controller-reported operator, radio technology, band and modem state. Configured failover mode is separate from current failover activity.", "string", sort_desc=False)
+    info["transformations"] = [{"id": "organize", "options": {
+        "excludeByName": {"Time": True, "Value": True},
+        "indexByName": {label: i for i, label in enumerate(info_labels.split(","))},
+        "renameByName": {"cluster": "Cluster", "location": "Location", "site_name": "Site", "name": "Modem", "operator": "Operator", "rat": "RAT", "band": "Band", "mode": "Mode", "lte_state": "State", "failover_mode": "Failover mode"},
+    }}]
+    info["options"]["sortBy"] = [{"desc": False, "displayName": "Modem"}]
+    panels.append(info)
+    # Join equally scoped channel observations by full modem identity, not only its name.
+    join_labels = ", ".join(f'"{label}"' for label in identity.split(","))
+    channels = table("LTE receive and transmit channels", "", "Controller-reported receive and transmit channel numbers per modem. Missing values remain N/A, not zero.", sort_desc=False)
+    channels["targets"] = []
+    for ref, direction in [("A", "rx"), ("B", "tx")]:
+        expr = f'label_join(max by ({identity}) (unpoller_device_lte_{direction}_channel{{{scope}}}), "modem", " / ", {join_labels})'
+        target = query(expr, interval="60s", instant=True, fmt="table")
+        target["refId"] = ref
+        channels["targets"].append(target)
+    # The join key identifies transmit-only rows whose receive-side labels are empty.
+    channels["transformations"] = [{"id": "joinByField", "options": {"byField": "modem", "mode": "outer"}}, {
+        "id": "organize", "options": {
+            "excludeByName": {"Time": True, "Time 1": True, "cluster 1": True, "location 1": True, "site_name 1": True, "name 1": True},
+            "indexByName": {"modem": 0, "cluster": 1, "location": 2, "site_name": 3, "name": 4, "Value #A": 5, "Value #B": 6},
+            "renameByName": {"modem": "Modem identity", "cluster": "Cluster", "location": "Location", "site_name": "Site", "name": "Modem", "Value #A": "Receive channel", "Value #B": "Transmit channel"},
+        },
+    }]
+    channels["fieldConfig"]["defaults"]["decimals"] = 0
+    channels["options"]["sortBy"] = [{"desc": False, "displayName": "Modem identity"}]
+    panels.append(channels)
+    return panels
+
+
 def make_unifi(uid, title, panels, purpose, variables=None):
     variables = list(variables or [])
     variables.append({"name": "search", "label": "Log contains", "type": "textbox", "query": "", "current": {"text": "", "value": ""}, "skipUrlSync": False})
@@ -258,7 +312,7 @@ def unifi_dashboards():
     switch_port_scope = f'{switch_scope},port_name=~"$port"'
     ap_scope = f'{site},name=~"$ap"'
     lte_info = f'max by (cluster,location,site_name,name) (unpoller_device_info{{{site},model="ULTEPEU"}})'
-    return {
+    result = {
         "unifi-overview.json": make_unifi("mon-unifi-overview", "UniFi Overview", [
             stat("UnPoller target", f'min(up{{{base},job="unpoller"}})', "Reachability of the UnPoller Prometheus endpoint. This does not prove controller login success.", threshold="ready"),
             stat("Controller collection", f'min(unpoller_controller_up{{{base}}})', "Lowest reported controller status.", threshold="ready"),
@@ -302,7 +356,7 @@ def unifi_dashboards():
             table("Gateway and LTE updates", f'max by (location,site_name,name,type) (unpoller_device_upgradable{{{site},type="udm"}} or (unpoller_device_upgradable{{{site},type="uap"}} * on (cluster,location,site_name,name) group_left() ({lte_info})))', "One means UniFi reports an available update.", threshold="warning"),
             log_query(chart("Gateway and WAN SIEM event volume", [], "Incoming UDM and UNAS SIEM records per second for the selected location.", "logs/s", width=24), 'sum by (location,appliance) (rate({cluster=~"$cluster",location=~"$location",source="unifi-siem"}[$__auto]))', '{{location}} {{appliance}}'),
             unifi_logs("Gateway, WAN, IDS, IPS and Network events", unifi_log_scope + ' |~ "(?i)gateway|wan|internet|lte|failover|dhcp|dns|dpi|ids|ips|threat|intrusion|rogue|network"', "Gateway, WAN, LTE, IDS, IPS and Network records."),
-        ], "Gateway, primary WAN, LTE failover device and rolling traffic totals. LTE values are device telemetry, not carrier billing data.", [variable("site", "unpoller_site_gateways", "site_name", base)]),
+        ] + lte_panels(site), "Gateway, primary WAN, LTE failover device and rolling traffic totals. LTE values are device telemetry, not carrier billing data.", [variable("site", "unpoller_site_gateways", "site_name", base)]),
         "unifi-switches.json": make_unifi("mon-unifi-switches", "UniFi Switches", [
             stat("Selected switches", f'count(max without (tag) (unpoller_device_info{{{switch_scope},type="usw"}}))', "Standalone switches in the selected scope. The UDM integrated switch is covered by the Gateway and WAN dashboard."),
             stat("Switch throughput", f'8 * (sum(unpoller_device_port_receive_rate_bytes{{{switch_port_scope}}}) + sum(unpoller_device_port_transmit_rate_bytes{{{switch_port_scope}}}))', "Current receive plus transmit rate for selected switch ports.", "bps"),
@@ -390,6 +444,14 @@ def unifi_dashboards():
             unifi_logs("UNAS SIEM events", '{cluster=~"$cluster",location=~"$location",source="unifi-siem",appliance="unas"}', "Sanitized SIEM records sent directly by UNAS."),
         ], "UNAS console, pools, RAID, disk and network telemetry plus direct SIEM records. The current exporter and SIEM stream do not expose a reliable backup-status contract, so no backup status is inferred."),
     }
+
+    # Keep panel IDs stable while placing LTE telemetry beside its WAN context.
+    gateway = result["unifi-gateway.json"]
+    panels = {p["id"]: p for p in gateway["panels"]}
+    order = [*range(1, 14), 25, 26, 14, 15, 16, 27, 28,
+             *range(17, 23), 29, 30, 23, 24]
+    gateway["panels"] = place([panels[panel_id] for panel_id in order])
+    return result
 
 
 def state_colors(p):
@@ -496,11 +558,13 @@ def dashboards():
         trend("Render queue", "grafana_rendering_queue_size"),
         trend("Active browser instances", "browser_instances_active", extra='job="grafana-renderer"'),
         trend("Completed render observations", "browser_render_duration_count", "ops", True, 'job="grafana-renderer"'),
-        stat("Redis reachable", f'min({metric("redis_up", "job=\"integrations/redis\"")})', "Exporter connectivity to Grafana Redis.", threshold="ready"),
+        stat("Redis reachable", f'min({metric("redis_up", "job=\"integrations/redis\"")})', "Exporter connectivity to Grafana Redis.", threshold="ready", width=12),
         trend("Redis memory", "redis_memory_used_bytes", "bytes", extra='job="integrations/redis"'),
         trend("Redis operations", "redis_commands_processed_total", "ops", True, 'job="integrations/redis"'),
         trend("Redis evictions", "redis_evicted_keys_total", "ops", True, 'job="integrations/redis"'),
     ], "Grafana request load, renderer activity, Redis and resource pressure. Container memory includes the renderer. Queue growth and restarts help explain slow dashboards and failed renders.")
+    redis_reachable = next(p for p in result["grafana.json"]["panels"] if p["title"] == "Redis reachable")
+    redis_reachable["gridPos"]["h"] = 8
 
     result["home-assistant.json"] = make("mon-app-homeassistant", "Home Assistant and MQTT", "homeassistant", [
         stat("Core scrape healthy", f'min({metric("up", "job=\"homeassistant\"")})', "Prometheus endpoint reachability, not health of every integration.", threshold="ready"),
@@ -625,6 +689,7 @@ def dashboards():
     result["postgresql.json"]["templating"]["list"][0] = variable("cluster", "cnpg_resource_instances_desired", "cluster")
     # Expand All to the discovered database namespaces, never every namespace.
     result["postgresql.json"]["templating"]["list"][1]["allValue"] = ""
+    result["device-batteries.json"] = battery_dashboard()
     return {name: reset_layout(d) for name, d in result.items()}
 
 
