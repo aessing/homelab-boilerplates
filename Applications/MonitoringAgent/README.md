@@ -224,6 +224,7 @@ then update workload references and trigger an Alloy rollout.
 | `patches/network-policy-kubernetes-api-egress.yaml` | API Service and API node IPs |
 | `patches/network-policy-alloy-logs-egress.yaml` | API Service, API node IPs on 6443, Loki ingress IP and local Traefik Pods on 8443 |
 | `patches/pvc.yaml` | Initial Alloy WAL size, default 2 GiB |
+| `patches/preferred-node.yaml` | Optional soft node preference for the single Alloy metrics collector |
 | `patches/resource-quota.yaml` | Pod and PVC quotas, extend resource quotas if needed |
 | `transformers/images.yaml` | Pinned image versions |
 | `transformers/labels.yaml` | Deployment labels |
@@ -241,6 +242,14 @@ cluster DNS suffix. Adjust addresses and policies if changing those assumptions.
 
 Do not increase Alloy replicas without implementing target sharding. Otherwise
 each replica scrapes the same targets and produces duplicate samples.
+
+To prefer a node with spare capacity, replace `preferred-node.example` in
+`patches/preferred-node.yaml` with its exact `kubernetes.io/hostname` label and
+uncomment the patch in `kustomization.yaml`. This adds a scheduling preference
+and allows Alloy to run on another eligible node when needed. Keep the existing
+resource sizing and WAL PVC. A Pod template change restarts the collector, so
+check Longhorn replica health before deployment and Remote Write recovery after
+the rollout. The preference applies when a Pod is scheduled, not continuously.
 
 ### 4. Validate and Deploy
 

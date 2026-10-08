@@ -94,6 +94,9 @@ Edit the patch files in your overlay's `patches/` directory:
 | `pvc-application.yaml` | Uptime Kuma storage size |
 | `pvc-database.yaml` | MariaDB storage size |
 | `resource-quota.yaml` | Namespace pod and PVC limits |
+| `preferred-node.yaml` | Optional preferred node for the application |
+
+To prefer a node with more spare capacity, replace `###PREFERRED_NODE_HOSTNAME###` in `preferred-node.yaml` with its `kubernetes.io/hostname` label and uncomment the corresponding patch in your overlay's `kustomization.yaml`. This adds a soft preference, so the application can still run on another eligible node during maintenance. It preserves existing pod anti-affinity and resource settings. Applying the preference changes the application pod template and triggers a restart, with a brief interruption for the single replica. Check storage replication and readiness before rollout. The MariaDB StatefulSet is unaffected.
 
 ### 4. Deploy
 

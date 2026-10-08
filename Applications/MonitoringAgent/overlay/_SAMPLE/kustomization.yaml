@@ -46,6 +46,8 @@ generators:
   - ./generators/secret-monitoring-agent-logs-telemetry.yaml
 
 patches:
+  # Optional soft placement preference. Replace the hostname before enabling.
+  # - path: ./patches/preferred-node.yaml
   # Keep both hostname lists identical and replace the documentation hostname.
   # - path: ./patches/alloy-logs-standard-nodes.yaml
   #   target:

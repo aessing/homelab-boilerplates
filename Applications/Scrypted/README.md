@@ -71,6 +71,15 @@ Edit the patch files in your overlay's `patches/` directory:
 | `multus.yaml` | Network interface configuration |
 | `pvc-application.yaml` | Persistent volume size |
 | `resource-quota.yaml` | Namespace pod and PVC limits |
+| `preferred-node.yaml` | Optional soft preference for a node with spare capacity |
+
+To prefer a node, replace `###PREFERRED_NODE_HOSTNAME###` in
+`preferred-node.yaml` with its `kubernetes.io/hostname` label and uncomment
+the corresponding patch entry in your overlay's `kustomization.yaml`.
+This preference permits scheduling on other eligible nodes. Changing the
+StatefulSet template restarts its single pod and briefly interrupts service.
+Before moving it, check that the destination supports the configured Multus
+interface and camera network, any configured devices, and persistent storage.
 
 ### 3. Configure Multus
 
