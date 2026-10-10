@@ -36,6 +36,13 @@ patches:
                       operator: In
                       values:
                         - example-high-memory-node
+          # Keep the shared host positions exclusive during profile handover.
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/component: alloy-logs
+                topologyKey: kubernetes.io/hostname
   - target:
       version: v1
       kind: Service

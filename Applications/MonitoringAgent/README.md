@@ -503,7 +503,11 @@ The original DaemonSet's immutable selector stays unchanged.
 Migrate one node at a time. First apply the normal DaemonSet's node exclusion
 and wait until its old Pod on the selected node has fully terminated. Then
 create the high-memory DaemonSet. Both variants use `/var/lib/alloy-logs` on
-the host and must not run simultaneously on the same node. The exclusion
+the host and must not run simultaneously on the same node. The high-memory
+Pod has required Pod anti-affinity against normal collectors in its namespace,
+using `kubernetes.io/hostname`. During a complete overlay apply, it remains
+Pending until the normal Pod on that node is deleted, including its termination
+grace period. Keep the staged migration for namespace quota headroom. The exclusion
 changes the normal Pod template, so its existing RollingUpdate also replaces
 the other normal collectors one at a time. Their resource values stay unchanged.
 Apply the selector changes to NetworkPolicies and the shared metrics ConfigMap
