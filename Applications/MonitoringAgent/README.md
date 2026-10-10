@@ -17,6 +17,7 @@ components/
   _central-telemetry/         Optional backend self-monitoring
   _etcd/                      Optional native K3s etcd metrics
   _logs/                      Per-node Pod, journal and selected host log collection
+  _logs-high-memory/          Optional separate log collector for selected nodes
   _logs-events/               Cluster-wide Kubernetes Event collection
 overlay/
   _SAMPLE/                    Complete example for the central cluster
@@ -223,6 +224,7 @@ then update workload references and trigger an Alloy rollout.
 | `patches/network-policy-kubernetes-api-egress.yaml` | API Service and API node IPs |
 | `patches/network-policy-alloy-logs-egress.yaml` | API Service, API node IPs on 6443, Loki ingress IP and local Traefik Pods on 8443 |
 | `patches/pvc.yaml` | Initial Alloy WAL size, default 2 GiB |
+| `patches/preferred-node.yaml` | Optional soft node preference for the single Alloy metrics collector |
 | `patches/resource-quota.yaml` | Pod and PVC quotas, extend resource quotas if needed |
 | `transformers/images.yaml` | Pinned image versions |
 | `transformers/labels.yaml` | Deployment labels |
@@ -240,6 +242,14 @@ cluster DNS suffix. Adjust addresses and policies if changing those assumptions.
 
 Do not increase Alloy replicas without implementing target sharding. Otherwise
 each replica scrapes the same targets and produces duplicate samples.
+
+To prefer a node with spare capacity, replace `preferred-node.example` in
+`patches/preferred-node.yaml` with its exact `kubernetes.io/hostname` label and
+uncomment the patch in `kustomization.yaml`. This adds a scheduling preference
+and allows Alloy to run on another eligible node when needed. Keep the existing
+resource sizing and WAL PVC. A Pod template change restarts the collector, so
+check Longhorn replica health before deployment and Remote Write recovery after
+the rollout. The preference applies when a Pod is scheduled, not continuously.
 
 ### 4. Validate and Deploy
 
@@ -467,6 +477,48 @@ Historical retention belongs to MonitoringMetrics. Ninety days is usually
 sufficient for incident investigation and short-term trends. Use 180 days for
 six-month comparisons. Shortening retention can delete existing history and
 does not reduce collector CPU or memory consumption.
+
+### Higher log memory on selected nodes
+
+The optional `_logs-high-memory` component adds `alloy-logs-high-memory`, a
+separate DaemonSet and Service using the same workload files, collection config,
+ServiceAccount and credentials as `_logs`. It raises only the memory limit to
+768Mi. The memory request stays 192Mi and CPU stays 100m request / 250m limit.
+Other nodes keep the normal 384Mi limit.
+
+Enable it after `_logs` in your overlay. Uncomment both optional node-list
+patches shown in `_SAMPLE/kustomization.yaml` and replace
+`example-high-memory-node` with the target node's `kubernetes.io/hostname` value
+in both patch files. Keep the lists identical. The normal DaemonSet excludes
+these hostnames and the high-memory DaemonSet includes them, so each node has
+one collector. Target each patch with its component label, as shown in the
+sample, rather than the original resource name.
+
+The component labels and DaemonSet selectors are distinct. The three existing
+NetworkPolicies accept both components while preserving the overlay's exact
+egress destinations. The shared metrics discovery also includes both component
+labels, so the additional collector keeps the same monitoring target set.
+The original DaemonSet's immutable selector stays unchanged.
+
+Migrate one node at a time. First apply the normal DaemonSet's node exclusion
+and wait until its old Pod on the selected node has fully terminated. Then
+create the high-memory DaemonSet. Both variants use `/var/lib/alloy-logs` on
+the host and must not run simultaneously on the same node. The high-memory
+Pod has required Pod anti-affinity against normal collectors in its namespace,
+using `kubernetes.io/hostname`. During a complete overlay apply, it remains
+Pending until the normal Pod on that node is deleted, including its termination
+grace period. Keep the staged migration for namespace quota headroom. The exclusion
+changes the normal Pod template, so its existing RollingUpdate also replaces
+the other normal collectors one at a time. Their resource values stay unchanged.
+Apply the selector changes to NetworkPolicies and the shared metrics ConfigMap
+as part of the migration, then check both DaemonSet rollouts and scrape health.
+
+Check the actual namespace quota before migration. Each selected node adds
+384Mi to the steady-state memory limits. The three-node sample budget becomes
+2720Mi within its 3072Mi quota, but an overlapping old 384Mi collector would
+raise it to 3104Mi. Live usage can differ from the sample. Keep surge disabled
+and remove the old selected-node Pod before creating its replacement. A direct
+Pod resize does not change the DaemonSet template and is lost on Pod recreation.
 
 ## Troubleshooting
 

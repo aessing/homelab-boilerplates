@@ -18,6 +18,13 @@ resources:
   - ../../base
 
 patches:
+  # Optional: replace the hostname in the patch before enabling this preference.
+  # - path: ./patches/preferred-node.yaml
+  #   target:
+  #     group: apps
+  #     version: v1
+  #     kind: StatefulSet
+  #     name: scrypted
   - path: ./patches/certificate.yaml
     target:
       group: cert-manager.io

@@ -1,0 +1,18 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: uptimekuma
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - '###PREFERRED_NODE_HOSTNAME###'

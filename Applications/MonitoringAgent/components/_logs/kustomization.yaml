@@ -17,5 +17,4 @@ resources:
   - ./resources/serviceaccount.yaml
   - ./resources/clusterrole.yaml
   - ./resources/clusterrolebinding.yaml
-  - ./resources/service.yaml
-  - ./resources/daemonset.yaml
+  - ./resources

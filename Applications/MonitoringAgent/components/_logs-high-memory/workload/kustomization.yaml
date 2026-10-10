@@ -1,0 +1,55 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../_logs/resources
+
+nameSuffix: -high-memory
+
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: DaemonSet
+    patch: |-
+      - op: replace
+        path: /metadata/labels/app.kubernetes.io~1component
+        value: alloy-logs-high-memory
+      - op: replace
+        path: /spec/selector/matchLabels/app.kubernetes.io~1component
+        value: alloy-logs-high-memory
+      - op: replace
+        path: /spec/template/metadata/labels/app.kubernetes.io~1component
+        value: alloy-logs-high-memory
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 768Mi
+      - op: add
+        path: /spec/template/spec/affinity
+        value:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - example-high-memory-node
+          # Keep the shared host positions exclusive during profile handover.
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/component: alloy-logs
+                topologyKey: kubernetes.io/hostname
+  - target:
+      version: v1
+      kind: Service
+    patch: |-
+      - op: replace
+        path: /metadata/labels/app.kubernetes.io~1component
+        value: alloy-logs-high-memory
+      - op: replace
+        path: /spec/selector/app.kubernetes.io~1component
+        value: alloy-logs-high-memory

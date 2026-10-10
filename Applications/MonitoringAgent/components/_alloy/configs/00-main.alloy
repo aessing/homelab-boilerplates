@@ -184,7 +184,7 @@ discovery.kubernetes "alloy_logs_pods" {
 
   selectors {
     role  = "pod"
-    label = "app.kubernetes.io/name=monitoring-agent,app.kubernetes.io/component=alloy-logs"
+    label = "app.kubernetes.io/name=monitoring-agent,app.kubernetes.io/component in (alloy-logs,alloy-logs-high-memory)"
   }
 
   namespaces {
