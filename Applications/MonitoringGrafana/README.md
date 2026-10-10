@@ -27,7 +27,7 @@ The package does not deploy another Grafana instance. Provisioning creates the
 Monitoring Metrics folder and assigns eleven infrastructure dashboards to it. Dashboards never
 need to be imported individually into the root dashboard list.
 
-Eleven dashboards are also provisioned into **Monitoring Applications** (UID
+Twelve dashboards are also provisioned into **Monitoring Applications** (UID
 `monitoring-applications`). They use the existing Monitoring Metrics and
 Monitoring Logs datasources, with no new collectors or Grafana plugins:
 
@@ -39,6 +39,7 @@ Monitoring Logs datasources, with no new collectors or Grafana plugins:
 | Authentik | Server, worker and outpost connectivity with running image version, request load and background tasks |
 | Grafana and Renderer | Requests, rendering queue, browser activity, Redis and memory pressure |
 | Home Assistant and MQTT | Entity availability, automation activity, broker connectivity, traffic and VictoriaMetrics HistoryDB |
+| Device Batteries | Battery inventory, healthy/warning/critical/unknown KPIs, attention list, all battery sensors with areas and sampled charge history |
 | HomeCDN | NGINX status, connections, requests, container resources and logs |
 | Timeserver (Chrony) | Collection health, reference, stratum, offset, delay and application logs |
 | Monitoring Logs (Loki) | Ingestion, rejected entries, compaction, requests, storage and logs |
@@ -57,7 +58,13 @@ human-readable while the technical cluster identity remains available as a
 hidden URL-backed filter. Network includes DPI, selected switch ports, PoE,
 power, rogue AP and IDS or IPS views. Gateway and WAN includes current traffic,
 outages, LTE device telemetry and rolling 30-day totals. Rolling totals are not
-calendar-month or carrier billing counters. Switch and access-point dashboards
+calendar-month or carrier billing counters. Per-modem LTE panels show carrier
+connection, active failover versus normal standby, RSSI/RSRP signal strength,
+RSRQ signal quality, operator/modem details and receive/transmit channels.
+The channel table keeps the combined cluster/location/site/modem identity visible
+when only one channel is reported. Missing channel values remain empty.
+These are controller-reported states, not an active Internet or failover test.
+Missing telemetry remains N/A. Switch and access-point dashboards
 add focused traffic, errors, radio, resource, uptime, firmware and update views.
 Protect contains camera state, network traffic and detection metadata without
 media. NVR disk/application throughput is not exported. UNAS covers console,
@@ -69,16 +76,37 @@ Kuma group monitors and individual monitors have separate status-history panels.
 The exporter does not provide parent-child relationships, so this is not a nested
 copy of Kuma's tree. History is sampled telemetry, with 20 rows per page and up to
 120 time samples. Short transitions can be missed when viewing long periods.
-Missing samples remain gaps. All application dashboards start at one hour.
+Missing samples remain gaps. Application dashboards start at one hour, except Device Batteries (24 hours).
 Healthy, quiet deployments can therefore have an empty log panel without a
 collection failure.
 
 Home Assistant's availability metric includes both `unavailable` and `unknown`
-states. The dashboard labels this explicitly. Containers without a memory limit
+states. The dashboard labels this explicitly.
+
+**Device Batteries** uses `homeassistant_sensor_battery_percent` from the existing
+Home Assistant Prometheus export in **Monitoring Metrics**. No new collector or
+HistoryDB query is needed. The first row counts observed battery entities,
+healthy batteries (>20%), warning batteries (>10% through 20%), almost-empty
+batteries (0% through 10%), unknown values and the lowest current charge.
+These counts refer to battery sensors, because the exporter has no physical
+device ID. Predicted charge and trip-end estimates are excluded. Names and areas
+come from the exported entity labels and `homeassistant_entity_info`.
+
+Current charge requires an available entity, a healthy Home Assistant scrape,
+a percentage from 0 to 100 and a sample less than 120 seconds old. The inventory
+uses distinct cluster/entity pairs seen with battery telemetry within 30 days
+that still have an availability entity. Historical charge never fills current
+values. Missing, invalid, stale and unavailable values appear as **Unknown**.
+Never-observed battery sensors and devices reporting only voltage or binary
+low-battery signals are outside this percentage inventory. Scrape sample age
+does not reveal the time of the device's last radio transmission. Cluster and
+battery-sensor filters apply throughout. This dashboard opens the last 24 hours.
+
+Containers without a memory limit
 show **No limit configured**, not a fabricated utilization percentage.
 
 All dashboards refresh once a minute. Their default window is one hour, except
-Daily Review, which opens the previous 24 hours. Tables and logs use full
+Daily Review and Device Batteries, which open the previous 24 hours. Tables and logs use full
 width. Cluster filters persist in the URL. The overview adds a namespace filter,
 and Uptime Kuma adds monitor ID and rolling-window filters. The log search field
 filters displayed log lines, not the volume charts. Each log view is capped at
@@ -237,12 +265,24 @@ python3 Applications/MonitoringGrafana/scripts/build_dashboards.py
 python3 Applications/MonitoringGrafana/scripts/build_log_dashboards.py
 python3 Applications/MonitoringGrafana/scripts/build_application_dashboards.py
 python3 -m unittest discover -s tests/monitoring -v
-MONITORING_PRIVATE_OVERLAYS=1 \
-  python3 -m unittest discover -s tests/monitoring -v
 ```
 
-The second test command renders local private overlays. Its output must remain
-private because environment-specific names may appear in failures.
+The unit tests check generated battery dashboard contracts. To run the six
+MetricsQL fixture tests as well, use a read-only port-forward to the existing
+VictoriaMetrics service. Without `BATTERY_QUERY_URL`, those tests are skipped.
+These tests do not render private overlays, validate the real overlay separately
+with the Kustomize commands above.
+
+```bash
+# Stop the port-forward with Ctrl-C after the test run.
+kubectl --context your-monitoring-context -n monitoring-metrics \
+  port-forward service/victoriametrics 19228:8428
+```
+
+```bash
+BATTERY_QUERY_URL=http://127.0.0.1:19228 \
+  python3 -m unittest discover -s tests/monitoring -v
+```
 
 Optionally validate application expressions against the running backends before
 deployment. This read-only check prints query status and result counts, never log
@@ -327,7 +367,9 @@ are not part of this Grafana OSS package.
 
 ## Updating
 
-Edit `scripts/build_dashboards.py` or `scripts/build_log_dashboards.py`,
+Edit `scripts/build_dashboards.py`, `scripts/build_log_dashboards.py` or
+`scripts/build_application_dashboards.py` (battery definitions live in
+`scripts/build_battery_dashboard.py`),
 regenerate the corresponding canonical JSON and run the
 tests. Validate, render and review the Grafana overlay, then repeat the deployment
 and verification steps. Keep dashboard/panel UIDs stable so links continue

@@ -30,7 +30,7 @@ spec:
       defaultDataLocality: 'best-effort'
       defaultReplicaCount: '###NUMBER_OF_REPLICAS(3)###'
       deletingConfirmationFlag: false
-      upgradeChecker: true
+      upgradeChecker: false
       allowCollectingLonghornUsageMetrics: false
       replicaAutoBalance: 'best-effort'
       concurrentAutomaticEngineUpgradePerNodeLimit: '3'

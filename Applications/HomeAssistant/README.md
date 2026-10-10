@@ -279,3 +279,17 @@ Navigate to the editor URL configured in your ingress route to edit Home Assista
 - [CloudNativePG Documentation](https://cloudnative-pg.io/documentation/)
 - [Multus CNI Documentation](https://github.com/k8snetworkplumbingwg/multus-cni/blob/master/docs/README.md)
 - [Kustomize Documentation](https://kustomize.io/)
+
+
+## History database capacity
+
+The sample VictoriaMetrics history PVC is 64 GiB. This is a conservative sizing
+example for a ten-year retention scenario with recent growth around 7.5 MiB per
+day, monthly partition overhead and free space for merges. A short observation
+window cannot predict device count or metric cardinality over ten years.
+
+Expand an existing `historydb-data-historydb-0` PVC through the Kubernetes CSI
+path, then verify PVC/PV capacity, the mounted filesystem and database queries.
+The StatefulSet claim template is immutable on an existing controller, so its
+repository template does not resize an existing claim. Keep the existing PVC
+and workload during online expansion.

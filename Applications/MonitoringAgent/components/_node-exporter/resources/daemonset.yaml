@@ -37,6 +37,8 @@ spec:
             - --path.procfs=/host/proc
             - --path.sysfs=/host/sys
             - --path.rootfs=/host/root
+            # udev metadata uses its own path, independent of path.rootfs.
+            - --path.udev.data=/host/root/run/udev/data
             - --web.listen-address=$(HOST_IP):9100
             - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/kubelet/pods/.+|var/lib/containers/storage/.+)($|/)
             - --collector.systemd
@@ -63,7 +65,7 @@ spec:
               cpu: '0'
               memory: '0'
             limits:
-              cpu: 100m
+              cpu: 250m
               memory: 64Mi
           ports:
             - name: metrics
@@ -91,7 +93,8 @@ spec:
               mountPath: /var/lib/node_exporter/textfile_collector
               readOnly: true
             - name: systemd-private
-              mountPath: /run/systemd/private
+              # Keep replacement sockets visible after systemd restarts.
+              mountPath: /run/systemd
               readOnly: true
         - name: maintenance-collector
           image: busybox:1.37.0
@@ -113,7 +116,7 @@ spec:
               cpu: '0'
               memory: '0'
             limits:
-              cpu: 20m
+              cpu: 50m
               memory: 32Mi
           volumeMounts:
             - name: root
@@ -140,8 +143,8 @@ spec:
             type: Directory
         - name: systemd-private
           hostPath:
-            path: /run/systemd/private
-            type: Socket
+            path: /run/systemd
+            type: Directory
         - name: textfile-collector
           emptyDir:
             medium: Memory

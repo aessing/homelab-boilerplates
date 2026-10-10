@@ -37,6 +37,7 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - run
+            - --disable-reporting
             - --stability.level=public-preview
             - --server.http.listen-addr=0.0.0.0:12345
             - --storage.path=/var/lib/alloy/data
@@ -52,11 +53,11 @@ spec:
             readOnlyRootFilesystem: true
           resources:
             requests:
-              cpu: '0'
-              memory: '0'
-            limits:
-              cpu: 500m
+              cpu: 200m
               memory: 512Mi
+            limits:
+              cpu: 750m
+              memory: 768Mi
           ports:
             - name: http
               containerPort: 12345

@@ -48,6 +48,13 @@ patches:
     target:
       version: v1
       kind: ResourceQuota
+  # Optional, replace the hostname in preferred-node.yaml before enabling.
+  # - path: ./patches/preferred-node.yaml
+  #   target:
+  #     group: apps
+  #     version: v1
+  #     kind: StatefulSet
+  #     name: uptimekuma
 
 transformers:
   # https://github.com/louislam/uptime-kuma

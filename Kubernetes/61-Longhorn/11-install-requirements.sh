@@ -216,7 +216,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: patch
-        image: curlimages/curl:latest
+        image: curlimages/curl:8.22.0
         imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false

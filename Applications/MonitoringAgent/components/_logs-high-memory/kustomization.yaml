@@ -1,0 +1,75 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - ./workload
+
+patches:
+  # Preserve the original immutable selector and keep node sets disjoint.
+  - target:
+      group: apps
+      version: v1
+      kind: DaemonSet
+      labelSelector: app.kubernetes.io/component=alloy-logs
+    patch: |-
+      - op: add
+        path: /spec/template/spec/affinity
+        value:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: NotIn
+                      values:
+                        - example-high-memory-node
+  # Broaden only Pod selectors, preserving the overlay's exact egress routes.
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: alloy-logs-egress
+    patch: |-
+      - op: remove
+        path: /spec/podSelector/matchLabels/app.kubernetes.io~1component
+      - op: add
+        path: /spec/podSelector/matchExpressions
+        value:
+          - key: app.kubernetes.io/component
+            operator: In
+            values:
+              - alloy-logs
+              - alloy-logs-high-memory
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: alloy-to-alloy-logs
+    patch: |-
+      - op: remove
+        path: /spec/podSelector/matchLabels/app.kubernetes.io~1component
+      - op: add
+        path: /spec/podSelector/matchExpressions
+        value:
+          - key: app.kubernetes.io/component
+            operator: In
+            values:
+              - alloy-logs
+              - alloy-logs-high-memory
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: alloy-to-alloy-logs-egress
+    patch: |-
+      - op: remove
+        path: /spec/egress/0/to/0/podSelector/matchLabels/app.kubernetes.io~1component
+      - op: add
+        path: /spec/egress/0/to/0/podSelector/matchExpressions
+        value:
+          - key: app.kubernetes.io/component
+            operator: In
+            values:
+              - alloy-logs
+              - alloy-logs-high-memory
